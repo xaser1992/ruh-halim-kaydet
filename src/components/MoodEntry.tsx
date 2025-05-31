@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -11,14 +10,69 @@ interface MoodOption {
   emoji: string;
   labelTr: string;
   labelEn: string;
+  colors: {
+    bg: string;
+    hover: string;
+    gradient: string;
+  };
 }
 
 const moodOptions: MoodOption[] = [
-  { id: "very-bad", emoji: "😢", labelTr: "Çok Kötü", labelEn: "Very Bad" },
-  { id: "bad", emoji: "😞", labelTr: "Kötü", labelEn: "Bad" },
-  { id: "neutral", emoji: "😐", labelTr: "Orta", labelEn: "Neutral" },
-  { id: "good", emoji: "😊", labelTr: "İyi", labelEn: "Good" },
-  { id: "great", emoji: "😄", labelTr: "Harika", labelEn: "Great" }
+  { 
+    id: "very-bad", 
+    emoji: "😢", 
+    labelTr: "Çok Kötü", 
+    labelEn: "Very Bad",
+    colors: {
+      bg: "bg-red-100",
+      hover: "hover:bg-red-200",
+      gradient: "from-red-200 to-red-300"
+    }
+  },
+  { 
+    id: "bad", 
+    emoji: "😞", 
+    labelTr: "Kötü", 
+    labelEn: "Bad",
+    colors: {
+      bg: "bg-orange-100",
+      hover: "hover:bg-orange-200",
+      gradient: "from-orange-200 to-orange-300"
+    }
+  },
+  { 
+    id: "neutral", 
+    emoji: "😐", 
+    labelTr: "Orta", 
+    labelEn: "Neutral",
+    colors: {
+      bg: "bg-yellow-100",
+      hover: "hover:bg-yellow-200",
+      gradient: "from-yellow-200 to-yellow-300"
+    }
+  },
+  { 
+    id: "good", 
+    emoji: "😊", 
+    labelTr: "İyi", 
+    labelEn: "Good",
+    colors: {
+      bg: "bg-green-100",
+      hover: "hover:bg-green-200",
+      gradient: "from-green-200 to-green-300"
+    }
+  },
+  { 
+    id: "great", 
+    emoji: "😄", 
+    labelTr: "Harika", 
+    labelEn: "Great",
+    colors: {
+      bg: "bg-emerald-100",
+      hover: "hover:bg-emerald-200",
+      gradient: "from-emerald-200 to-emerald-300"
+    }
+  }
 ];
 
 interface MoodEntryProps {
@@ -89,6 +143,17 @@ export const MoodEntry = ({ language }: MoodEntryProps) => {
     });
   };
 
+  const getSelectedMoodColors = () => {
+    const selectedMoodOption = moodOptions.find(mood => mood.id === selectedMood);
+    return selectedMoodOption?.colors || {
+      bg: "bg-purple-100",
+      hover: "hover:bg-purple-200", 
+      gradient: "from-purple-200 to-pink-200"
+    };
+  };
+
+  const selectedColors = getSelectedMoodColors();
+
   return (
     <Card className="p-6 bg-white/80 backdrop-blur-sm border-0 shadow-lg">
       <div className="space-y-6">
@@ -124,8 +189,8 @@ export const MoodEntry = ({ language }: MoodEntryProps) => {
               onClick={() => setSelectedMood(mood.id)}
               className={`flex flex-col items-center p-3 rounded-xl transition-all duration-200 ${
                 selectedMood === mood.id
-                  ? 'bg-gradient-to-br from-purple-200 to-pink-200 shadow-lg scale-105'
-                  : 'bg-white/70 hover:bg-white/90 hover:scale-105'
+                  ? `bg-gradient-to-br ${mood.colors.gradient} shadow-lg scale-105`
+                  : `${mood.colors.bg} ${mood.colors.hover} hover:scale-105`
               }`}
             >
               <span className="text-2xl mb-1">{mood.emoji}</span>
@@ -157,7 +222,11 @@ export const MoodEntry = ({ language }: MoodEntryProps) => {
         <Button
           onClick={handleSave}
           disabled={!selectedMood}
-          className="w-full bg-gradient-to-r from-purple-400 to-pink-400 hover:from-purple-500 hover:to-pink-500 text-white py-3 rounded-xl font-medium transition-all duration-200 disabled:opacity-50"
+          className={`w-full text-white py-3 rounded-xl font-medium transition-all duration-200 disabled:opacity-50 ${
+            selectedMood 
+              ? `bg-gradient-to-r ${selectedColors.gradient} hover:shadow-lg`
+              : 'bg-gradient-to-r from-purple-400 to-pink-400 hover:from-purple-500 hover:to-pink-500'
+          }`}
         >
           {todayEntry ? t.update : t.save}
         </Button>
