@@ -1,9 +1,10 @@
 
 import { useState, useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { MoodEntry } from "@/components/MoodEntry";
 import { MoodHistory } from "@/components/MoodHistory";
-import { Lock } from "lucide-react";
+import { Lock, Globe } from "lucide-react";
 
 const Index = () => {
   const [language, setLanguage] = useState<'tr' | 'en'>('tr');
@@ -13,13 +14,15 @@ const Index = () => {
       appName: "Ruh Halim",
       entry: "Giriş",
       history: "Geçmiş",
-      privacy: "Verileriniz cihazınızda güvenle saklanır"
+      privacy: "Verileriniz cihazınızda güvenle saklanır",
+      selectLanguage: "Dil Seçin"
     },
     en: {
       appName: "My Mood",
       entry: "Entry",
       history: "History",
-      privacy: "Your data is securely stored on your device"
+      privacy: "Your data is securely stored on your device",
+      selectLanguage: "Select Language"
     }
   };
 
@@ -31,32 +34,22 @@ const Index = () => {
         {/* Header */}
         <div className="text-center mb-8">
           <div className="w-16 h-16 bg-gradient-to-br from-purple-200 to-pink-200 rounded-2xl mx-auto mb-4 flex items-center justify-center shadow-lg">
-            <span className="text-2xl">😊</span>
+            <span className="text-2xl">🌈</span>
           </div>
-          <h1 className="text-2xl font-bold text-gray-800 mb-2">{t.appName}</h1>
+          <h1 className="text-2xl font-bold text-gray-800 mb-4">{t.appName}</h1>
           
           {/* Language Selector */}
-          <div className="flex justify-center gap-2 mb-4">
-            <button
-              onClick={() => setLanguage('tr')}
-              className={`px-3 py-1 rounded-full text-sm transition-all ${
-                language === 'tr' 
-                  ? 'bg-purple-200 text-purple-800' 
-                  : 'bg-white/50 text-gray-600 hover:bg-white/70'
-              }`}
-            >
-              Türkçe
-            </button>
-            <button
-              onClick={() => setLanguage('en')}
-              className={`px-3 py-1 rounded-full text-sm transition-all ${
-                language === 'en' 
-                  ? 'bg-purple-200 text-purple-800' 
-                  : 'bg-white/50 text-gray-600 hover:bg-white/70'
-              }`}
-            >
-              English
-            </button>
+          <div className="flex justify-center mb-4">
+            <Select value={language} onValueChange={(value: 'tr' | 'en') => setLanguage(value)}>
+              <SelectTrigger className="w-48 bg-white/70 backdrop-blur-sm border-purple-200">
+                <Globe className="w-4 h-4 mr-2" />
+                <SelectValue placeholder={t.selectLanguage} />
+              </SelectTrigger>
+              <SelectContent className="bg-white border-purple-200">
+                <SelectItem value="tr">🇹🇷 Türkçe</SelectItem>
+                <SelectItem value="en">🇺🇸 English</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
         </div>
 
