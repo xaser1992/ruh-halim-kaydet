@@ -95,10 +95,13 @@ export const MoodHistory = ({ language }: MoodHistoryProps) => {
 
     // Show undo button for 5 seconds
     setShowUndo(true);
-    setTimeout(() => {
+    const undoTimeout = setTimeout(() => {
       setShowUndo(false);
       setDeletedEntry(null);
     }, 5000);
+
+    // Clear timeout if component unmounts
+    return () => clearTimeout(undoTimeout);
   };
 
   const handleUndo = () => {
@@ -142,7 +145,7 @@ export const MoodHistory = ({ language }: MoodHistoryProps) => {
             <div className="flex items-center gap-2">
               <Undo className="w-4 h-4 text-orange-600" />
               <span className="text-sm text-orange-800">
-                {moodLabels[language][deletedEntry.mood as keyof typeof moodLabels.tr]} {t.deleteConfirm}
+                {moodLabels[language][deletedEntry.mood as keyof typeof moodLabels.tr]} silindi
               </span>
             </div>
             <Button

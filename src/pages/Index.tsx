@@ -32,9 +32,6 @@ const Index = () => {
       <div className="container mx-auto px-4 py-6 max-w-md">
         {/* Header */}
         <div className="text-center mb-8">
-          <div className="w-16 h-16 bg-gradient-to-br from-purple-200 to-pink-200 rounded-2xl mx-auto mb-4 flex items-center justify-center shadow-lg">
-            <span className="text-2xl">🌈</span>
-          </div>
           <h1 className="text-2xl font-bold text-gray-800 mb-4">{t.appName}</h1>
           
           {/* Language Selector */}
@@ -43,7 +40,7 @@ const Index = () => {
               <DropdownMenuTrigger asChild>
                 <Button variant="outline" className="bg-white/70 backdrop-blur-sm border-purple-200">
                   <Globe className="w-4 h-4 mr-2" />
-                  {language.toUpperCase()}
+                  {language === 'tr' ? 'TR' : 'EN'}
                   <ChevronDown className="w-4 h-4 ml-2" />
                 </Button>
               </DropdownMenuTrigger>
