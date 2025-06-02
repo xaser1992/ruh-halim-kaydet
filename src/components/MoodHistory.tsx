@@ -2,8 +2,8 @@
 import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { getAllMoodEntries, deleteMoodEntry } from "@/utils/moodStorage";
-import { Calendar, Trash2 } from "lucide-react";
+import { getAllMoodEntries, deleteMoodEntry, saveMoodEntry } from "@/utils/moodStorage";
+import { Calendar, Trash2, Undo } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 
 interface MoodHistoryProps {
@@ -37,6 +37,8 @@ const moodLabels = {
 
 export const MoodHistory = ({ language }: MoodHistoryProps) => {
   const [entries, setEntries] = useState<any[]>([]);
+  const [deletedEntry, setDeletedEntry] = useState<any>(null);
+  const [showUndo, setShowUndo] = useState(false);
 
   const translations = {
     tr: {
@@ -45,7 +47,8 @@ export const MoodHistory = ({ language }: MoodHistoryProps) => {
       noEntriesDesc: "Ruh halinizi kaydetmeye başlayın!",
       delete: "Sil",
       deleteConfirm: "Kayıt silindi!",
-      deleteDesc: "Bu işlem geri alınamaz"
+      undo: "Geri Al",
+      undoSuccess: "Kayıt geri getirildi!"
     },
     en: {
       title: "Past Entries",
@@ -53,7 +56,8 @@ export const MoodHistory = ({ language }: MoodHistoryProps) => {
       noEntriesDesc: "Start recording your mood!",
       delete: "Delete",
       deleteConfirm: "Entry deleted!",
-      deleteDesc: "This action cannot be undone"
+      undo: "Undo",
+      undoSuccess: "Entry restored!"
     }
   };
 
@@ -73,11 +77,45 @@ export const MoodHistory = ({ language }: MoodHistoryProps) => {
   };
 
   const handleDelete = (date: string) => {
+    const entryToDelete = entries.find(entry => entry.date === date);
+    if (!entryToDelete) return;
+
+    // Store the deleted entry for potential undo
+    setDeletedEntry(entryToDelete);
+    
+    // Delete the entry
     deleteMoodEntry(date);
-    loadEntries(); // Reload entries after deletion
+    loadEntries();
+    
+    // Show short toast
     toast({
       title: t.deleteConfirm,
-      description: t.deleteDesc,
+      duration: 1500, // 1.5 seconds
+    });
+
+    // Show undo button for 5 seconds
+    setShowUndo(true);
+    setTimeout(() => {
+      setShowUndo(false);
+      setDeletedEntry(null);
+    }, 5000);
+  };
+
+  const handleUndo = () => {
+    if (!deletedEntry) return;
+
+    // Restore the deleted entry
+    saveMoodEntry(deletedEntry);
+    loadEntries();
+    
+    // Hide undo button
+    setShowUndo(false);
+    setDeletedEntry(null);
+
+    // Show success toast
+    toast({
+      title: t.undoSuccess,
+      duration: 1500, // 1.5 seconds
     });
   };
 
@@ -96,6 +134,28 @@ export const MoodHistory = ({ language }: MoodHistoryProps) => {
       <h2 className="text-xl font-semibold text-gray-800 text-center mb-6">
         {t.title}
       </h2>
+
+      {/* Undo Button */}
+      {showUndo && deletedEntry && (
+        <Card className="p-4 bg-orange-50 border-orange-200 shadow-lg">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Undo className="w-4 h-4 text-orange-600" />
+              <span className="text-sm text-orange-800">
+                {moodLabels[language][deletedEntry.mood as keyof typeof moodLabels.tr]} {t.deleteConfirm}
+              </span>
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleUndo}
+              className="bg-orange-100 border-orange-300 text-orange-700 hover:bg-orange-200"
+            >
+              {t.undo}
+            </Button>
+          </div>
+        </Card>
+      )}
       
       {entries.map((entry, index) => (
         <Card key={index} className="p-4 bg-white/80 backdrop-blur-sm border-0 shadow-lg">

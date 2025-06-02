@@ -1,10 +1,11 @@
 
 import { useState, useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Button } from "@/components/ui/button";
 import { MoodEntry } from "@/components/MoodEntry";
 import { MoodHistory } from "@/components/MoodHistory";
-import { Lock, Globe } from "lucide-react";
+import { Lock, Globe, ChevronDown } from "lucide-react";
 
 const Index = () => {
   const [language, setLanguage] = useState<'tr' | 'en'>('tr');
@@ -14,15 +15,13 @@ const Index = () => {
       appName: "Ruh Halim",
       entry: "Giriş",
       history: "Geçmiş",
-      privacy: "Verileriniz cihazınızda güvenle saklanır",
-      selectLanguage: "Dil Seçin"
+      privacy: "Verileriniz cihazınızda güvenle saklanır"
     },
     en: {
       appName: "My Mood",
       entry: "Entry",
       history: "History",
-      privacy: "Your data is securely stored on your device",
-      selectLanguage: "Select Language"
+      privacy: "Your data is securely stored on your device"
     }
   };
 
@@ -40,16 +39,23 @@ const Index = () => {
           
           {/* Language Selector */}
           <div className="flex justify-center mb-4">
-            <Select value={language} onValueChange={(value: 'tr' | 'en') => setLanguage(value)}>
-              <SelectTrigger className="w-48 bg-white/70 backdrop-blur-sm border-purple-200">
-                <Globe className="w-4 h-4 mr-2" />
-                <SelectValue placeholder={t.selectLanguage} />
-              </SelectTrigger>
-              <SelectContent className="bg-white border-purple-200">
-                <SelectItem value="tr">🇹🇷 Türkçe</SelectItem>
-                <SelectItem value="en">🇺🇸 English</SelectItem>
-              </SelectContent>
-            </Select>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" className="bg-white/70 backdrop-blur-sm border-purple-200">
+                  <Globe className="w-4 h-4 mr-2" />
+                  {language.toUpperCase()}
+                  <ChevronDown className="w-4 h-4 ml-2" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="bg-white border-purple-200 z-50">
+                <DropdownMenuItem onClick={() => setLanguage('tr')} className="cursor-pointer">
+                  TR
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setLanguage('en')} className="cursor-pointer">
+                  EN
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </div>
 
