@@ -282,7 +282,7 @@ export const MoodEntry = ({ language, theme }: MoodEntryProps) => {
             onImagesChange={setImages}
             language={language}
             theme={theme}
-            maxImages={10}
+            maxImages={5}
           />
         </div>
 

@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
 import { ImagePlus, X } from "lucide-react";
 
 interface ImageUploadProps {
@@ -17,49 +18,68 @@ export const ImageUpload = ({
   onImagesChange, 
   language, 
   theme, 
-  maxImages = 10 
+  maxImages = 5 
 }: ImageUploadProps) => {
   const [dragOver, setDragOver] = useState(false);
+  const [loadingImages, setLoadingImages] = useState<boolean[]>([]);
 
   const translations = {
     tr: {
       addPhoto: "Fotoğraf Ekle",
       dragDrop: "Fotoğraf sürükleyip bırakın veya tıklayın",
       maxPhotos: `En fazla ${maxImages} fotoğraf`,
-      removePhoto: "Fotoğrafı kaldır"
+      removePhoto: "Fotoğrafı kaldır",
+      loading: "Yükleniyor..."
     },
     en: {
       addPhoto: "Add Photo",
       dragDrop: "Drag and drop photos or click",
       maxPhotos: `Maximum ${maxImages} photos`,
-      removePhoto: "Remove photo"
+      removePhoto: "Remove photo",
+      loading: "Loading..."
     }
   };
 
   const t = translations[language];
 
-  const handleFileSelect = (files: FileList | null) => {
+  const handleFileSelect = async (files: FileList | null) => {
     if (!files) return;
 
-    const newImages: string[] = [];
     const remainingSlots = maxImages - images.length;
     const filesToProcess = Math.min(files.length, remainingSlots);
+    
+    if (filesToProcess === 0) return;
+
+    // Initialize loading states
+    const newLoadingStates = Array(filesToProcess).fill(true);
+    setLoadingImages(prev => [...prev, ...newLoadingStates]);
+
+    const newImages: string[] = [];
+    const loadingPromises: Promise<void>[] = [];
 
     for (let i = 0; i < filesToProcess; i++) {
       const file = files[i];
       if (file.type.startsWith('image/')) {
-        const reader = new FileReader();
-        reader.onload = (e) => {
-          if (e.target?.result) {
-            newImages.push(e.target.result as string);
-            if (newImages.length === filesToProcess) {
-              onImagesChange([...images, ...newImages]);
+        const promise = new Promise<void>((resolve) => {
+          const reader = new FileReader();
+          reader.onload = (e) => {
+            if (e.target?.result) {
+              newImages.push(e.target.result as string);
             }
-          }
-        };
-        reader.readAsDataURL(file);
+            resolve();
+          };
+          reader.readAsDataURL(file);
+        });
+        loadingPromises.push(promise);
       }
     }
+
+    // Wait for all images to load
+    await Promise.all(loadingPromises);
+    
+    // Update images and clear loading states
+    onImagesChange([...images, ...newImages]);
+    setLoadingImages(prev => prev.slice(0, prev.length - filesToProcess));
   };
 
   const handleDrop = (e: React.DragEvent) => {
@@ -83,7 +103,7 @@ export const ImageUpload = ({
     onImagesChange(newImages);
   };
 
-  const canAddMore = images.length < maxImages;
+  const canAddMore = images.length + loadingImages.length < maxImages;
 
   return (
     <div className="space-y-2">
@@ -137,10 +157,10 @@ export const ImageUpload = ({
         </div>
       )}
 
-      {images.length > 0 && (
+      {(images.length > 0 || loadingImages.length > 0) && (
         <div className="grid grid-cols-5 gap-1">
           {images.map((image, index) => (
-            <div key={index} className="relative group">
+            <div key={`image-${index}`} className="relative group">
               <img
                 src={image}
                 alt={`Upload ${index + 1}`}
@@ -155,6 +175,14 @@ export const ImageUpload = ({
               >
                 <X className="w-3 h-3" />
               </Button>
+            </div>
+          ))}
+          {loadingImages.map((_, index) => (
+            <div key={`loading-${index}`} className="relative">
+              <Skeleton className="w-full h-16 rounded-lg" />
+              <div className="absolute inset-0 flex items-center justify-center">
+                <div className="w-4 h-4 border-2 border-purple-500 border-t-transparent rounded-full animate-spin"></div>
+              </div>
             </div>
           ))}
         </div>
