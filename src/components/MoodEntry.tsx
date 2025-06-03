@@ -254,12 +254,12 @@ export const MoodEntry = ({ language, theme }: MoodEntryProps) => {
                 ? 'bg-gray-700/70 border-purple-600 focus:border-purple-400 text-white placeholder:text-gray-400' 
                 : 'bg-white/70 border-purple-200 focus:border-purple-400'
             }`}
-            maxLength={280}
+            maxLength={10000}
           />
           <p className={`text-xs text-right transition-colors duration-300 ${
             theme === 'dark' ? 'text-gray-400' : 'text-gray-500'
           }`}>
-            {note.length}/280
+            {note.length}/10000
           </p>
         </div>
 

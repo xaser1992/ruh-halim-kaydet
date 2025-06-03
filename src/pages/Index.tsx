@@ -33,8 +33,32 @@ const Index = () => {
   const t = translations[language];
 
   useEffect(() => {
+    // Load saved preferences on mount
+    const savedLanguage = localStorage.getItem('ruh-halim-language') as 'tr' | 'en';
+    const savedTheme = localStorage.getItem('ruh-halim-theme') as 'light' | 'dark';
+    
+    if (savedLanguage) {
+      setLanguage(savedLanguage);
+    }
+    
+    if (savedTheme) {
+      setTheme(savedTheme);
+    }
+  }, []);
+
+  useEffect(() => {
     document.documentElement.classList.toggle('dark', theme === 'dark');
   }, [theme]);
+
+  const handleLanguageChange = (newLanguage: 'tr' | 'en') => {
+    setLanguage(newLanguage);
+    localStorage.setItem('ruh-halim-language', newLanguage);
+  };
+
+  const handleThemeChange = (newTheme: 'light' | 'dark') => {
+    setTheme(newTheme);
+    localStorage.setItem('ruh-halim-theme', newTheme);
+  };
 
   return (
     <div className={`min-h-screen transition-colors duration-300 ${
@@ -75,14 +99,14 @@ const Index = () => {
                   ? 'bg-gray-800 border-purple-600' 
                   : 'bg-white border-purple-200'
               }`}>
-                <DropdownMenuItem onClick={() => setLanguage('tr')} className={`cursor-pointer transition-colors duration-300 ${
+                <DropdownMenuItem onClick={() => handleLanguageChange('tr')} className={`cursor-pointer transition-colors duration-300 ${
                   theme === 'dark' 
                     ? 'text-white hover:bg-gray-700' 
                     : 'text-gray-900 hover:bg-gray-100'
                 }`}>
                   TR
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setLanguage('en')} className={`cursor-pointer transition-colors duration-300 ${
+                <DropdownMenuItem onClick={() => handleLanguageChange('en')} className={`cursor-pointer transition-colors duration-300 ${
                   theme === 'dark' 
                     ? 'text-white hover:bg-gray-700' 
                     : 'text-gray-900 hover:bg-gray-100'
@@ -110,7 +134,7 @@ const Index = () => {
                   ? 'bg-gray-800 border-purple-600' 
                   : 'bg-white border-purple-200'
               }`}>
-                <DropdownMenuItem onClick={() => setTheme('light')} className={`cursor-pointer transition-colors duration-300 ${
+                <DropdownMenuItem onClick={() => handleThemeChange('light')} className={`cursor-pointer transition-colors duration-300 ${
                   theme === 'dark' 
                     ? 'text-white hover:bg-gray-700' 
                     : 'text-gray-900 hover:bg-gray-100'
@@ -118,7 +142,7 @@ const Index = () => {
                   <Sun className="w-4 h-4 mr-2" />
                   {t.light}
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setTheme('dark')} className={`cursor-pointer transition-colors duration-300 ${
+                <DropdownMenuItem onClick={() => handleThemeChange('dark')} className={`cursor-pointer transition-colors duration-300 ${
                   theme === 'dark' 
                     ? 'text-white hover:bg-gray-700' 
                     : 'text-gray-900 hover:bg-gray-100'
