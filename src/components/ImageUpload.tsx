@@ -17,7 +17,7 @@ export const ImageUpload = ({
   onImagesChange, 
   language, 
   theme, 
-  maxImages = 3 
+  maxImages = 10 
 }: ImageUploadProps) => {
   const [dragOver, setDragOver] = useState(false);
 
@@ -86,7 +86,7 @@ export const ImageUpload = ({
   const canAddMore = images.length < maxImages;
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-2">
       {canAddMore && (
         <div>
           <input
@@ -99,7 +99,7 @@ export const ImageUpload = ({
           />
           <label htmlFor="image-upload">
             <Card
-              className={`p-4 border-2 border-dashed cursor-pointer transition-all duration-200 ${
+              className={`p-3 border-2 border-dashed cursor-pointer transition-all duration-200 ${
                 dragOver
                   ? 'border-purple-400 bg-purple-50 dark:bg-purple-900/20'
                   : theme === 'dark'
@@ -110,8 +110,8 @@ export const ImageUpload = ({
               onDragOver={handleDragOver}
               onDragLeave={handleDragLeave}
             >
-              <div className="flex flex-col items-center gap-2 text-center">
-                <ImagePlus className={`w-8 h-8 ${
+              <div className="flex flex-col items-center gap-1 text-center">
+                <ImagePlus className={`w-6 h-6 ${
                   theme === 'dark' ? 'text-gray-400' : 'text-gray-500'
                 }`} />
                 <div>
@@ -138,18 +138,18 @@ export const ImageUpload = ({
       )}
 
       {images.length > 0 && (
-        <div className="grid grid-cols-3 gap-2">
+        <div className="grid grid-cols-5 gap-1">
           {images.map((image, index) => (
             <div key={index} className="relative group">
               <img
                 src={image}
                 alt={`Upload ${index + 1}`}
-                className="w-full h-20 object-cover rounded-lg"
+                className="w-full h-16 object-cover rounded-lg"
               />
               <Button
                 variant="destructive"
                 size="sm"
-                className="absolute -top-1 -right-1 w-6 h-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
+                className="absolute -top-1 -right-1 w-5 h-5 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
                 onClick={() => removeImage(index)}
                 title={t.removePhoto}
               >

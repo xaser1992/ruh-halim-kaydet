@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -184,15 +185,15 @@ export const MoodEntry = ({ language, theme }: MoodEntryProps) => {
   const selectedColors = getSelectedMoodColors();
 
   return (
-    <Card className={`p-6 backdrop-blur-sm border-0 shadow-lg transition-colors duration-300 ${
+    <Card className={`p-4 backdrop-blur-sm border-0 shadow-lg transition-colors duration-300 ${
       theme === 'dark' 
         ? 'bg-gray-800/80 text-white' 
         : 'bg-white/80'
     }`}>
-      <div className="space-y-6">
+      <div className="space-y-4">
         {/* Today's Date */}
         <div className="text-center">
-          <p className={`text-lg font-medium mb-1 transition-colors duration-300 ${
+          <p className={`text-base font-medium mb-1 transition-colors duration-300 ${
             theme === 'dark' ? 'text-gray-200' : 'text-gray-700'
           }`}>
             {new Date().toLocaleDateString(language === 'tr' ? 'tr-TR' : 'en-US', {
@@ -203,7 +204,7 @@ export const MoodEntry = ({ language, theme }: MoodEntryProps) => {
             })}
           </p>
           {todayEntry && (
-            <p className={`text-sm px-3 py-1 rounded-full inline-block transition-colors duration-300 ${
+            <p className={`text-xs px-2 py-1 rounded-full inline-block transition-colors duration-300 ${
               theme === 'dark' 
                 ? 'text-purple-300 bg-purple-900/50' 
                 : 'text-purple-600 bg-purple-50'
@@ -215,7 +216,7 @@ export const MoodEntry = ({ language, theme }: MoodEntryProps) => {
 
         {/* Question */}
         <div className="text-center">
-          <h2 className={`text-xl font-semibold mb-6 transition-colors duration-300 ${
+          <h2 className={`text-lg font-semibold mb-4 transition-colors duration-300 ${
             theme === 'dark' ? 'text-white' : 'text-gray-800'
           }`}>
             {t.question}
@@ -223,18 +224,18 @@ export const MoodEntry = ({ language, theme }: MoodEntryProps) => {
         </div>
 
         {/* Mood Selection */}
-        <div className="grid grid-cols-5 gap-3">
+        <div className="grid grid-cols-5 gap-2">
           {moodOptions.map((mood) => (
             <button
               key={mood.id}
               onClick={() => setSelectedMood(mood.id)}
-              className={`flex flex-col items-center p-3 rounded-xl transition-all duration-200 ${
+              className={`flex flex-col items-center p-2 rounded-xl transition-all duration-200 ${
                 selectedMood === mood.id
                   ? `bg-gradient-to-br ${mood.colors.gradient} ${theme === 'dark' ? mood.colors.darkGradient : ''} shadow-lg scale-105`
                   : `${mood.colors.bg} ${mood.colors.hover} ${theme === 'dark' ? `${mood.colors.darkBg} ${mood.colors.darkHover}` : ''} hover:scale-105`
               }`}
             >
-              <span className="text-2xl mb-1">{mood.emoji}</span>
+              <span className="text-xl mb-1">{mood.emoji}</span>
               <span className={`text-xs text-center font-medium transition-colors duration-300 ${
                 theme === 'dark' ? 'text-gray-200' : 'text-gray-700'
               }`}>
@@ -245,7 +246,7 @@ export const MoodEntry = ({ language, theme }: MoodEntryProps) => {
         </div>
 
         {/* Note Input */}
-        <div className="space-y-2">
+        <div className="space-y-1">
           <label className={`text-sm font-medium transition-colors duration-300 ${
             theme === 'dark' ? 'text-gray-200' : 'text-gray-700'
           }`}>
@@ -255,7 +256,7 @@ export const MoodEntry = ({ language, theme }: MoodEntryProps) => {
             value={note}
             onChange={(e) => setNote(e.target.value)}
             placeholder={t.notePlaceholder}
-            className={`min-h-[100px] rounded-xl transition-colors duration-300 ${
+            className={`min-h-[80px] rounded-xl transition-colors duration-300 ${
               theme === 'dark' 
                 ? 'bg-gray-700/70 border-purple-600 focus:border-purple-400 text-white placeholder:text-gray-400' 
                 : 'bg-white/70 border-purple-200 focus:border-purple-400'
@@ -270,7 +271,7 @@ export const MoodEntry = ({ language, theme }: MoodEntryProps) => {
         </div>
 
         {/* Photo Upload */}
-        <div className="space-y-2">
+        <div className="space-y-1">
           <label className={`text-sm font-medium transition-colors duration-300 ${
             theme === 'dark' ? 'text-gray-200' : 'text-gray-700'
           }`}>
@@ -281,7 +282,7 @@ export const MoodEntry = ({ language, theme }: MoodEntryProps) => {
             onImagesChange={setImages}
             language={language}
             theme={theme}
-            maxImages={3}
+            maxImages={10}
           />
         </div>
 
@@ -289,7 +290,7 @@ export const MoodEntry = ({ language, theme }: MoodEntryProps) => {
         <Button
           onClick={handleSave}
           disabled={!selectedMood}
-          className={`w-full text-white py-3 rounded-xl font-medium transition-all duration-200 disabled:opacity-50 ${
+          className={`w-full text-white py-2 rounded-xl font-medium transition-all duration-200 disabled:opacity-50 ${
             selectedMood 
               ? `bg-gradient-to-r ${selectedColors.gradient} ${theme === 'dark' ? selectedColors.darkGradient : ''} hover:shadow-lg`
               : `bg-gradient-to-r ${theme === 'dark' ? 'from-purple-700 to-pink-700 hover:from-purple-600 hover:to-pink-600' : 'from-purple-400 to-pink-400 hover:from-purple-500 hover:to-pink-500'}`
