@@ -3,6 +3,7 @@ interface MoodEntry {
   date: string;
   mood: string;
   note?: string;
+  images?: string[];
   timestamp: string;
 }
 

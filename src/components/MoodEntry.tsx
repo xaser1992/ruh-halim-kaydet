@@ -1,10 +1,10 @@
-
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Card } from "@/components/ui/card";
 import { toast } from "@/hooks/use-toast";
 import { saveMoodEntry, getMoodEntry } from "@/utils/moodStorage";
+import { ImageUpload } from "@/components/ImageUpload";
 
 interface MoodOption {
   id: string;
@@ -102,6 +102,7 @@ interface MoodEntryProps {
 export const MoodEntry = ({ language, theme }: MoodEntryProps) => {
   const [selectedMood, setSelectedMood] = useState<string>("");
   const [note, setNote] = useState("");
+  const [images, setImages] = useState<string[]>([]);
   const [todayEntry, setTodayEntry] = useState<any>(null);
 
   const translations = {
@@ -109,6 +110,7 @@ export const MoodEntry = ({ language, theme }: MoodEntryProps) => {
       question: "Bugün nasıl hissediyorsun?",
       noteLabel: "Not (İsteğe bağlı)",
       notePlaceholder: "Bugün için notlarınızı yazın...",
+      photosLabel: "Fotoğraflar (İsteğe bağlı)",
       save: "Kaydet",
       update: "Güncelle",
       alreadyExists: "Bu gün için zaten bir kayıt var",
@@ -119,6 +121,7 @@ export const MoodEntry = ({ language, theme }: MoodEntryProps) => {
       question: "How are you feeling today?",
       noteLabel: "Note (Optional)",
       notePlaceholder: "Write your notes for today...",
+      photosLabel: "Photos (Optional)",
       save: "Save",
       update: "Update",
       alreadyExists: "There is already an entry for today",
@@ -137,9 +140,11 @@ export const MoodEntry = ({ language, theme }: MoodEntryProps) => {
     if (entry) {
       setSelectedMood(entry.mood);
       setNote(entry.note || "");
+      setImages(entry.images || []);
     } else {
       setSelectedMood("");
       setNote("");
+      setImages([]);
     }
   }, []);
 
@@ -151,6 +156,7 @@ export const MoodEntry = ({ language, theme }: MoodEntryProps) => {
       date: today,
       mood: selectedMood,
       note: note.trim(),
+      images: images,
       timestamp: new Date().toISOString()
     };
 
@@ -261,6 +267,22 @@ export const MoodEntry = ({ language, theme }: MoodEntryProps) => {
           }`}>
             {note.length}/10000
           </p>
+        </div>
+
+        {/* Photo Upload */}
+        <div className="space-y-2">
+          <label className={`text-sm font-medium transition-colors duration-300 ${
+            theme === 'dark' ? 'text-gray-200' : 'text-gray-700'
+          }`}>
+            {t.photosLabel}
+          </label>
+          <ImageUpload
+            images={images}
+            onImagesChange={setImages}
+            language={language}
+            theme={theme}
+            maxImages={3}
+          />
         </div>
 
         {/* Save Button */}
