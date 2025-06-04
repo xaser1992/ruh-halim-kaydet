@@ -1,9 +1,10 @@
+
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Card } from "@/components/ui/card";
 import { toast } from "@/hooks/use-toast";
-import { saveMoodEntry, getMoodEntry } from "@/utils/moodStorage";
+import { saveMoodEntry, getMoodEntry, saveDraft, getDraft, clearDraft } from "@/utils/moodStorage";
 import { ImageUpload } from "@/components/ImageUpload";
 
 interface MoodOption {
@@ -135,19 +136,52 @@ export const MoodEntry = ({ language, theme }: MoodEntryProps) => {
   useEffect(() => {
     const today = new Date().toDateString();
     const entry = getMoodEntry(today);
+    const draft = getDraft(today);
+    
     setTodayEntry(entry);
     
     if (entry) {
       setSelectedMood(entry.mood);
-      // Note ve images alanlarını entry'den doldurma, boş bırak
-      setNote("");
-      setImages([]);
+      // Eğer taslak varsa taslaktan yükle, yoksa boş bırak
+      if (draft) {
+        setNote(draft.note || "");
+        setImages(draft.images || []);
+      } else {
+        setNote("");
+        setImages([]);
+      }
     } else {
-      setSelectedMood("");
-      setNote("");
-      setImages([]);
+      // Kayıt yoksa, taslak varsa taslaktan yükle
+      if (draft) {
+        setSelectedMood(draft.mood || "");
+        setNote(draft.note || "");
+        setImages(draft.images || []);
+      } else {
+        setSelectedMood("");
+        setNote("");
+        setImages([]);
+      }
     }
   }, []);
+
+  // Taslak kaydetme fonksiyonu
+  const saveDraftData = () => {
+    const today = new Date().toDateString();
+    const draft = {
+      date: today,
+      mood: selectedMood,
+      note: note.trim(),
+      images: images
+    };
+    saveDraft(draft);
+  };
+
+  // Her değişiklikte taslak kaydet
+  useEffect(() => {
+    if (selectedMood || note.trim() || images.length > 0) {
+      saveDraftData();
+    }
+  }, [selectedMood, note, images]);
 
   const handleSave = () => {
     if (!selectedMood) return;
@@ -163,6 +197,9 @@ export const MoodEntry = ({ language, theme }: MoodEntryProps) => {
 
     saveMoodEntry(entry);
     setTodayEntry(entry);
+    
+    // Kaydetme işleminden sonra taslağı temizle
+    clearDraft(today);
     
     // Kaydetme işleminden sonra not ve images alanlarını temizle
     setNote("");
