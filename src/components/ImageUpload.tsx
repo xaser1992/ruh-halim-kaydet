@@ -1,14 +1,15 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ImagePlus, X } from "lucide-react";
 
+type Language = 'tr' | 'en' | 'de' | 'fr' | 'es' | 'it' | 'ru';
+
 interface ImageUploadProps {
   images: string[];
   onImagesChange: (images: string[]) => void;
-  language: 'tr' | 'en';
+  language: Language;
   theme: 'light' | 'dark';
   maxImages?: number;
 }
@@ -37,6 +38,41 @@ export const ImageUpload = ({
       maxPhotos: `Maximum ${maxImages} photos`,
       removePhoto: "Remove photo",
       loading: "Loading..."
+    },
+    de: {
+      addPhoto: "Foto hinzufügen",
+      dragDrop: "Fotos ziehen und ablegen oder klicken",
+      maxPhotos: `Maximal ${maxImages} Fotos`,
+      removePhoto: "Foto entfernen",
+      loading: "Wird geladen..."
+    },
+    fr: {
+      addPhoto: "Ajouter une photo",
+      dragDrop: "Glissez-déposez des photos ou cliquez",
+      maxPhotos: `Maximum ${maxImages} photos`,
+      removePhoto: "Supprimer la photo",
+      loading: "Chargement..."
+    },
+    es: {
+      addPhoto: "Añadir foto",
+      dragDrop: "Arrastra y suelta fotos o haz clic",
+      maxPhotos: `Máximo ${maxImages} fotos`,
+      removePhoto: "Eliminar foto",
+      loading: "Cargando..."
+    },
+    it: {
+      addPhoto: "Aggiungi foto",
+      dragDrop: "Trascina e rilascia le foto o clicca",
+      maxPhotos: `Massimo ${maxImages} foto`,
+      removePhoto: "Rimuovi foto",
+      loading: "Caricamento..."
+    },
+    ru: {
+      addPhoto: "Добавить фото",
+      dragDrop: "Перетащите фото или нажмите",
+      maxPhotos: `Максимум ${maxImages} фото`,
+      removePhoto: "Удалить фото",
+      loading: "Загрузка..."
     }
   };
 
