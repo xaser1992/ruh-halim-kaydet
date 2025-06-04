@@ -126,7 +126,7 @@ const moodOptions: MoodOption[] = [
 
 interface MoodEntryProps {
   language: 'tr' | 'en' | 'de' | 'fr' | 'es' | 'it' | 'ru';
-  theme: 'light' | 'dark';
+  theme: 'light' | 'dark' | 'feminine';
 }
 
 export const MoodEntry = ({ language, theme }: MoodEntryProps) => {
@@ -330,13 +330,15 @@ export const MoodEntry = ({ language, theme }: MoodEntryProps) => {
     <Card className={`p-4 backdrop-blur-sm border-0 shadow-lg transition-colors duration-300 ${
       theme === 'dark' 
         ? 'bg-gray-800/80 text-white' 
+        : theme === 'feminine'
+        ? 'bg-pink-50/80'
         : 'bg-white/80'
     }`}>
       <div className="space-y-4">
         {/* Today's Date */}
         <div className="text-center">
           <p className={`text-base font-medium mb-1 transition-colors duration-300 ${
-            theme === 'dark' ? 'text-gray-200' : 'text-gray-700'
+            theme === 'dark' ? 'text-gray-200' : theme === 'feminine' ? 'text-pink-700' : 'text-gray-700'
           }`}>
             {new Date().toLocaleDateString(getLocaleString(language), {
               weekday: 'long',
@@ -349,6 +351,8 @@ export const MoodEntry = ({ language, theme }: MoodEntryProps) => {
             <p className={`text-xs px-2 py-1 rounded-full inline-block transition-colors duration-300 ${
               theme === 'dark' 
                 ? 'text-purple-300 bg-purple-900/50' 
+                : theme === 'feminine'
+                ? 'text-pink-600 bg-pink-100'
                 : 'text-purple-600 bg-purple-50'
             }`}>
               {t.alreadyExists}
@@ -359,7 +363,7 @@ export const MoodEntry = ({ language, theme }: MoodEntryProps) => {
         {/* Question */}
         <div className="text-center">
           <h2 className={`text-lg font-semibold mb-4 transition-colors duration-300 ${
-            theme === 'dark' ? 'text-white' : 'text-gray-800'
+            theme === 'dark' ? 'text-white' : theme === 'feminine' ? 'text-pink-800' : 'text-gray-800'
           }`}>
             {t.question}
           </h2>
@@ -379,7 +383,7 @@ export const MoodEntry = ({ language, theme }: MoodEntryProps) => {
             >
               <span className="text-xl mb-1">{mood.emoji}</span>
               <span className={`text-xs text-center font-medium transition-colors duration-300 ${
-                theme === 'dark' ? 'text-gray-200' : 'text-gray-700'
+                theme === 'dark' ? 'text-gray-200' : theme === 'feminine' ? 'text-pink-700' : 'text-gray-700'
               }`}>
                 {getMoodLabel(mood)}
               </span>
@@ -390,7 +394,7 @@ export const MoodEntry = ({ language, theme }: MoodEntryProps) => {
         {/* Note Input */}
         <div className="space-y-1">
           <label className={`text-sm font-medium transition-colors duration-300 ${
-            theme === 'dark' ? 'text-gray-200' : 'text-gray-700'
+            theme === 'dark' ? 'text-gray-200' : theme === 'feminine' ? 'text-pink-700' : 'text-gray-700'
           }`}>
             {t.noteLabel}
           </label>
@@ -401,12 +405,14 @@ export const MoodEntry = ({ language, theme }: MoodEntryProps) => {
             className={`min-h-[80px] rounded-xl transition-colors duration-300 ${
               theme === 'dark' 
                 ? 'bg-gray-700/70 border-purple-600 focus:border-purple-400 text-white placeholder:text-gray-400' 
+                : theme === 'feminine'
+                ? 'bg-pink-25/70 border-pink-300 focus:border-pink-400 text-pink-800 placeholder:text-pink-400'
                 : 'bg-white/70 border-purple-200 focus:border-purple-400'
             }`}
             maxLength={10000}
           />
           <p className={`text-xs text-right transition-colors duration-300 ${
-            theme === 'dark' ? 'text-gray-400' : 'text-gray-500'
+            theme === 'dark' ? 'text-gray-400' : theme === 'feminine' ? 'text-pink-500' : 'text-gray-500'
           }`}>
             {note.length}/10000
           </p>
@@ -415,7 +421,7 @@ export const MoodEntry = ({ language, theme }: MoodEntryProps) => {
         {/* Photo Upload */}
         <div className="space-y-1">
           <label className={`text-sm font-medium transition-colors duration-300 ${
-            theme === 'dark' ? 'text-gray-200' : 'text-gray-700'
+            theme === 'dark' ? 'text-gray-200' : theme === 'feminine' ? 'text-pink-700' : 'text-gray-700'
           }`}>
             {t.photosLabel}
           </label>
@@ -435,7 +441,13 @@ export const MoodEntry = ({ language, theme }: MoodEntryProps) => {
           className={`w-full text-white py-2 rounded-xl font-medium transition-all duration-200 disabled:opacity-50 ${
             selectedMood 
               ? `bg-gradient-to-r ${selectedColors.gradient} ${theme === 'dark' ? selectedColors.darkGradient : ''} hover:shadow-lg`
-              : `bg-gradient-to-r ${theme === 'dark' ? 'from-purple-700 to-pink-700 hover:from-purple-600 hover:to-pink-600' : 'from-purple-400 to-pink-400 hover:from-purple-500 hover:to-pink-500'}`
+              : `bg-gradient-to-r ${
+                theme === 'dark' 
+                  ? 'from-purple-700 to-pink-700 hover:from-purple-600 hover:to-pink-600'
+                  : theme === 'feminine'
+                  ? 'from-pink-400 to-rose-400 hover:from-pink-500 hover:to-rose-500'
+                  : 'from-purple-400 to-pink-400 hover:from-purple-500 hover:to-pink-500'
+              }`
           }`}
         >
           {(todayEntry && (note.trim() || images.length > 0)) ? t.update : t.save}

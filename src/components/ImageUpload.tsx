@@ -10,7 +10,7 @@ interface ImageUploadProps {
   images: string[];
   onImagesChange: (images: string[]) => void;
   language: Language;
-  theme: 'light' | 'dark';
+  theme: 'light' | 'dark' | 'feminine';
   maxImages?: number;
 }
 
@@ -157,9 +157,13 @@ export const ImageUpload = ({
             <Card
               className={`p-3 border-2 border-dashed cursor-pointer transition-all duration-200 ${
                 dragOver
-                  ? 'border-purple-400 bg-purple-50 dark:bg-purple-900/20'
+                  ? theme === 'feminine'
+                    ? 'border-pink-400 bg-pink-50 dark:bg-pink-900/20'
+                    : 'border-purple-400 bg-purple-50 dark:bg-purple-900/20'
                   : theme === 'dark'
                   ? 'border-gray-600 bg-gray-800/50 hover:border-purple-500'
+                  : theme === 'feminine'
+                  ? 'border-pink-300 bg-pink-25 hover:border-pink-400'
                   : 'border-gray-300 bg-gray-50 hover:border-purple-400'
               }`}
               onDrop={handleDrop}
@@ -168,21 +172,21 @@ export const ImageUpload = ({
             >
               <div className="flex flex-col items-center gap-1 text-center">
                 <ImagePlus className={`w-6 h-6 ${
-                  theme === 'dark' ? 'text-gray-400' : 'text-gray-500'
+                  theme === 'dark' ? 'text-gray-400' : theme === 'feminine' ? 'text-pink-500' : 'text-gray-500'
                 }`} />
                 <div>
                   <p className={`text-sm font-medium ${
-                    theme === 'dark' ? 'text-gray-200' : 'text-gray-700'
+                    theme === 'dark' ? 'text-gray-200' : theme === 'feminine' ? 'text-pink-700' : 'text-gray-700'
                   }`}>
                     {t.addPhoto}
                   </p>
                   <p className={`text-xs ${
-                    theme === 'dark' ? 'text-gray-400' : 'text-gray-500'
+                    theme === 'dark' ? 'text-gray-400' : theme === 'feminine' ? 'text-pink-500' : 'text-gray-500'
                   }`}>
                     {t.dragDrop}
                   </p>
                   <p className={`text-xs ${
-                    theme === 'dark' ? 'text-gray-400' : 'text-gray-500'
+                    theme === 'dark' ? 'text-gray-400' : theme === 'feminine' ? 'text-pink-500' : 'text-gray-500'
                   }`}>
                     {t.maxPhotos}
                   </p>
