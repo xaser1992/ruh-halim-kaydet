@@ -45,7 +45,7 @@ const Index = () => {
       privacy: "Verileriniz cihazınızda güvenle saklanır",
       light: "Açık",
       dark: "Karanlık",
-      feminine: "Pembe"
+      feminine: "Kadınsı"
     },
     en: {
       appName: "My Mood",
@@ -54,7 +54,7 @@ const Index = () => {
       privacy: "Your data is securely stored on your device",
       light: "Light",
       dark: "Dark",
-      feminine: "Pink"
+      feminine: "Feminine"
     },
     de: {
       appName: "Meine Stimmung",
@@ -63,7 +63,7 @@ const Index = () => {
       privacy: "Ihre Daten werden sicher auf Ihrem Gerät gespeichert",
       light: "Hell",
       dark: "Dunkel",
-      feminine: "Rosa"
+      feminine: "Feminin"
     },
     fr: {
       appName: "Mon Humeur",
@@ -72,7 +72,7 @@ const Index = () => {
       privacy: "Vos données sont stockées en sécurité sur votre appareil",
       light: "Clair",
       dark: "Sombre",
-      feminine: "Rose"
+      feminine: "Féminin"
     },
     es: {
       appName: "Mi Estado de Ánimo",
@@ -81,7 +81,7 @@ const Index = () => {
       privacy: "Sus datos se almacenan de forma segura en su dispositivo",
       light: "Claro",
       dark: "Oscuro",
-      feminine: "Rosa"
+      feminine: "Femenino"
     },
     it: {
       appName: "Il Mio Umore",
@@ -90,7 +90,7 @@ const Index = () => {
       privacy: "I tuoi dati sono memorizzati in sicurezza sul tuo dispositivo",
       light: "Chiaro",
       dark: "Scuro",
-      feminine: "Rosa"
+      feminine: "Femminile"
     },
     ru: {
       appName: "Моё Настроение",
@@ -99,7 +99,7 @@ const Index = () => {
       privacy: "Ваши данные надёжно хранятся на вашем устройстве",
       light: "Светлая",
       dark: "Тёмная",
-      feminine: "Розовая"
+      feminine: "Женственная"
     }
   };
 

@@ -321,15 +321,9 @@ export const MoodHistory = ({ language, theme }: MoodHistoryProps) => {
                     <div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-600">
                       {entry.note && (
                         <div className="mb-3">
-                          <p className={`text-sm leading-relaxed break-words overflow-hidden transition-colors duration-300 ${
+                          <p className={`text-sm whitespace-pre-wrap transition-colors duration-300 ${
                             theme === 'dark' ? 'text-gray-300' : theme === 'feminine' ? 'text-pink-700' : 'text-gray-700'
-                          }`}
-                          style={{
-                            whiteSpace: 'pre-wrap',
-                            wordBreak: 'break-word',
-                            overflowWrap: 'break-word',
-                            maxWidth: '100%'
-                          }}>
+                          }`}>
                             {entry.note}
                           </p>
                         </div>
