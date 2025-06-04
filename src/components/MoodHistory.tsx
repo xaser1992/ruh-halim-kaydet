@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -9,7 +8,7 @@ import { Calendar, Trash2, Image as ImageIcon, ChevronDown } from "lucide-react"
 import { toast } from "@/hooks/use-toast";
 
 interface MoodHistoryProps {
-  language: 'tr' | 'en';
+  language: 'tr' | 'en' | 'de' | 'fr' | 'es' | 'it' | 'ru';
   theme: 'light' | 'dark';
 }
 
@@ -35,6 +34,41 @@ const moodLabels = {
     "neutral": "Neutral",
     "good": "Good",
     "great": "Great"
+  },
+  de: {
+    "very-bad": "Sehr schlecht",
+    "bad": "Schlecht",
+    "neutral": "Neutral",
+    "good": "Gut",
+    "great": "Großartig"
+  },
+  fr: {
+    "very-bad": "Très mauvais",
+    "bad": "Mauvais",
+    "neutral": "Neutre",
+    "good": "Bon",
+    "great": "Génial"
+  },
+  es: {
+    "very-bad": "Muy malo",
+    "bad": "Malo",
+    "neutral": "Neutral",
+    "good": "Bueno",
+    "great": "Genial"
+  },
+  it: {
+    "very-bad": "Molto male",
+    "bad": "Male",
+    "neutral": "Neutro",
+    "good": "Buono",
+    "great": "Fantastico"
+  },
+  ru: {
+    "very-bad": "Очень плохо",
+    "bad": "Плохо",
+    "neutral": "Нейтрально",
+    "good": "Хорошо",
+    "great": "Отлично"
   }
 };
 
@@ -71,6 +105,76 @@ export const MoodHistory = ({ language, theme }: MoodHistoryProps) => {
       photos: "Photos",
       showDetails: "Show details",
       hideDetails: "Hide details"
+    },
+    de: {
+      title: "Vergangene Einträge",
+      noEntries: "Noch keine Einträge",
+      noEntriesDesc: "Beginne deine Stimmung aufzuzeichnen!",
+      delete: "Löschen",
+      deleteConfirm: "Eintrag gelöscht!",
+      deleteQuestion: "Diesen Eintrag löschen?",
+      deleteDescription: "Diese Aktion kann nicht rückgängig gemacht werden.",
+      cancel: "Abbrechen",
+      confirmDelete: "Löschen",
+      photos: "Fotos",
+      showDetails: "Details anzeigen",
+      hideDetails: "Details verbergen"
+    },
+    fr: {
+      title: "Entrées Passées",
+      noEntries: "Aucune entrée pour le moment",
+      noEntriesDesc: "Commencez à enregistrer votre humeur!",
+      delete: "Supprimer",
+      deleteConfirm: "Entrée supprimée!",
+      deleteQuestion: "Supprimer cette entrée?",
+      deleteDescription: "Cette action ne peut pas être annulée.",
+      cancel: "Annuler",
+      confirmDelete: "Supprimer",
+      photos: "Photos",
+      showDetails: "Afficher les détails",
+      hideDetails: "Masquer les détails"
+    },
+    es: {
+      title: "Entradas Pasadas",
+      noEntries: "Aún no hay entradas",
+      noEntriesDesc: "¡Comienza a registrar tu estado de ánimo!",
+      delete: "Eliminar",
+      deleteConfirm: "¡Entrada eliminada!",
+      deleteQuestion: "¿Eliminar esta entrada?",
+      deleteDescription: "Esta acción no se puede deshacer.",
+      cancel: "Cancelar",
+      confirmDelete: "Eliminar",
+      photos: "Fotos",
+      showDetails: "Mostrar detalles",
+      hideDetails: "Ocultar detalles"
+    },
+    it: {
+      title: "Voci Passate",
+      noEntries: "Nessuna voce ancora",
+      noEntriesDesc: "Inizia a registrare il tuo umore!",
+      delete: "Elimina",
+      deleteConfirm: "Voce eliminata!",
+      deleteQuestion: "Eliminare questa voce?",
+      deleteDescription: "Questa azione non può essere annullata.",
+      cancel: "Annulla",
+      confirmDelete: "Elimina",
+      photos: "Foto",
+      showDetails: "Mostra dettagli",
+      hideDetails: "Nascondi dettagli"
+    },
+    ru: {
+      title: "Прошлые Записи",
+      noEntries: "Пока нет записей",
+      noEntriesDesc: "Начните записывать своё настроение!",
+      delete: "Удалить",
+      deleteConfirm: "Запись удалена!",
+      deleteQuestion: "Удалить эту запись?",
+      deleteDescription: "Это действие нельзя отменить.",
+      cancel: "Отмена",
+      confirmDelete: "Удалить",
+      photos: "Фотографии",
+      showDetails: "Показать детали",
+      hideDetails: "Скрыть детали"
     }
   };
 
@@ -107,6 +211,20 @@ export const MoodHistory = ({ language, theme }: MoodHistoryProps) => {
       newExpanded.add(entryDate);
     }
     setExpandedEntries(newExpanded);
+  };
+
+  // Helper function to get locale string
+  const getLocaleString = (language: string) => {
+    const localeMap: Record<string, string> = {
+      'tr': 'tr-TR',
+      'en': 'en-US',
+      'de': 'de-DE',
+      'fr': 'fr-FR',
+      'es': 'es-ES',
+      'it': 'it-IT',
+      'ru': 'ru-RU'
+    };
+    return localeMap[language] || 'en-US';
   };
 
   if (entries.length === 0) {
@@ -166,14 +284,14 @@ export const MoodHistory = ({ language, theme }: MoodHistoryProps) => {
                         <h3 className={`font-medium transition-colors duration-300 ${
                           theme === 'dark' ? 'text-white' : 'text-gray-800'
                         }`}>
-                          {moodLabels[language][entry.mood as keyof typeof moodLabels.tr]}
+                          {moodLabels[language as keyof typeof moodLabels][entry.mood as keyof typeof moodLabels.tr]}
                         </h3>
                         <div className="flex items-center gap-2">
                           <span className={`text-sm transition-colors duration-300 ${
                             theme === 'dark' ? 'text-gray-400' : 'text-gray-500'
                           }`}>
                             {new Date(entry.timestamp).toLocaleDateString(
-                              language === 'tr' ? 'tr-TR' : 'en-US',
+                              getLocaleString(language),
                               { month: 'short', day: 'numeric' }
                             )}
                           </span>
@@ -216,7 +334,7 @@ export const MoodHistory = ({ language, theme }: MoodHistoryProps) => {
                         theme === 'dark' ? 'text-gray-300' : 'text-gray-600'
                       }`}>
                         {new Date(entry.timestamp).toLocaleDateString(
-                          language === 'tr' ? 'tr-TR' : 'en-US',
+                          getLocaleString(language),
                           { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }
                         )}
                       </p>

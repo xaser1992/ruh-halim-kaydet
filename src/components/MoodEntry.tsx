@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -12,6 +11,11 @@ interface MoodOption {
   emoji: string;
   labelTr: string;
   labelEn: string;
+  labelDe: string;
+  labelFr: string;
+  labelEs: string;
+  labelIt: string;
+  labelRu: string;
   colors: {
     bg: string;
     hover: string;
@@ -28,6 +32,11 @@ const moodOptions: MoodOption[] = [
     emoji: "😢", 
     labelTr: "Çok Kötü", 
     labelEn: "Very Bad",
+    labelDe: "Sehr schlecht",
+    labelFr: "Très mauvais",
+    labelEs: "Muy malo",
+    labelIt: "Molto male",
+    labelRu: "Очень плохо",
     colors: {
       bg: "bg-red-100",
       hover: "hover:bg-red-200",
@@ -42,6 +51,11 @@ const moodOptions: MoodOption[] = [
     emoji: "😞", 
     labelTr: "Kötü", 
     labelEn: "Bad",
+    labelDe: "Schlecht",
+    labelFr: "Mauvais",
+    labelEs: "Malo",
+    labelIt: "Male",
+    labelRu: "Плохо",
     colors: {
       bg: "bg-orange-100",
       hover: "hover:bg-orange-200",
@@ -56,6 +70,11 @@ const moodOptions: MoodOption[] = [
     emoji: "😐", 
     labelTr: "Orta", 
     labelEn: "Neutral",
+    labelDe: "Neutral",
+    labelFr: "Neutre",
+    labelEs: "Neutral",
+    labelIt: "Neutro",
+    labelRu: "Нейтрально",
     colors: {
       bg: "bg-yellow-100",
       hover: "hover:bg-yellow-200",
@@ -70,6 +89,11 @@ const moodOptions: MoodOption[] = [
     emoji: "😊", 
     labelTr: "İyi", 
     labelEn: "Good",
+    labelDe: "Gut",
+    labelFr: "Bon",
+    labelEs: "Bueno",
+    labelIt: "Buono",
+    labelRu: "Хорошо",
     colors: {
       bg: "bg-green-100",
       hover: "hover:bg-green-200",
@@ -84,6 +108,11 @@ const moodOptions: MoodOption[] = [
     emoji: "😄", 
     labelTr: "Harika", 
     labelEn: "Great",
+    labelDe: "Großartig",
+    labelFr: "Génial",
+    labelEs: "Genial",
+    labelIt: "Fantastico",
+    labelRu: "Отлично",
     colors: {
       bg: "bg-emerald-100",
       hover: "hover:bg-emerald-200",
@@ -96,7 +125,7 @@ const moodOptions: MoodOption[] = [
 ];
 
 interface MoodEntryProps {
-  language: 'tr' | 'en';
+  language: 'tr' | 'en' | 'de' | 'fr' | 'es' | 'it' | 'ru';
   theme: 'light' | 'dark';
 }
 
@@ -128,6 +157,61 @@ export const MoodEntry = ({ language, theme }: MoodEntryProps) => {
       alreadyExists: "There is already an entry for today",
       saved: "Your mood has been saved!",
       updated: "Entry updated!"
+    },
+    de: {
+      question: "Wie fühlst du dich heute?",
+      noteLabel: "Notiz (Optional)",
+      notePlaceholder: "Schreibe deine Notizen für heute...",
+      photosLabel: "Fotos (Optional)",
+      save: "Speichern",
+      update: "Aktualisieren",
+      alreadyExists: "Für heute gibt es bereits einen Eintrag",
+      saved: "Deine Stimmung wurde gespeichert!",
+      updated: "Eintrag aktualisiert!"
+    },
+    fr: {
+      question: "Comment te sens-tu aujourd'hui?",
+      noteLabel: "Note (Optionnel)",
+      notePlaceholder: "Écris tes notes pour aujourd'hui...",
+      photosLabel: "Photos (Optionnel)",
+      save: "Enregistrer",
+      update: "Mettre à jour",
+      alreadyExists: "Il y a déjà une entrée pour aujourd'hui",
+      saved: "Votre humeur a été enregistrée!",
+      updated: "Entrée mise à jour!"
+    },
+    es: {
+      question: "¿Cómo te sientes hoy?",
+      noteLabel: "Nota (Opcional)",
+      notePlaceholder: "Escribe tus notas para hoy...",
+      photosLabel: "Fotos (Opcional)",
+      save: "Guardar",
+      update: "Actualizar",
+      alreadyExists: "Ya existe una entrada para hoy",
+      saved: "¡Tu estado de ánimo ha sido guardado!",
+      updated: "¡Entrada actualizada!"
+    },
+    it: {
+      question: "Come ti senti oggi?",
+      noteLabel: "Nota (Opzionale)",
+      notePlaceholder: "Scrivi le tue note per oggi...",
+      photosLabel: "Foto (Opzionale)",
+      save: "Salva",
+      update: "Aggiorna",
+      alreadyExists: "Esiste già una voce per oggi",
+      saved: "Il tuo umore è stato salvato!",
+      updated: "Voce aggiornata!"
+    },
+    ru: {
+      question: "Как ты себя чувствуешь сегодня?",
+      noteLabel: "Заметка (Необязательно)",
+      notePlaceholder: "Напиши свои заметки на сегодня...",
+      photosLabel: "Фотографии (Необязательно)",
+      save: "Сохранить",
+      update: "Обновить",
+      alreadyExists: "На сегодня уже есть запись",
+      saved: "Ваше настроение сохранено!",
+      updated: "Запись обновлена!"
     }
   };
 
@@ -207,7 +291,11 @@ export const MoodEntry = ({ language, theme }: MoodEntryProps) => {
     
     toast({
       title: todayEntry ? t.updated : t.saved,
-      description: new Date().toLocaleDateString(language === 'tr' ? 'tr-TR' : 'en-US'),
+      description: new Date().toLocaleDateString(getLocaleString(language), {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      }),
     });
   };
 
@@ -225,6 +313,19 @@ export const MoodEntry = ({ language, theme }: MoodEntryProps) => {
 
   const selectedColors = getSelectedMoodColors();
 
+  const getMoodLabel = (mood: MoodOption) => {
+    switch (language) {
+      case 'tr': return mood.labelTr;
+      case 'en': return mood.labelEn;
+      case 'de': return mood.labelDe;
+      case 'fr': return mood.labelFr;
+      case 'es': return mood.labelEs;
+      case 'it': return mood.labelIt;
+      case 'ru': return mood.labelRu;
+      default: return mood.labelEn;
+    }
+  };
+
   return (
     <Card className={`p-4 backdrop-blur-sm border-0 shadow-lg transition-colors duration-300 ${
       theme === 'dark' 
@@ -237,7 +338,7 @@ export const MoodEntry = ({ language, theme }: MoodEntryProps) => {
           <p className={`text-base font-medium mb-1 transition-colors duration-300 ${
             theme === 'dark' ? 'text-gray-200' : 'text-gray-700'
           }`}>
-            {new Date().toLocaleDateString(language === 'tr' ? 'tr-TR' : 'en-US', {
+            {new Date().toLocaleDateString(getLocaleString(language), {
               weekday: 'long',
               year: 'numeric',
               month: 'long',
@@ -280,7 +381,7 @@ export const MoodEntry = ({ language, theme }: MoodEntryProps) => {
               <span className={`text-xs text-center font-medium transition-colors duration-300 ${
                 theme === 'dark' ? 'text-gray-200' : 'text-gray-700'
               }`}>
-                {language === 'tr' ? mood.labelTr : mood.labelEn}
+                {getMoodLabel(mood)}
               </span>
             </button>
           ))}
@@ -342,4 +443,18 @@ export const MoodEntry = ({ language, theme }: MoodEntryProps) => {
       </div>
     </Card>
   );
+};
+
+// Helper function to get locale string
+const getLocaleString = (language: string) => {
+  const localeMap: Record<string, string> = {
+    'tr': 'tr-TR',
+    'en': 'en-US',
+    'de': 'de-DE',
+    'fr': 'fr-FR',
+    'es': 'es-ES',
+    'it': 'it-IT',
+    'ru': 'ru-RU'
+  };
+  return localeMap[language] || 'en-US';
 };

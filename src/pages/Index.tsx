@@ -7,9 +7,36 @@ import { MoodEntry } from "@/components/MoodEntry";
 import { MoodHistory } from "@/components/MoodHistory";
 import { Lock, Globe, ChevronDown, Sun, Moon } from "lucide-react";
 
+type Language = 'tr' | 'en' | 'de' | 'fr' | 'es' | 'it' | 'ru';
+
 const Index = () => {
-  const [language, setLanguage] = useState<'tr' | 'en'>('tr');
-  const [theme, setTheme] = useState<'light' | 'dark'>('light');
+  // Tema için localStorage'dan direk okuyarak başlatıyoruz
+  const [theme, setTheme] = useState<'light' | 'dark'>(() => {
+    if (typeof window !== 'undefined') {
+      const savedTheme = localStorage.getItem('ruh-halim-theme') as 'light' | 'dark';
+      return savedTheme || 'light';
+    }
+    return 'light';
+  });
+  
+  // Dil için de aynı şekilde
+  const [language, setLanguage] = useState<Language>(() => {
+    if (typeof window !== 'undefined') {
+      const savedLanguage = localStorage.getItem('ruh-halim-language') as Language;
+      return savedLanguage || 'tr';
+    }
+    return 'tr';
+  });
+
+  const languages = {
+    tr: { name: 'Türkçe', code: 'TR' },
+    en: { name: 'English', code: 'EN' },
+    de: { name: 'Deutsch', code: 'DE' },
+    fr: { name: 'Français', code: 'FR' },
+    es: { name: 'Español', code: 'ES' },
+    it: { name: 'Italiano', code: 'IT' },
+    ru: { name: 'Русский', code: 'RU' }
+  };
 
   const translations = {
     tr: {
@@ -27,30 +54,59 @@ const Index = () => {
       privacy: "Your data is securely stored on your device",
       light: "Light",
       dark: "Dark"
+    },
+    de: {
+      appName: "Meine Stimmung",
+      entry: "Eintrag",
+      history: "Verlauf",
+      privacy: "Ihre Daten werden sicher auf Ihrem Gerät gespeichert",
+      light: "Hell",
+      dark: "Dunkel"
+    },
+    fr: {
+      appName: "Mon Humeur",
+      entry: "Entrée",
+      history: "Historique",
+      privacy: "Vos données sont stockées en sécurité sur votre appareil",
+      light: "Clair",
+      dark: "Sombre"
+    },
+    es: {
+      appName: "Mi Estado de Ánimo",
+      entry: "Entrada",
+      history: "Historial",
+      privacy: "Sus datos se almacenan de forma segura en su dispositivo",
+      light: "Claro",
+      dark: "Oscuro"
+    },
+    it: {
+      appName: "Il Mio Umore",
+      entry: "Inserimento",
+      history: "Cronologia",
+      privacy: "I tuoi dati sono memorizzati in sicurezza sul tuo dispositivo",
+      light: "Chiaro",
+      dark: "Scuro"
+    },
+    ru: {
+      appName: "Моё Настроение",
+      entry: "Запись",
+      history: "История",
+      privacy: "Ваши данные надёжно хранятся на вашем устройстве",
+      light: "Светлая",
+      dark: "Тёмная"
     }
   };
 
   const t = translations[language];
 
-  useEffect(() => {
-    // Load saved preferences on mount
-    const savedLanguage = localStorage.getItem('ruh-halim-language') as 'tr' | 'en';
-    const savedTheme = localStorage.getItem('ruh-halim-theme') as 'light' | 'dark';
-    
-    if (savedLanguage) {
-      setLanguage(savedLanguage);
-    }
-    
-    if (savedTheme) {
-      setTheme(savedTheme);
-    }
-  }, []);
-
+  // Tema değişikliği için effect - hemen uyguluyoruz
   useEffect(() => {
     document.documentElement.classList.toggle('dark', theme === 'dark');
   }, [theme]);
 
-  const handleLanguageChange = (newLanguage: 'tr' | 'en') => {
+  // İlk yükleme effect'ini kaldırıyoruz çünkü state'i başlatırken zaten kontrol ediyoruz
+
+  const handleLanguageChange = (newLanguage: Language) => {
     setLanguage(newLanguage);
     localStorage.setItem('ruh-halim-language', newLanguage);
   };
@@ -80,7 +136,7 @@ const Index = () => {
             theme === 'dark' ? 'text-white' : 'text-gray-800'
           }`}>{t.appName}</h1>
           
-          {/* Language Selector */}
+          {/* Language and Theme Selectors */}
           <div className="flex justify-center gap-3 mb-4">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -90,7 +146,7 @@ const Index = () => {
                     : 'bg-white/70 border-purple-200 hover:bg-white/90'
                 }`}>
                   <Globe className="w-4 h-4 mr-2" />
-                  {language === 'tr' ? 'TR' : 'EN'}
+                  {languages[language].code}
                   <ChevronDown className="w-4 h-4 ml-2" />
                 </Button>
               </DropdownMenuTrigger>
@@ -99,20 +155,19 @@ const Index = () => {
                   ? 'bg-gray-800 border-purple-600' 
                   : 'bg-white border-purple-200'
               }`}>
-                <DropdownMenuItem onClick={() => handleLanguageChange('tr')} className={`cursor-pointer transition-colors duration-300 ${
-                  theme === 'dark' 
-                    ? 'text-white hover:bg-gray-700' 
-                    : 'text-gray-900 hover:bg-gray-100'
-                }`}>
-                  TR
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => handleLanguageChange('en')} className={`cursor-pointer transition-colors duration-300 ${
-                  theme === 'dark' 
-                    ? 'text-white hover:bg-gray-700' 
-                    : 'text-gray-900 hover:bg-gray-100'
-                }`}>
-                  EN
-                </DropdownMenuItem>
+                {Object.entries(languages).map(([key, lang]) => (
+                  <DropdownMenuItem 
+                    key={key}
+                    onClick={() => handleLanguageChange(key as Language)} 
+                    className={`cursor-pointer transition-colors duration-300 ${
+                      theme === 'dark' 
+                        ? 'text-white hover:bg-gray-700' 
+                        : 'text-gray-900 hover:bg-gray-100'
+                    }`}
+                  >
+                    {lang.name}
+                  </DropdownMenuItem>
+                ))}
               </DropdownMenuContent>
             </DropdownMenu>
 
@@ -185,11 +240,11 @@ const Index = () => {
           </TabsList>
           
           <TabsContent value="entry" className="mt-0">
-            <MoodEntry language={language} theme={theme} />
+            <MoodEntry language={language as 'tr' | 'en'} theme={theme} />
           </TabsContent>
           
           <TabsContent value="history" className="mt-0">
-            <MoodHistory language={language} theme={theme} />
+            <MoodHistory language={language as 'tr' | 'en'} theme={theme} />
           </TabsContent>
         </Tabs>
 
