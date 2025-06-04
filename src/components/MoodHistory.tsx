@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { ChevronDown } from "lucide-react";
-import { getMoodEntries } from "@/utils/moodStorage";
+import { getAllMoodEntries } from "@/utils/moodStorage";
 
 interface MoodOption {
   id: string;
@@ -191,7 +191,7 @@ export const MoodHistory = ({ language, theme }: MoodHistoryProps) => {
   };
 
   useEffect(() => {
-    const allEntries = getMoodEntries();
+    const allEntries = getAllMoodEntries();
     // Sort entries by timestamp in descending order (newest first)
     const sortedEntries = Object.values(allEntries).sort((a: any, b: any) => {
       return new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime();
