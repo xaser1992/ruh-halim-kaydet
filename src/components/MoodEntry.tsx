@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -140,8 +139,9 @@ export const MoodEntry = ({ language, theme }: MoodEntryProps) => {
     
     if (entry) {
       setSelectedMood(entry.mood);
-      setNote(entry.note || "");
-      setImages(entry.images || []);
+      // Note ve images alanlarını entry'den doldurma, boş bırak
+      setNote("");
+      setImages([]);
     } else {
       setSelectedMood("");
       setNote("");
@@ -163,6 +163,10 @@ export const MoodEntry = ({ language, theme }: MoodEntryProps) => {
 
     saveMoodEntry(entry);
     setTodayEntry(entry);
+    
+    // Kaydetme işleminden sonra not ve images alanlarını temizle
+    setNote("");
+    setImages([]);
     
     toast({
       title: todayEntry ? t.updated : t.saved,
@@ -296,7 +300,7 @@ export const MoodEntry = ({ language, theme }: MoodEntryProps) => {
               : `bg-gradient-to-r ${theme === 'dark' ? 'from-purple-700 to-pink-700 hover:from-purple-600 hover:to-pink-600' : 'from-purple-400 to-pink-400 hover:from-purple-500 hover:to-pink-500'}`
           }`}
         >
-          {todayEntry ? t.update : t.save}
+          {(todayEntry && (note.trim() || images.length > 0)) ? t.update : t.save}
         </Button>
       </div>
     </Card>
