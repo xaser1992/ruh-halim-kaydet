@@ -9,23 +9,23 @@ import { Lock, Globe, ChevronDown, Sun, Moon, Heart } from "lucide-react";
 type Language = 'tr' | 'en' | 'de' | 'fr' | 'es' | 'it' | 'ru';
 
 const Index = () => {
-  const [theme, setTheme] = useState<'light' | 'dark' | 'feminine'>(() => {
-    if (typeof window !== 'undefined') {
-      const savedTheme = localStorage.getItem('ruh-halim-theme') as 'light' | 'dark' | 'feminine';
-      return savedTheme || 'light';
-    }
-    return 'light';
-  });
-  
-  const [language, setLanguage] = useState<Language>(() => {
-    if (typeof window !== 'undefined') {
-      const savedLanguage = localStorage.getItem('ruh-halim-language') as Language;
-      return savedLanguage || 'tr';
-    }
-    return 'tr';
-  });
-
+  const [theme, setTheme] = useState<'light' | 'dark' | 'feminine'>('light');
+  const [language, setLanguage] = useState<Language>('tr');
   const [refreshHistory, setRefreshHistory] = useState(0);
+
+  // Initialize theme and language from localStorage
+  useEffect(() => {
+    const savedTheme = localStorage.getItem('ruh-halim-theme') as 'light' | 'dark' | 'feminine';
+    const savedLanguage = localStorage.getItem('ruh-halim-language') as Language;
+    
+    if (savedTheme) {
+      setTheme(savedTheme);
+    }
+    
+    if (savedLanguage) {
+      setLanguage(savedLanguage);
+    }
+  }, []);
 
   const languages = {
     tr: { name: 'Türkçe', code: 'TR' },
@@ -45,7 +45,7 @@ const Index = () => {
       privacy: "Verileriniz cihazınızda güvenle saklanır",
       light: "Açık",
       dark: "Karanlık",
-      feminine: "Pembe"
+      feminine: "Pembiş"
     },
     en: {
       appName: "My Mood",
