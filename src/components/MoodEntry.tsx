@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -5,124 +6,9 @@ import { Card } from "@/components/ui/card";
 import { toast } from "@/hooks/use-toast";
 import { saveMoodEntry, getMoodEntry, saveDraft, getDraft, clearDraft } from "@/utils/moodStorage";
 import { ImageUpload } from "@/components/ImageUpload";
-
-interface MoodOption {
-  id: string;
-  emoji: string;
-  labelTr: string;
-  labelEn: string;
-  labelDe: string;
-  labelFr: string;
-  labelEs: string;
-  labelIt: string;
-  labelRu: string;
-  colors: {
-    bg: string;
-    hover: string;
-    gradient: string;
-    darkBg: string;
-    darkHover: string;
-    darkGradient: string;
-  };
-}
-
-const moodOptions: MoodOption[] = [
-  { 
-    id: "very-bad", 
-    emoji: "😢", 
-    labelTr: "Çok Kötü", 
-    labelEn: "Very Bad",
-    labelDe: "Sehr schlecht",
-    labelFr: "Très mauvais",
-    labelEs: "Muy malo",
-    labelIt: "Molto male",
-    labelRu: "Очень плохо",
-    colors: {
-      bg: "bg-red-100",
-      hover: "hover:bg-red-200",
-      gradient: "from-red-200 to-red-300",
-      darkBg: "dark:bg-red-900/30",
-      darkHover: "dark:hover:bg-red-800/40",
-      darkGradient: "dark:from-red-800 dark:to-red-900"
-    }
-  },
-  { 
-    id: "bad", 
-    emoji: "😞", 
-    labelTr: "Kötü", 
-    labelEn: "Bad",
-    labelDe: "Schlecht",
-    labelFr: "Mauvais",
-    labelEs: "Malo",
-    labelIt: "Male",
-    labelRu: "Плохо",
-    colors: {
-      bg: "bg-orange-100",
-      hover: "hover:bg-orange-200",
-      gradient: "from-orange-200 to-orange-300",
-      darkBg: "dark:bg-orange-900/30",
-      darkHover: "dark:hover:bg-orange-800/40",
-      darkGradient: "dark:from-orange-800 dark:to-orange-900"
-    }
-  },
-  { 
-    id: "neutral", 
-    emoji: "😐", 
-    labelTr: "Orta", 
-    labelEn: "Neutral",
-    labelDe: "Neutral",
-    labelFr: "Neutre",
-    labelEs: "Neutral",
-    labelIt: "Neutro",
-    labelRu: "Нейтрально",
-    colors: {
-      bg: "bg-yellow-100",
-      hover: "hover:bg-yellow-200",
-      gradient: "from-yellow-200 to-yellow-300",
-      darkBg: "dark:bg-yellow-900/30",
-      darkHover: "dark:hover:bg-yellow-800/40",
-      darkGradient: "dark:from-yellow-800 dark:to-yellow-900"
-    }
-  },
-  { 
-    id: "good", 
-    emoji: "😊", 
-    labelTr: "İyi", 
-    labelEn: "Good",
-    labelDe: "Gut",
-    labelFr: "Bon",
-    labelEs: "Bueno",
-    labelIt: "Buono",
-    labelRu: "Хорошо",
-    colors: {
-      bg: "bg-green-100",
-      hover: "hover:bg-green-200",
-      gradient: "from-green-200 to-green-300",
-      darkBg: "dark:bg-green-900/30",
-      darkHover: "dark:hover:bg-green-800/40",
-      darkGradient: "dark:from-green-800 dark:to-green-900"
-    }
-  },
-  { 
-    id: "great", 
-    emoji: "😄", 
-    labelTr: "Harika", 
-    labelEn: "Great",
-    labelDe: "Großartig",
-    labelFr: "Génial",
-    labelEs: "Genial",
-    labelIt: "Fantastico",
-    labelRu: "Отлично",
-    colors: {
-      bg: "bg-emerald-100",
-      hover: "hover:bg-emerald-200",
-      gradient: "from-emerald-200 to-emerald-300",
-      darkBg: "dark:bg-emerald-900/30",
-      darkHover: "dark:hover:bg-emerald-800/40",
-      darkGradient: "dark:from-emerald-800 dark:to-emerald-900"
-    }
-  }
-];
+import { MoodSelector } from "@/components/MoodSelector";
+import { moodOptions } from "@/utils/moodData";
+import { translations } from "@/utils/translations";
 
 interface MoodEntryProps {
   language: 'tr' | 'en' | 'de' | 'fr' | 'es' | 'it' | 'ru';
@@ -135,86 +21,6 @@ export const MoodEntry = ({ language, theme, onEntryUpdate }: MoodEntryProps) =>
   const [note, setNote] = useState("");
   const [images, setImages] = useState<string[]>([]);
   const [todayEntry, setTodayEntry] = useState<any>(null);
-
-  const translations = {
-    tr: {
-      question: "Bugün nasıl hissediyorsun?",
-      noteLabel: "Not (İsteğe bağlı)",
-      notePlaceholder: "Bugün için notlarınızı yazın...",
-      photosLabel: "Fotoğraflar (İsteğe bağlı)",
-      save: "Kaydet",
-      update: "Güncelle",
-      alreadyExists: "Bu gün için zaten bir kayıt var",
-      saved: "Ruh haliniz kaydedildi!",
-      updated: "Kayıt güncellendi!"
-    },
-    en: {
-      question: "How are you feeling today?",
-      noteLabel: "Note (Optional)",
-      notePlaceholder: "Write your notes for today...",
-      photosLabel: "Photos (Optional)",
-      save: "Save",
-      update: "Update",
-      alreadyExists: "There is already an entry for today",
-      saved: "Your mood has been saved!",
-      updated: "Entry updated!"
-    },
-    de: {
-      question: "Wie fühlst du dich heute?",
-      noteLabel: "Notiz (Optional)",
-      notePlaceholder: "Schreibe deine Notizen für heute...",
-      photosLabel: "Fotos (Optional)",
-      save: "Speichern",
-      update: "Aktualisieren",
-      alreadyExists: "Für heute gibt es bereits einen Eintrag",
-      saved: "Deine Stimmung wurde gespeichert!",
-      updated: "Eintrag aktualisiert!"
-    },
-    fr: {
-      question: "Comment te sens-tu aujourd'hui?",
-      noteLabel: "Note (Optionnel)",
-      notePlaceholder: "Écris tes notes pour aujourd'hui...",
-      photosLabel: "Photos (Optionnel)",
-      save: "Enregistrer",
-      update: "Mettre à jour",
-      alreadyExists: "Il y a déjà une entrée pour aujourd'hui",
-      saved: "Votre humeur a été enregistrée!",
-      updated: "Entrée mise à jour!"
-    },
-    es: {
-      question: "¿Cómo te sientes hoy?",
-      noteLabel: "Nota (Opcional)",
-      notePlaceholder: "Escribe tus notas para hoy...",
-      photosLabel: "Fotos (Opcional)",
-      save: "Guardar",
-      update: "Actualizar",
-      alreadyExists: "Ya existe una entrada para hoy",
-      saved: "¡Tu estado de ánimo ha sido guardado!",
-      updated: "¡Entrada actualizada!"
-    },
-    it: {
-      question: "Come ti senti oggi?",
-      noteLabel: "Nota (Opzionale)",
-      notePlaceholder: "Scrivi le tue note per oggi...",
-      photosLabel: "Foto (Opzionale)",
-      save: "Salva",
-      update: "Aggiorna",
-      alreadyExists: "Esiste già una voce per oggi",
-      saved: "Il tuo umore è stato salvato!",
-      updated: "Voce aggiornata!"
-    },
-    ru: {
-      question: "Как ты себя чувствуешь сегодня?",
-      noteLabel: "Заметка (Необязательно)",
-      notePlaceholder: "Напиши свои заметки на сегодня...",
-      photosLabel: "Фотографии (Необязательно)",
-      save: "Сохранить",
-      update: "Обновить",
-      alreadyExists: "На сегодня уже есть запись",
-      saved: "Ваше настроение сохранено!",
-      updated: "Запись обновлена!"
-    }
-  };
 
   const t = translations[language];
 
@@ -287,7 +93,7 @@ export const MoodEntry = ({ language, theme, onEntryUpdate }: MoodEntryProps) =>
     }
     
     toast({
-      title: todayEntry ? t.updated : t.saved,
+      title: t.saved,
       description: new Date().toLocaleDateString(getLocaleString(language), {
         year: 'numeric',
         month: 'long',
@@ -308,24 +114,9 @@ export const MoodEntry = ({ language, theme, onEntryUpdate }: MoodEntryProps) =>
     };
   };
 
-  const selectedColors = getSelectedMoodColors();
-
-  const getMoodLabel = (mood: MoodOption) => {
-    switch (language) {
-      case 'tr': return mood.labelTr;
-      case 'en': return mood.labelEn;
-      case 'de': return mood.labelDe;
-      case 'fr': return mood.labelFr;
-      case 'es': return mood.labelEs;
-      case 'it': return mood.labelIt;
-      case 'ru': return mood.labelRu;
-      default: return mood.labelEn;
-    }
-  };
-
   // Check if there's content to show save button
   const hasContent = selectedMood || note.trim() || images.length > 0;
-  const shouldShowButton = hasContent && !todayEntry;
+  const shouldShowButton = hasContent;
 
   return (
     <Card className={`p-4 backdrop-blur-sm border-0 shadow-lg transition-colors duration-300 ${
@@ -370,26 +161,12 @@ export const MoodEntry = ({ language, theme, onEntryUpdate }: MoodEntryProps) =>
           </h2>
         </div>
 
-        <div className="grid grid-cols-5 gap-2">
-          {moodOptions.map((mood) => (
-            <button
-              key={mood.id}
-              onClick={() => setSelectedMood(mood.id)}
-              className={`flex flex-col items-center p-2 rounded-xl transition-all duration-200 ${
-                selectedMood === mood.id
-                  ? `bg-gradient-to-br ${mood.colors.gradient} ${theme === 'dark' ? mood.colors.darkGradient : ''} shadow-lg scale-105`
-                  : `${mood.colors.bg} ${mood.colors.hover} ${theme === 'dark' ? `${mood.colors.darkBg} ${mood.colors.darkHover}` : ''} hover:scale-105`
-              }`}
-            >
-              <span className="text-xl mb-1">{mood.emoji}</span>
-              <span className={`text-xs text-center font-medium transition-colors duration-300 ${
-                theme === 'dark' ? 'text-gray-200' : theme === 'feminine' ? 'text-pink-700' : 'text-gray-700'
-              }`}>
-                {getMoodLabel(mood)}
-              </span>
-            </button>
-          ))}
-        </div>
+        <MoodSelector
+          selectedMood={selectedMood}
+          onMoodSelect={setSelectedMood}
+          language={language}
+          theme={theme}
+        />
 
         {/* Note Input */}
         <div className="space-y-1">
@@ -434,7 +211,7 @@ export const MoodEntry = ({ language, theme, onEntryUpdate }: MoodEntryProps) =>
           />
         </div>
 
-        {/* Save Button - Only show when there's content and no existing entry */}
+        {/* Save Button */}
         {shouldShowButton && (
           <Button
             onClick={handleSave}
@@ -451,7 +228,7 @@ export const MoodEntry = ({ language, theme, onEntryUpdate }: MoodEntryProps) =>
                 }`
             }`}
           >
-            {t.save}
+            {todayEntry ? t.update : t.save}
           </Button>
         )}
       </div>
