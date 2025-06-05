@@ -11,9 +11,8 @@ type Language = 'tr' | 'en' | 'de' | 'fr' | 'es' | 'it' | 'ru';
 const Index = () => {
   const [theme, setTheme] = useState<'light' | 'dark' | 'feminine'>('light');
   const [language, setLanguage] = useState<Language>('tr');
-  const [refreshHistory, setRefreshHistory] = useState(0);
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
 
-  // Initialize theme and language from localStorage
   useEffect(() => {
     const savedTheme = localStorage.getItem('ruh-halim-theme') as 'light' | 'dark' | 'feminine';
     const savedLanguage = localStorage.getItem('ruh-halim-language') as Language;
@@ -120,7 +119,8 @@ const Index = () => {
   };
 
   const handleEntryUpdate = () => {
-    setRefreshHistory(prev => prev + 1);
+    console.log('Index - Entry updated, triggering refresh');
+    setRefreshTrigger(prev => prev + 1);
   };
 
   const getThemeBackground = () => {
@@ -309,7 +309,7 @@ const Index = () => {
           </TabsContent>
           
           <TabsContent value="history" className="mt-0">
-            <MoodHistory language={language} theme={theme} key={refreshHistory} />
+            <MoodHistory language={language} theme={theme} refreshTrigger={refreshTrigger} />
           </TabsContent>
         </Tabs>
 

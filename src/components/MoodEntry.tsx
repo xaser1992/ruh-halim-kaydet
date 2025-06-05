@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -28,6 +27,9 @@ export const MoodEntry = ({ language, theme, onEntryUpdate }: MoodEntryProps) =>
     const today = new Date().toDateString();
     const entry = getMoodEntry(today);
     const draft = getDraft(today);
+    
+    console.log('Loading today entry:', entry);
+    console.log('Loading draft:', draft);
     
     setTodayEntry(entry);
     
@@ -78,6 +80,8 @@ export const MoodEntry = ({ language, theme, onEntryUpdate }: MoodEntryProps) =>
 
     console.log('Saving entry:', entry);
     saveMoodEntry(entry);
+    
+    // Update local state to reflect the saved entry
     setTodayEntry(entry);
     
     // Clear the form after saving
@@ -87,7 +91,8 @@ export const MoodEntry = ({ language, theme, onEntryUpdate }: MoodEntryProps) =>
     
     clearDraft(today);
     
-    // Update the parent component if callback provided
+    // Notify parent component to refresh
+    console.log('Calling onEntryUpdate callback');
     if (onEntryUpdate) {
       onEntryUpdate();
     }
@@ -116,7 +121,7 @@ export const MoodEntry = ({ language, theme, onEntryUpdate }: MoodEntryProps) =>
 
   // Check if there's content to show save button
   const hasContent = selectedMood || note.trim() || images.length > 0;
-  const shouldShowButton = hasContent;
+  const shouldShowButton = hasContent && !todayEntry;
 
   return (
     <Card className={`p-4 backdrop-blur-sm border-0 shadow-lg transition-colors duration-300 ${
