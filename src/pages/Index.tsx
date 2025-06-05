@@ -9,7 +9,6 @@ import { Lock, Globe, ChevronDown, Sun, Moon, Heart } from "lucide-react";
 type Language = 'tr' | 'en' | 'de' | 'fr' | 'es' | 'it' | 'ru';
 
 const Index = () => {
-  // Tema için localStorage'dan direk okuyarak başlatıyoruz
   const [theme, setTheme] = useState<'light' | 'dark' | 'feminine'>(() => {
     if (typeof window !== 'undefined') {
       const savedTheme = localStorage.getItem('ruh-halim-theme') as 'light' | 'dark' | 'feminine';
@@ -18,7 +17,6 @@ const Index = () => {
     return 'light';
   });
   
-  // Dil için de aynı şekilde
   const [language, setLanguage] = useState<Language>(() => {
     if (typeof window !== 'undefined') {
       const savedLanguage = localStorage.getItem('ruh-halim-language') as Language;
@@ -26,6 +24,8 @@ const Index = () => {
     }
     return 'tr';
   });
+
+  const [refreshHistory, setRefreshHistory] = useState(0);
 
   const languages = {
     tr: { name: 'Türkçe', code: 'TR' },
@@ -45,7 +45,7 @@ const Index = () => {
       privacy: "Verileriniz cihazınızda güvenle saklanır",
       light: "Açık",
       dark: "Karanlık",
-      feminine: "Kadınsı"
+      feminine: "Pembe"
     },
     en: {
       appName: "My Mood",
@@ -54,7 +54,7 @@ const Index = () => {
       privacy: "Your data is securely stored on your device",
       light: "Light",
       dark: "Dark",
-      feminine: "Feminine"
+      feminine: "Pink"
     },
     de: {
       appName: "Meine Stimmung",
@@ -63,7 +63,7 @@ const Index = () => {
       privacy: "Ihre Daten werden sicher auf Ihrem Gerät gespeichert",
       light: "Hell",
       dark: "Dunkel",
-      feminine: "Feminin"
+      feminine: "Rosa"
     },
     fr: {
       appName: "Mon Humeur",
@@ -72,7 +72,7 @@ const Index = () => {
       privacy: "Vos données sont stockées en sécurité sur votre appareil",
       light: "Clair",
       dark: "Sombre",
-      feminine: "Féminin"
+      feminine: "Rose"
     },
     es: {
       appName: "Mi Estado de Ánimo",
@@ -81,7 +81,7 @@ const Index = () => {
       privacy: "Sus datos se almacenan de forma segura en su dispositivo",
       light: "Claro",
       dark: "Oscuro",
-      feminine: "Femenino"
+      feminine: "Rosa"
     },
     it: {
       appName: "Il Mio Umore",
@@ -90,7 +90,7 @@ const Index = () => {
       privacy: "I tuoi dati sono memorizzati in sicurezza sul tuo dispositivo",
       light: "Chiaro",
       dark: "Scuro",
-      feminine: "Femminile"
+      feminine: "Rosa"
     },
     ru: {
       appName: "Моё Настроение",
@@ -99,18 +99,16 @@ const Index = () => {
       privacy: "Ваши данные надёжно хранятся на вашем устройстве",
       light: "Светлая",
       dark: "Тёмная",
-      feminine: "Женственная"
+      feminine: "Розовая"
     }
   };
 
   const t = translations[language];
 
-  // Tema değişikliği için effect - hemen uyguluyoruz
   useEffect(() => {
     document.documentElement.classList.toggle('dark', theme === 'dark');
   }, [theme]);
 
-  // Dil değişikliği için fonksiyon
   const handleLanguageChange = (newLanguage: Language) => {
     setLanguage(newLanguage);
     localStorage.setItem('ruh-halim-language', newLanguage);
@@ -119,6 +117,10 @@ const Index = () => {
   const handleThemeChange = (newTheme: 'light' | 'dark' | 'feminine') => {
     setTheme(newTheme);
     localStorage.setItem('ruh-halim-theme', newTheme);
+  };
+
+  const handleEntryUpdate = () => {
+    setRefreshHistory(prev => prev + 1);
   };
 
   const getThemeBackground = () => {
@@ -157,7 +159,6 @@ const Index = () => {
   return (
     <div className={`min-h-screen transition-colors duration-300 ${getThemeBackground()}`}>
       <div className="container mx-auto px-4 py-6 max-w-md">
-        {/* Header */}
         <div className="text-center mb-8">
           <div className={`w-16 h-16 rounded-2xl mx-auto mb-4 flex items-center justify-center shadow-lg transition-colors duration-300 ${
             theme === 'dark' 
@@ -172,7 +173,6 @@ const Index = () => {
             theme === 'dark' ? 'text-white' : theme === 'feminine' ? 'text-pink-800' : 'text-gray-800'
           }`}>{t.appName}</h1>
           
-          {/* Language and Theme Selectors */}
           <div className="flex justify-center gap-3 mb-4">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -213,7 +213,6 @@ const Index = () => {
               </DropdownMenuContent>
             </DropdownMenu>
 
-            {/* Theme Selector */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="outline" className={`backdrop-blur-sm transition-colors duration-300 ${
@@ -306,11 +305,11 @@ const Index = () => {
           </TabsList>
           
           <TabsContent value="entry" className="mt-0">
-            <MoodEntry language={language as 'tr' | 'en'} theme={theme} />
+            <MoodEntry language={language} theme={theme} onEntryUpdate={handleEntryUpdate} />
           </TabsContent>
           
           <TabsContent value="history" className="mt-0">
-            <MoodHistory language={language as 'tr' | 'en'} theme={theme} />
+            <MoodHistory language={language} theme={theme} key={refreshHistory} />
           </TabsContent>
         </Tabs>
 

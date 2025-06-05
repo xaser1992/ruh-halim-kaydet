@@ -127,9 +127,10 @@ const moodOptions: MoodOption[] = [
 interface MoodEntryProps {
   language: 'tr' | 'en' | 'de' | 'fr' | 'es' | 'it' | 'ru';
   theme: 'light' | 'dark' | 'feminine';
+  onEntryUpdate?: () => void;
 }
 
-export const MoodEntry = ({ language, theme }: MoodEntryProps) => {
+export const MoodEntry = ({ language, theme, onEntryUpdate }: MoodEntryProps) => {
   const [selectedMood, setSelectedMood] = useState<string>("");
   const [note, setNote] = useState("");
   const [images, setImages] = useState<string[]>([]);
@@ -226,29 +227,19 @@ export const MoodEntry = ({ language, theme }: MoodEntryProps) => {
     
     if (entry) {
       setSelectedMood(entry.mood);
-      // Eğer taslak varsa taslaktan yükle, yoksa boş bırak
-      if (draft) {
-        setNote(draft.note || "");
-        setImages(draft.images || []);
-      } else {
-        setNote("");
-        setImages([]);
-      }
+      setNote(entry.note || "");
+      setImages(entry.images || []);
+    } else if (draft) {
+      setSelectedMood(draft.mood || "");
+      setNote(draft.note || "");
+      setImages(draft.images || []);
     } else {
-      // Kayıt yoksa, taslak varsa taslaktan yükle
-      if (draft) {
-        setSelectedMood(draft.mood || "");
-        setNote(draft.note || "");
-        setImages(draft.images || []);
-      } else {
-        setSelectedMood("");
-        setNote("");
-        setImages([]);
-      }
+      setSelectedMood("");
+      setNote("");
+      setImages([]);
     }
   }, []);
 
-  // Taslak kaydetme fonksiyonu
   const saveDraftData = () => {
     const today = new Date().toDateString();
     const draft = {
@@ -260,7 +251,6 @@ export const MoodEntry = ({ language, theme }: MoodEntryProps) => {
     saveDraft(draft);
   };
 
-  // Her değişiklikte taslak kaydet
   useEffect(() => {
     if (selectedMood || note.trim() || images.length > 0) {
       saveDraftData();
@@ -279,15 +269,16 @@ export const MoodEntry = ({ language, theme }: MoodEntryProps) => {
       timestamp: new Date().toISOString()
     };
 
+    console.log('Saving entry:', entry);
     saveMoodEntry(entry);
     setTodayEntry(entry);
     
-    // Kaydetme işleminden sonra taslağı temizle
     clearDraft(today);
     
-    // Kaydetme işleminden sonra not ve images alanlarını temizle
-    setNote("");
-    setImages([]);
+    // Update the parent component if callback provided
+    if (onEntryUpdate) {
+      onEntryUpdate();
+    }
     
     toast({
       title: todayEntry ? t.updated : t.saved,
@@ -369,7 +360,6 @@ export const MoodEntry = ({ language, theme }: MoodEntryProps) => {
           </h2>
         </div>
 
-        {/* Mood Selection */}
         <div className="grid grid-cols-5 gap-2">
           {moodOptions.map((mood) => (
             <button
@@ -450,14 +440,13 @@ export const MoodEntry = ({ language, theme }: MoodEntryProps) => {
               }`
           }`}
         >
-          {(todayEntry && (note.trim() || images.length > 0)) ? t.update : t.save}
+          {todayEntry ? t.update : t.save}
         </Button>
       </div>
     </Card>
   );
 };
 
-// Helper function to get locale string
 const getLocaleString = (language: string) => {
   const localeMap: Record<string, string> = {
     'tr': 'tr-TR',
