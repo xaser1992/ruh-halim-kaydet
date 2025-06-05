@@ -226,9 +226,10 @@ export const MoodEntry = ({ language, theme, onEntryUpdate }: MoodEntryProps) =>
     setTodayEntry(entry);
     
     if (entry) {
-      setSelectedMood(entry.mood);
-      setNote(entry.note || "");
-      setImages(entry.images || []);
+      // If there's an entry, clear the form to show it's saved
+      setSelectedMood("");
+      setNote("");
+      setImages([]);
     } else if (draft) {
       setSelectedMood(draft.mood || "");
       setNote(draft.note || "");
@@ -242,20 +243,20 @@ export const MoodEntry = ({ language, theme, onEntryUpdate }: MoodEntryProps) =>
 
   const saveDraftData = () => {
     const today = new Date().toDateString();
-    const draft = {
-      date: today,
-      mood: selectedMood,
-      note: note.trim(),
-      images: images
-    };
-    saveDraft(draft);
+    if (!todayEntry && (selectedMood || note.trim() || images.length > 0)) {
+      const draft = {
+        date: today,
+        mood: selectedMood,
+        note: note.trim(),
+        images: images
+      };
+      saveDraft(draft);
+    }
   };
 
   useEffect(() => {
-    if (selectedMood || note.trim() || images.length > 0) {
-      saveDraftData();
-    }
-  }, [selectedMood, note, images]);
+    saveDraftData();
+  }, [selectedMood, note, images, todayEntry]);
 
   const handleSave = () => {
     if (!selectedMood) return;
@@ -272,6 +273,11 @@ export const MoodEntry = ({ language, theme, onEntryUpdate }: MoodEntryProps) =>
     console.log('Saving entry:', entry);
     saveMoodEntry(entry);
     setTodayEntry(entry);
+    
+    // Clear the form after saving
+    setSelectedMood("");
+    setNote("");
+    setImages([]);
     
     clearDraft(today);
     
@@ -316,6 +322,10 @@ export const MoodEntry = ({ language, theme, onEntryUpdate }: MoodEntryProps) =>
       default: return mood.labelEn;
     }
   };
+
+  // Check if there's content to show save button
+  const hasContent = selectedMood || note.trim() || images.length > 0;
+  const shouldShowButton = hasContent && !todayEntry;
 
   return (
     <Card className={`p-4 backdrop-blur-sm border-0 shadow-lg transition-colors duration-300 ${
@@ -424,24 +434,26 @@ export const MoodEntry = ({ language, theme, onEntryUpdate }: MoodEntryProps) =>
           />
         </div>
 
-        {/* Save Button */}
-        <Button
-          onClick={handleSave}
-          disabled={!selectedMood}
-          className={`w-full text-white py-2 rounded-xl font-medium transition-all duration-200 disabled:opacity-50 ${
-            selectedMood 
-              ? `bg-gradient-to-r ${selectedColors.gradient} ${theme === 'dark' ? selectedColors.darkGradient : ''} hover:shadow-lg`
-              : `bg-gradient-to-r ${
-                theme === 'dark' 
-                  ? 'from-purple-700 to-pink-700 hover:from-purple-600 hover:to-pink-600'
-                  : theme === 'feminine'
-                  ? 'from-pink-400 to-rose-400 hover:from-pink-500 hover:to-rose-500'
-                  : 'from-purple-400 to-pink-400 hover:from-purple-500 hover:to-pink-500'
-              }`
-          }`}
-        >
-          {todayEntry ? t.update : t.save}
-        </Button>
+        {/* Save Button - Only show when there's content and no existing entry */}
+        {shouldShowButton && (
+          <Button
+            onClick={handleSave}
+            disabled={!selectedMood}
+            className={`w-full text-white py-2 rounded-xl font-medium transition-all duration-200 disabled:opacity-50 ${
+              selectedMood 
+                ? `bg-gradient-to-r ${getSelectedMoodColors().gradient} ${theme === 'dark' ? getSelectedMoodColors().darkGradient : ''} hover:shadow-lg`
+                : `bg-gradient-to-r ${
+                  theme === 'dark' 
+                    ? 'from-purple-700 to-pink-700 hover:from-purple-600 hover:to-pink-600'
+                    : theme === 'feminine'
+                    ? 'from-pink-400 to-rose-400 hover:from-pink-500 hover:to-rose-500'
+                    : 'from-purple-400 to-pink-400 hover:from-purple-500 hover:to-pink-500'
+                }`
+            }`}
+          >
+            {t.save}
+          </Button>
+        )}
       </div>
     </Card>
   );
