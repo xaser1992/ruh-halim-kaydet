@@ -1,10 +1,11 @@
 import { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { MoodEntry } from "@/components/MoodEntry";
 import { MoodHistory } from "@/components/MoodHistory";
-import { Lock, Globe, ChevronDown, Sun, Moon, Heart } from "lucide-react";
+import { Lock, Globe, ChevronDown, Sun, Moon, Heart, MoreVertical } from "lucide-react";
 
 type Language = 'tr' | 'en' | 'de' | 'fr' | 'es' | 'it' | 'ru';
 
@@ -174,6 +175,63 @@ const Index = () => {
     <div className={`min-h-screen transition-colors duration-300 ${getThemeBackground()}`}>
       <div className="container mx-auto px-4 py-6 max-w-md">
         <div className="text-center mb-8">
+          <div className="flex justify-end mb-4">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="icon" className={`backdrop-blur-sm transition-colors duration-300 ${
+                  theme === 'dark' 
+                    ? 'bg-gray-800/70 border-purple-600 text-white hover:bg-gray-700/70' 
+                    : theme === 'feminine'
+                    ? 'bg-pink-50/70 border-pink-300 text-pink-800 hover:bg-pink-100/70'
+                    : 'bg-white/70 border-purple-200 hover:bg-white/90'
+                }`}>
+                  <MoreVertical className="w-4 h-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className={`border-purple-200 z-50 transition-colors duration-300 ${
+                theme === 'dark' 
+                  ? 'bg-gray-800 border-purple-600' 
+                  : theme === 'feminine'
+                  ? 'bg-pink-50 border-pink-300'
+                  : 'bg-white border-purple-200'
+              }`}>
+                <DropdownMenuItem asChild className={`cursor-pointer transition-colors duration-300 ${
+                  theme === 'dark' 
+                    ? 'text-white hover:bg-gray-700' 
+                    : theme === 'feminine'
+                    ? 'text-pink-800 hover:bg-pink-100'
+                    : 'text-gray-900 hover:bg-gray-100'
+                }`}>
+                  <Link to="/privacy-policy">
+                    Gizlilik Politikası
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild className={`cursor-pointer transition-colors duration-300 ${
+                  theme === 'dark' 
+                    ? 'text-white hover:bg-gray-700' 
+                    : theme === 'feminine'
+                    ? 'text-pink-800 hover:bg-pink-100'
+                    : 'text-gray-900 hover:bg-gray-100'
+                }`}>
+                  <Link to="/terms-of-service">
+                    Kullanıcı Sözleşmesi
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild className={`cursor-pointer transition-colors duration-300 ${
+                  theme === 'dark' 
+                    ? 'text-white hover:bg-gray-700' 
+                    : theme === 'feminine'
+                    ? 'text-pink-800 hover:bg-pink-100'
+                    : 'text-gray-900 hover:bg-gray-100'
+                }`}>
+                  <Link to="/license-info">
+                    Lisans Bilgileri
+                  </Link>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+
           <div className={`w-16 h-16 rounded-2xl mx-auto mb-4 flex items-center justify-center shadow-lg transition-colors duration-300 ${
             theme === 'dark' 
               ? 'bg-gradient-to-br from-purple-700 to-pink-700' 
