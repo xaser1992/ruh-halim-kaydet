@@ -34,7 +34,6 @@ export const MoodEntry = ({ language, theme, onEntryUpdate }: MoodEntryProps) =>
     setTodayEntry(entry);
     
     if (entry) {
-      // If there's an entry, clear the form to show it's saved
       setSelectedMood("");
       setNote("");
       setImages([]);
@@ -58,15 +57,20 @@ export const MoodEntry = ({ language, theme, onEntryUpdate }: MoodEntryProps) =>
         note: note.trim(),
         images: images
       };
+      console.log('Saving draft:', draft);
       saveDraft(draft);
     }
   };
 
   useEffect(() => {
-    saveDraftData();
+    const timeoutId = setTimeout(() => {
+      saveDraftData();
+    }, 500); // 500ms gecikme ile kaydet
+
+    return () => clearTimeout(timeoutId);
   }, [selectedMood, note, images, todayEntry]);
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!selectedMood) return;
 
     const today = new Date().toDateString();
@@ -78,33 +82,56 @@ export const MoodEntry = ({ language, theme, onEntryUpdate }: MoodEntryProps) =>
       timestamp: new Date().toISOString()
     };
 
-    console.log('Saving entry:', entry);
-    saveMoodEntry(entry);
+    console.log('Saving entry with images count:', images.length);
+    console.log('Entry data:', entry);
     
-    // Update local state to reflect the saved entry
-    setTodayEntry(entry);
-    
-    // Clear the form after saving
-    setSelectedMood("");
-    setNote("");
-    setImages([]);
-    
-    clearDraft(today);
-    
-    // Notify parent component to refresh
-    console.log('Calling onEntryUpdate callback');
-    if (onEntryUpdate) {
-      onEntryUpdate();
+    try {
+      // Kaydetmeyi dene
+      saveMoodEntry(entry);
+      
+      // Kaydedilen veriyi doğrula
+      const savedEntry = getMoodEntry(today);
+      console.log('Verified saved entry:', savedEntry);
+      
+      if (savedEntry) {
+        setTodayEntry(entry);
+        setSelectedMood("");
+        setNote("");
+        setImages([]);
+        clearDraft(today);
+        
+        // Parent component'i bilgilendir
+        if (onEntryUpdate) {
+          console.log('Calling onEntryUpdate after successful save');
+          setTimeout(() => {
+            onEntryUpdate();
+          }, 100); // Kısa gecikme ile güncelle
+        }
+        
+        toast({
+          title: t.saved,
+          description: new Date().toLocaleDateString(getLocaleString(language), {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+          }),
+        });
+      } else {
+        console.error('Entry was not saved properly');
+        toast({
+          title: "Hata",
+          description: "Kayıt işlemi başarısız oldu",
+          variant: "destructive"
+        });
+      }
+    } catch (error) {
+      console.error('Error saving entry:', error);
+      toast({
+        title: "Hata",
+        description: "Kayıt işlemi sırasında bir hata oluştu",
+        variant: "destructive"
+      });
     }
-    
-    toast({
-      title: t.saved,
-      description: new Date().toLocaleDateString(getLocaleString(language), {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric'
-      }),
-    });
   };
 
   const getSelectedMoodColors = () => {

@@ -109,13 +109,29 @@ const Index = () => {
   }, [theme]);
 
   const handleLanguageChange = (newLanguage: Language) => {
+    console.log('Changing language to:', newLanguage);
     setLanguage(newLanguage);
-    localStorage.setItem('ruh-halim-language', newLanguage);
+    
+    // Hemen localStorage'a kaydet
+    try {
+      localStorage.setItem('ruh-halim-language', newLanguage);
+      console.log('Language saved to localStorage:', newLanguage);
+    } catch (error) {
+      console.error('Error saving language to localStorage:', error);
+    }
   };
 
   const handleThemeChange = (newTheme: 'light' | 'dark' | 'feminine') => {
+    console.log('Changing theme to:', newTheme);
     setTheme(newTheme);
-    localStorage.setItem('ruh-halim-theme', newTheme);
+    
+    // Hemen localStorage'a kaydet
+    try {
+      localStorage.setItem('ruh-halim-theme', newTheme);
+      console.log('Theme saved to localStorage:', newTheme);
+    } catch (error) {
+      console.error('Error saving theme to localStorage:', error);
+    }
   };
 
   const handleEntryUpdate = () => {
