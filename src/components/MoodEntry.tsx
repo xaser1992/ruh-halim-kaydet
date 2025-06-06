@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -20,10 +21,11 @@ export const MoodEntry = ({ language, theme, onEntryUpdate }: MoodEntryProps) =>
   const [note, setNote] = useState("");
   const [images, setImages] = useState<string[]>([]);
   const [todayEntry, setTodayEntry] = useState<any>(null);
+  const [isSaving, setIsSaving] = useState(false);
 
   const t = translations[language];
 
-  useEffect(() => {
+  const loadTodayData = () => {
     const today = new Date().toDateString();
     const entry = getMoodEntry(today);
     const draft = getDraft(today);
@@ -34,18 +36,25 @@ export const MoodEntry = ({ language, theme, onEntryUpdate }: MoodEntryProps) =>
     setTodayEntry(entry);
     
     if (entry) {
-      setSelectedMood("");
-      setNote("");
-      setImages([]);
+      // Eğer kayıtlı entry varsa, düzenleme moduna geç
+      setSelectedMood(entry.mood || "");
+      setNote(entry.note || "");
+      setImages(entry.images || []);
     } else if (draft) {
+      // Eğer taslak varsa, taslağı yükle
       setSelectedMood(draft.mood || "");
       setNote(draft.note || "");
       setImages(draft.images || []);
     } else {
+      // Hiçbiri yoksa temiz başla
       setSelectedMood("");
       setNote("");
       setImages([]);
     }
+  };
+
+  useEffect(() => {
+    loadTodayData();
   }, []);
 
   const saveDraftData = () => {
@@ -65,14 +74,15 @@ export const MoodEntry = ({ language, theme, onEntryUpdate }: MoodEntryProps) =>
   useEffect(() => {
     const timeoutId = setTimeout(() => {
       saveDraftData();
-    }, 500); // 500ms gecikme ile kaydet
+    }, 500);
 
     return () => clearTimeout(timeoutId);
   }, [selectedMood, note, images, todayEntry]);
 
   const handleSave = async () => {
-    if (!selectedMood) return;
+    if (!selectedMood || isSaving) return;
 
+    setIsSaving(true);
     const today = new Date().toDateString();
     const entry = {
       date: today,
@@ -83,29 +93,22 @@ export const MoodEntry = ({ language, theme, onEntryUpdate }: MoodEntryProps) =>
     };
 
     console.log('Saving entry with images count:', images.length);
-    console.log('Entry data:', entry);
     
     try {
-      // Kaydetmeyi dene
-      saveMoodEntry(entry);
+      await saveMoodEntry(entry);
       
-      // Kaydedilen veriyi doğrula
       const savedEntry = getMoodEntry(today);
       console.log('Verified saved entry:', savedEntry);
       
       if (savedEntry) {
-        setTodayEntry(entry);
-        setSelectedMood("");
-        setNote("");
-        setImages([]);
+        setTodayEntry(savedEntry);
         clearDraft(today);
         
-        // Parent component'i bilgilendir
         if (onEntryUpdate) {
           console.log('Calling onEntryUpdate after successful save');
           setTimeout(() => {
             onEntryUpdate();
-          }, 100); // Kısa gecikme ile güncelle
+          }, 100);
         }
         
         toast({
@@ -117,20 +120,17 @@ export const MoodEntry = ({ language, theme, onEntryUpdate }: MoodEntryProps) =>
           }),
         });
       } else {
-        console.error('Entry was not saved properly');
-        toast({
-          title: "Hata",
-          description: "Kayıt işlemi başarısız oldu",
-          variant: "destructive"
-        });
+        throw new Error('Entry verification failed');
       }
     } catch (error) {
       console.error('Error saving entry:', error);
       toast({
         title: "Hata",
-        description: "Kayıt işlemi sırasında bir hata oluştu",
+        description: "Kayıt işlemi sırasında bir hata oluştu. Lütfen fotoğraf sayısını azaltmayı deneyin.",
         variant: "destructive"
       });
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -146,9 +146,17 @@ export const MoodEntry = ({ language, theme, onEntryUpdate }: MoodEntryProps) =>
     };
   };
 
-  // Check if there's content to show save button
+  // Güncelle butonunu göster: eğer entry varsa ve değişiklik yapılmışsa
+  const hasChanges = todayEntry && (
+    selectedMood !== todayEntry.mood ||
+    note !== (todayEntry.note || "") ||
+    JSON.stringify(images) !== JSON.stringify(todayEntry.images || [])
+  );
+
+  // Kaydet butonunu göster: eğer entry yoksa ve içerik varsa
   const hasContent = selectedMood || note.trim() || images.length > 0;
-  const shouldShowButton = hasContent && !todayEntry;
+  const shouldShowSaveButton = hasContent && !todayEntry;
+  const shouldShowUpdateButton = hasChanges;
 
   return (
     <Card className={`p-4 backdrop-blur-sm border-0 shadow-lg transition-colors duration-300 ${
@@ -243,11 +251,11 @@ export const MoodEntry = ({ language, theme, onEntryUpdate }: MoodEntryProps) =>
           />
         </div>
 
-        {/* Save Button */}
-        {shouldShowButton && (
+        {/* Save/Update Button */}
+        {(shouldShowSaveButton || shouldShowUpdateButton) && (
           <Button
             onClick={handleSave}
-            disabled={!selectedMood}
+            disabled={!selectedMood || isSaving}
             className={`w-full text-white py-2 rounded-xl font-medium transition-all duration-200 disabled:opacity-50 ${
               selectedMood 
                 ? `bg-gradient-to-r ${getSelectedMoodColors().gradient} ${theme === 'dark' ? getSelectedMoodColors().darkGradient : ''} hover:shadow-lg`
@@ -260,7 +268,7 @@ export const MoodEntry = ({ language, theme, onEntryUpdate }: MoodEntryProps) =>
                 }`
             }`}
           >
-            {todayEntry ? t.update : t.save}
+            {isSaving ? "Kaydediliyor..." : (shouldShowUpdateButton ? t.update : t.save)}
           </Button>
         )}
       </div>

@@ -1,4 +1,3 @@
-
 interface MoodEntry {
   date: string;
   mood: string;
@@ -17,29 +16,75 @@ interface MoodDraft {
 const STORAGE_KEY = 'ruh-halim-entries';
 const DRAFT_STORAGE_KEY = 'ruh-halim-drafts';
 
-// Resim boyutunu kontrol et ve gerekirse sıkıştır
-const compressImage = (base64: string, maxSizeKB: number = 500): string => {
-  const sizeInKB = (base64.length * 3) / 4 / 1024; // Base64 boyutunu tahmin et
-  
-  if (sizeInKB <= maxSizeKB) {
-    return base64;
-  }
-  
-  // Basit sıkıştırma - eğer çok büyükse kırp
-  const compressionRatio = maxSizeKB / sizeInKB;
-  const targetLength = Math.floor(base64.length * compressionRatio);
-  
-  return base64.substring(0, targetLength);
+// Gelişmiş resim sıkıştırma fonksiyonu
+const compressImage = (base64: string, maxSizeKB: number = 300): Promise<string> => {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      
+      // Boyutu azalt
+      const maxWidth = 800;
+      const maxHeight = 600;
+      let { width, height } = img;
+      
+      if (width > height) {
+        if (width > maxWidth) {
+          height = height * (maxWidth / width);
+          width = maxWidth;
+        }
+      } else {
+        if (height > maxHeight) {
+          width = width * (maxHeight / height);
+          height = maxHeight;
+        }
+      }
+      
+      canvas.width = width;
+      canvas.height = height;
+      
+      // Resmi çiz
+      ctx!.drawImage(img, 0, 0, width, height);
+      
+      // Kaliteyi ayarla
+      let quality = 0.8;
+      let compressedBase64 = canvas.toDataURL('image/jpeg', quality);
+      
+      // Boyut kontrolü ve kalite ayarı
+      while (compressedBase64.length > maxSizeKB * 1024 * 1.37 && quality > 0.1) {
+        quality -= 0.1;
+        compressedBase64 = canvas.toDataURL('image/jpeg', quality);
+      }
+      
+      resolve(compressedBase64);
+    };
+    img.src = base64;
+  });
 };
 
-export const saveMoodEntry = (entry: MoodEntry): void => {
+export const saveMoodEntry = async (entry: MoodEntry): Promise<void> => {
   try {
     console.log('Saving mood entry:', entry);
     
     // Resimleri sıkıştır
     if (entry.images && entry.images.length > 0) {
-      entry.images = entry.images.map(img => compressImage(img, 400));
-      console.log('Compressed images, new count:', entry.images.length);
+      console.log('Compressing images...');
+      const compressedImages = [];
+      for (const img of entry.images) {
+        try {
+          const compressed = await compressImage(img, 250);
+          compressedImages.push(compressed);
+          console.log('Image compressed successfully');
+        } catch (error) {
+          console.error('Error compressing image:', error);
+          // Sıkıştırma başarısız olursa orijinali kullan ama kırp
+          const fallback = img.length > 100000 ? img.substring(0, 100000) : img;
+          compressedImages.push(fallback);
+        }
+      }
+      entry.images = compressedImages;
+      console.log('All images processed, count:', entry.images.length);
     }
     
     const existingEntries = getAllMoodEntries();
@@ -47,21 +92,34 @@ export const saveMoodEntry = (entry: MoodEntry): void => {
     updatedEntries.push(entry);
     
     const dataToStore = JSON.stringify(updatedEntries);
-    console.log('Data size to store (KB):', dataToStore.length / 1024);
+    console.log('Data size to store (KB):', Math.round(dataToStore.length / 1024));
     
     // localStorage limitini kontrol et
     try {
       localStorage.setItem(STORAGE_KEY, dataToStore);
       console.log('Successfully saved to localStorage');
-    } catch (storageError) {
+    } catch (storageError: any) {
       console.error('localStorage error:', storageError);
       
       // Eğer localStorage dolu ise, eski kayıtları temizle
       if (storageError.name === 'QuotaExceededError') {
         console.log('Storage quota exceeded, cleaning old entries...');
-        const recentEntries = updatedEntries.slice(-10); // Son 10 kayıt
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(recentEntries));
-        console.log('Cleaned storage, kept recent 10 entries');
+        
+        // Önce resim sayısını azalt
+        const entriesWithLessImages = updatedEntries.map(e => ({
+          ...e,
+          images: e.images ? e.images.slice(0, 2) : []
+        }));
+        
+        try {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(entriesWithLessImages));
+          console.log('Reduced images per entry to 2');
+        } catch {
+          // Hala çok büyükse son 5 kayıt
+          const recentEntries = entriesWithLessImages.slice(-5);
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(recentEntries));
+          console.log('Kept only recent 5 entries');
+        }
       } else {
         throw storageError;
       }
@@ -115,7 +173,6 @@ export const deleteMoodEntry = (date: string): void => {
   }
 };
 
-// Taslak kaydetme fonksiyonları
 export const saveDraft = (draft: MoodDraft): void => {
   try {
     const existingDrafts = getAllDrafts();
