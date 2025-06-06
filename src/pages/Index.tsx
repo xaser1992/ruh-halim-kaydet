@@ -5,7 +5,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Button } from "@/components/ui/button";
 import { MoodEntry } from "@/components/MoodEntry";
 import { MoodHistory } from "@/components/MoodHistory";
-import { Lock, Globe, ChevronDown, Sun, Moon, Heart, MoreVertical } from "lucide-react";
+import { Lock, Globe, ChevronDown, Sun, Moon, Heart, Menu } from "lucide-react";
 
 type Language = 'tr' | 'en' | 'de' | 'fr' | 'es' | 'it' | 'ru';
 
@@ -185,7 +185,7 @@ const Index = () => {
                     ? 'bg-pink-50/70 border-pink-300 text-pink-800 hover:bg-pink-100/70'
                     : 'bg-white/70 border-purple-200 hover:bg-white/90'
                 }`}>
-                  <MoreVertical className="w-4 h-4" />
+                  <Menu className="w-4 h-4" />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className={`border-purple-200 z-50 transition-colors duration-300 ${
