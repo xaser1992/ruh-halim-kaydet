@@ -357,7 +357,7 @@ export const MoodEntry = ({ language, theme, onEntryUpdate }: MoodEntryProps) =>
               onClick={toggleReminder}
               variant="outline"
               size="sm"
-              className={`flex-1 transition-all duration-300 ${
+              className={`transition-all duration-300 ${
                 isReminderActive
                   ? theme === 'dark'
                     ? 'bg-purple-700/70 border-purple-500 text-purple-200 hover:bg-purple-600/70'
@@ -371,8 +371,7 @@ export const MoodEntry = ({ language, theme, onEntryUpdate }: MoodEntryProps) =>
                     : 'bg-white/70 border-purple-200 hover:bg-white/90'
               }`}
             >
-              {isReminderActive ? <Bell className="w-4 h-4 mr-2" /> : <BellOff className="w-4 h-4 mr-2" />}
-              {isReminderActive ? "Hatırlatıcı Açık" : "Hatırlatıcı"}
+              {isReminderActive ? <Bell className="w-4 h-4" /> : <BellOff className="w-4 h-4" />}
             </Button>
           </div>
 
