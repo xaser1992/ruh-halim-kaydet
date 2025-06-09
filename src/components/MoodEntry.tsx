@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -9,6 +8,9 @@ import { ImageUpload } from "@/components/ImageUpload";
 import { MoodSelector } from "@/components/MoodSelector";
 import { moodOptions } from "@/utils/moodData";
 import { translations } from "@/utils/translations";
+import { Camera, CameraResultType, CameraSource } from '@capacitor/camera';
+import { LocalNotifications } from '@capacitor/local-notifications';
+import { Camera as CameraIcon, Bell } from "lucide-react";
 
 interface MoodEntryProps {
   language: 'tr' | 'en' | 'de' | 'fr' | 'es' | 'it' | 'ru';
@@ -36,17 +38,14 @@ export const MoodEntry = ({ language, theme, onEntryUpdate }: MoodEntryProps) =>
     setTodayEntry(entry);
     
     if (entry) {
-      // Eğer kayıtlı entry varsa, düzenleme moduna geç
       setSelectedMood(entry.mood || "");
       setNote(entry.note || "");
       setImages(entry.images || []);
     } else if (draft) {
-      // Eğer taslak varsa, taslağı yükle
       setSelectedMood(draft.mood || "");
       setNote(draft.note || "");
       setImages(draft.images || []);
     } else {
-      // Hiçbiri yoksa temiz başla
       setSelectedMood("");
       setNote("");
       setImages([]);
@@ -55,7 +54,76 @@ export const MoodEntry = ({ language, theme, onEntryUpdate }: MoodEntryProps) =>
 
   useEffect(() => {
     loadTodayData();
+    requestNotificationPermission();
   }, []);
+
+  const requestNotificationPermission = async () => {
+    try {
+      const permission = await LocalNotifications.requestPermissions();
+      console.log('Notification permission:', permission);
+    } catch (error) {
+      console.error('Error requesting notification permission:', error);
+    }
+  };
+
+  const takePhoto = async () => {
+    try {
+      const image = await Camera.getPhoto({
+        quality: 90,
+        allowEditing: false,
+        resultType: CameraResultType.DataUrl,
+        source: CameraSource.Camera
+      });
+
+      if (image.dataUrl) {
+        setImages(prev => [...prev, image.dataUrl!]);
+        toast({
+          title: "Fotoğraf eklendi",
+          description: "Kameradan çekilen fotoğraf başarıyla eklendi."
+        });
+      }
+    } catch (error) {
+      console.error('Camera error:', error);
+      toast({
+        title: "Kamera Hatası",
+        description: "Fotoğraf çekilirken bir hata oluştu.",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const scheduleReminder = async () => {
+    try {
+      await LocalNotifications.schedule({
+        notifications: [
+          {
+            title: "Ruh Halim",
+            body: "Bugünkü ruh halinizi kaydetmeyi unutmayın!",
+            id: 1,
+            schedule: { 
+              at: new Date(Date.now() + 24 * 60 * 60 * 1000) // 24 saat sonra
+            },
+            sound: 'default',
+            attachments: undefined,
+            actionTypeId: "",
+            extra: null
+          }
+        ]
+      });
+
+      toast({
+        title: "Hatırlatıcı Ayarlandı",
+        description: "Yarın aynı saatte size hatırlatacağız."
+      });
+    } catch (error) {
+      console.error('Notification error:', error);
+      toast({
+        title: "Bildirim Hatası",
+        description: "Hatırlatıcı ayarlanırken bir hata oluştu.",
+        variant: "destructive"
+      });
+    }
+  };
 
   const saveDraftData = () => {
     const today = new Date().toDateString();
@@ -146,14 +214,12 @@ export const MoodEntry = ({ language, theme, onEntryUpdate }: MoodEntryProps) =>
     };
   };
 
-  // Güncelle butonunu göster: eğer entry varsa ve değişiklik yapılmışsa
   const hasChanges = todayEntry && (
     selectedMood !== todayEntry.mood ||
     note !== (todayEntry.note || "") ||
     JSON.stringify(images) !== JSON.stringify(todayEntry.images || [])
   );
 
-  // Kaydet butonunu göster: eğer entry yoksa ve içerik varsa
   const hasContent = selectedMood || note.trim() || images.length > 0;
   const shouldShowSaveButton = hasContent && !todayEntry;
   const shouldShowUpdateButton = hasChanges;
@@ -242,6 +308,42 @@ export const MoodEntry = ({ language, theme, onEntryUpdate }: MoodEntryProps) =>
           }`}>
             {t.photosLabel}
           </label>
+          
+          {/* Camera and Gallery buttons */}
+          <div className="flex gap-2 mb-2">
+            <Button
+              onClick={takePhoto}
+              variant="outline"
+              size="sm"
+              className={`flex-1 transition-colors duration-300 ${
+                theme === 'dark' 
+                  ? 'bg-gray-700/70 border-purple-600 text-white hover:bg-gray-600/70' 
+                  : theme === 'feminine'
+                  ? 'bg-pink-50/70 border-pink-300 text-pink-800 hover:bg-pink-100/70'
+                  : 'bg-white/70 border-purple-200 hover:bg-white/90'
+              }`}
+            >
+              <CameraIcon className="w-4 h-4 mr-2" />
+              Kamera
+            </Button>
+            
+            <Button
+              onClick={scheduleReminder}
+              variant="outline"
+              size="sm"
+              className={`flex-1 transition-colors duration-300 ${
+                theme === 'dark' 
+                  ? 'bg-gray-700/70 border-purple-600 text-white hover:bg-gray-600/70' 
+                  : theme === 'feminine'
+                  ? 'bg-pink-50/70 border-pink-300 text-pink-800 hover:bg-pink-100/70'
+                  : 'bg-white/70 border-purple-200 hover:bg-white/90'
+              }`}
+            >
+              <Bell className="w-4 h-4 mr-2" />
+              Hatırlatıcı
+            </Button>
+          </div>
+
           <ImageUpload
             images={images}
             onImagesChange={setImages}

@@ -7,7 +7,17 @@ const config: CapacitorConfig = {
   webDir: 'dist',
   android: {
     allowMixedContent: true
-  }
+  },
+  plugins: {
+    Camera: {
+      saveToGallery: false
+    },
+    LocalNotifications: {
+      smallIcon: "ic_stat_icon_config_sample",
+      iconColor: "#488AFF",
+      sound: "beep.wav",
+    },
+  },
 };
 
 export default config;
