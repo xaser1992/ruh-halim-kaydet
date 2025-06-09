@@ -371,7 +371,14 @@ export const MoodEntry = ({ language, theme, onEntryUpdate }: MoodEntryProps) =>
                     : 'bg-white/70 border-purple-200 hover:bg-white/90'
               }`}
             >
-              {isReminderActive ? <Bell className="w-4 h-4" /> : <BellOff className="w-4 h-4" />}
+              {isReminderActive ? (
+                <Bell className="w-4 h-4" />
+              ) : (
+                <>
+                  <BellOff className="w-4 h-4 mr-2" />
+                  Hatırlatıcı
+                </>
+              )}
             </Button>
           </div>
 
