@@ -10,7 +10,7 @@ import { moodOptions } from "@/utils/moodData";
 import { translations } from "@/utils/translations";
 import { Camera, CameraResultType, CameraSource } from '@capacitor/camera';
 import { LocalNotifications } from '@capacitor/local-notifications';
-import { Camera as CameraIcon, Bell } from "lucide-react";
+import { Camera as CameraIcon, Bell, BellOff } from "lucide-react";
 
 interface MoodEntryProps {
   language: 'tr' | 'en' | 'de' | 'fr' | 'es' | 'it' | 'ru';
@@ -24,6 +24,7 @@ export const MoodEntry = ({ language, theme, onEntryUpdate }: MoodEntryProps) =>
   const [images, setImages] = useState<string[]>([]);
   const [todayEntry, setTodayEntry] = useState<any>(null);
   const [isSaving, setIsSaving] = useState(false);
+  const [isReminderActive, setIsReminderActive] = useState(false);
 
   const t = translations[language];
 
@@ -55,7 +56,19 @@ export const MoodEntry = ({ language, theme, onEntryUpdate }: MoodEntryProps) =>
   useEffect(() => {
     loadTodayData();
     requestNotificationPermission();
+    checkReminderStatus();
   }, []);
+
+  const checkReminderStatus = async () => {
+    try {
+      const pending = await LocalNotifications.getPending();
+      const hasActiveReminder = pending.notifications.some(notif => notif.id === 1);
+      setIsReminderActive(hasActiveReminder);
+      console.log('Reminder status:', hasActiveReminder);
+    } catch (error) {
+      console.error('Error checking reminder status:', error);
+    }
+  };
 
   const requestNotificationPermission = async () => {
     try {
@@ -92,31 +105,44 @@ export const MoodEntry = ({ language, theme, onEntryUpdate }: MoodEntryProps) =>
     }
   };
 
-  const scheduleReminder = async () => {
+  const toggleReminder = async () => {
     try {
-      await LocalNotifications.schedule({
-        notifications: [
-          {
-            title: "Ruh Halim",
-            body: "Bugünkü ruh halinizi kaydetmeyi unutmayın!",
-            id: 1,
-            schedule: { 
-              at: new Date(Date.now() + 24 * 60 * 60 * 1000) // 24 saat sonra
-            },
-            sound: 'default',
-            attachments: undefined,
-            actionTypeId: "",
-            extra: null
-          }
-        ]
-      });
-
-      toast({
-        title: "Hatırlatıcı Ayarlandı",
-        description: "Yarın aynı saatte size hatırlatacağız."
-      });
+      if (isReminderActive) {
+        // Hatırlatıcıyı kapat
+        await LocalNotifications.cancel({
+          notifications: [{ id: 1 }]
+        });
+        setIsReminderActive(false);
+        toast({
+          title: "Hatırlatıcı Kapatıldı",
+          description: "Günlük hatırlatıcı iptal edildi."
+        });
+      } else {
+        // Hatırlatıcıyı aç
+        await LocalNotifications.schedule({
+          notifications: [
+            {
+              title: "Ruh Halim",
+              body: "Bugünkü ruh halinizi kaydetmeyi unutmayın!",
+              id: 1,
+              schedule: { 
+                at: new Date(Date.now() + 24 * 60 * 60 * 1000) // 24 saat sonra
+              },
+              sound: 'default',
+              attachments: undefined,
+              actionTypeId: "",
+              extra: null
+            }
+          ]
+        });
+        setIsReminderActive(true);
+        toast({
+          title: "Hatırlatıcı Ayarlandı",
+          description: "Yarın aynı saatte size hatırlatacağız."
+        });
+      }
     } catch (error) {
-      console.error('Notification error:', error);
+      console.error('Notification toggle error:', error);
       toast({
         title: "Bildirim Hatası",
         description: "Hatırlatıcı ayarlanırken bir hata oluştu.",
@@ -309,7 +335,7 @@ export const MoodEntry = ({ language, theme, onEntryUpdate }: MoodEntryProps) =>
             {t.photosLabel}
           </label>
           
-          {/* Camera and Gallery buttons */}
+          {/* Camera and Reminder buttons */}
           <div className="flex gap-2 mb-2">
             <Button
               onClick={takePhoto}
@@ -328,19 +354,25 @@ export const MoodEntry = ({ language, theme, onEntryUpdate }: MoodEntryProps) =>
             </Button>
             
             <Button
-              onClick={scheduleReminder}
+              onClick={toggleReminder}
               variant="outline"
               size="sm"
-              className={`flex-1 transition-colors duration-300 ${
-                theme === 'dark' 
-                  ? 'bg-gray-700/70 border-purple-600 text-white hover:bg-gray-600/70' 
-                  : theme === 'feminine'
-                  ? 'bg-pink-50/70 border-pink-300 text-pink-800 hover:bg-pink-100/70'
-                  : 'bg-white/70 border-purple-200 hover:bg-white/90'
+              className={`flex-1 transition-all duration-300 ${
+                isReminderActive
+                  ? theme === 'dark'
+                    ? 'bg-purple-700/70 border-purple-500 text-purple-200 hover:bg-purple-600/70'
+                    : theme === 'feminine'
+                    ? 'bg-pink-200/70 border-pink-400 text-pink-800 hover:bg-pink-300/70'
+                    : 'bg-purple-100/70 border-purple-400 text-purple-800 hover:bg-purple-200/70'
+                  : theme === 'dark' 
+                    ? 'bg-gray-700/70 border-purple-600 text-white hover:bg-gray-600/70' 
+                    : theme === 'feminine'
+                    ? 'bg-pink-50/70 border-pink-300 text-pink-800 hover:bg-pink-100/70'
+                    : 'bg-white/70 border-purple-200 hover:bg-white/90'
               }`}
             >
-              <Bell className="w-4 h-4 mr-2" />
-              Hatırlatıcı
+              {isReminderActive ? <Bell className="w-4 h-4 mr-2" /> : <BellOff className="w-4 h-4 mr-2" />}
+              {isReminderActive ? "Hatırlatıcı Açık" : "Hatırlatıcı"}
             </Button>
           </div>
 
