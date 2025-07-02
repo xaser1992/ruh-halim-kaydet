@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Heart, MessageCircle } from "lucide-react";
+import { Heart, MessageCircle, Share } from "lucide-react";
 import { translations } from "@/utils/translations";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -10,6 +10,7 @@ import { useToast } from "@/hooks/use-toast";
 interface CommunityProps {
   language: 'tr' | 'en' | 'de' | 'fr' | 'es' | 'it' | 'ru';
   theme: 'light' | 'dark' | 'feminine';
+  onShare?: (mood: string, message: string) => void;
 }
 
 interface CommunityPost {
@@ -20,7 +21,7 @@ interface CommunityPost {
   user_ip: string;
 }
 
-export const Community = ({ language, theme }: CommunityProps) => {
+export const Community = ({ language, theme, onShare }: CommunityProps) => {
   const t = translations[language];
   const { toast } = useToast();
   const [posts, setPosts] = useState<CommunityPost[]>([]);
@@ -56,6 +57,52 @@ export const Community = ({ language, theme }: CommunityProps) => {
   useEffect(() => {
     fetchPosts();
   }, []);
+
+  const handleShare = async (mood: string, message: string) => {
+    try {
+      const { error } = await supabase
+        .from('community_posts')
+        .insert([
+          {
+            mood: mood,
+            message: message,
+            user_ip: 'anonymous'
+          }
+        ]);
+
+      if (error) {
+        console.error('Error sharing post:', error);
+        toast({
+          title: "Hata",
+          description: "Paylaşım yapılırken bir hata oluştu.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      toast({
+        title: "Başarılı",
+        description: "Paylaşımınız toplulukla paylaşıldı! 🌟",
+      });
+
+      // Paylaşımları yenile
+      fetchPosts();
+    } catch (error) {
+      console.error('Error:', error);
+      toast({
+        title: "Hata",
+        description: "Beklenmeyen bir hata oluştu.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  // onShare prop'unu parent component'e bildir
+  useEffect(() => {
+    if (onShare) {
+      // Bu kısım parent component tarafından kullanılacak
+    }
+  }, [onShare]);
 
   const getMoodEmoji = (mood: string) => {
     const moodEmojis: Record<string, string> = {
@@ -93,40 +140,6 @@ export const Community = ({ language, theme }: CommunityProps) => {
 
   return (
     <div className="space-y-4">
-      {/* Paylaş Butonu */}
-      <Card className={`p-4 backdrop-blur-sm border-0 shadow-lg transition-colors duration-300 ${
-        theme === 'dark' 
-          ? 'bg-gray-800/80 text-white' 
-          : theme === 'feminine'
-          ? 'bg-pink-50/80'
-          : 'bg-white/80'
-      }`}>
-        <div className="text-center">
-          <h3 className={`text-lg font-semibold mb-2 transition-colors duration-300 ${
-            theme === 'dark' ? 'text-white' : theme === 'feminine' ? 'text-pink-800' : 'text-gray-800'
-          }`}>
-            Topluluğa Paylaş
-          </h3>
-          <p className={`text-sm mb-4 transition-colors duration-300 ${
-            theme === 'dark' ? 'text-gray-300' : theme === 'feminine' ? 'text-pink-600' : 'text-gray-600'
-          }`}>
-            Bugünkü kayıtınızı anonim olarak paylaşın
-          </p>
-          <Button
-            className={`w-full text-white py-2 rounded-xl font-medium transition-all duration-200 ${
-              theme === 'dark' 
-                ? 'bg-gradient-to-r from-purple-700 to-pink-700 hover:from-purple-600 hover:to-pink-600'
-                : theme === 'feminine'
-                ? 'bg-gradient-to-r from-pink-400 to-rose-400 hover:from-pink-500 hover:to-rose-500'
-                : 'bg-gradient-to-r from-purple-400 to-pink-400 hover:from-purple-500 hover:to-pink-500'
-            }`}
-            disabled
-          >
-            Yakında Aktif Olacak
-          </Button>
-        </div>
-      </Card>
-
       {/* Topluluk Gönderileri */}
       <div className="space-y-3">
         <h3 className={`text-lg font-semibold transition-colors duration-300 ${
@@ -233,23 +246,8 @@ export const Community = ({ language, theme }: CommunityProps) => {
           ))
         )}
       </div>
-      
-      {/* API Bekleme Mesajı */}
-      <Card className={`p-4 backdrop-blur-sm border-0 shadow-lg transition-colors duration-300 ${
-        theme === 'dark' 
-          ? 'bg-gray-800/80 text-white' 
-          : theme === 'feminine'
-          ? 'bg-pink-50/80'
-          : 'bg-white/80'
-      }`}>
-        <div className="text-center">
-          <p className={`text-sm transition-colors duration-300 ${
-            theme === 'dark' ? 'text-gray-400' : theme === 'feminine' ? 'text-pink-500' : 'text-gray-500'
-          }`}>
-            💡 Paylaşım ve etkileşim özellikleri yakında aktif olacak
-          </p>
-        </div>
-      </Card>
     </div>
   );
 };
+
+export { type CommunityProps };
