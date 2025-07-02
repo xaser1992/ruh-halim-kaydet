@@ -5,6 +5,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Button } from "@/components/ui/button";
 import { MoodEntry } from "@/components/MoodEntry";
 import { MoodHistory } from "@/components/MoodHistory";
+import { Community } from "@/components/Community";
 import { Lock, Globe, ChevronDown, Sun, Moon, Heart, Menu } from "lucide-react";
 
 type Language = 'tr' | 'en' | 'de' | 'fr' | 'es' | 'it' | 'ru';
@@ -44,6 +45,7 @@ const Index = () => {
       appName: "Ruh Halim",
       entry: "Giriş",
       history: "Geçmiş",
+      community: "Topluluk",
       privacy: "Verileriniz cihazınızda güvenle saklanır",
       light: "Açık",
       dark: "Karanlık",
@@ -53,15 +55,17 @@ const Index = () => {
       appName: "My Mood",
       entry: "Entry",
       history: "History",
+      community: "Community",
       privacy: "Your data is securely stored on your device",
       light: "Light",
       dark: "Dark",
       feminine: "Pink"
     },
     de: {
-      appName: "Meine Stimmung",
+      appName: "Meine Stimmung",  
       entry: "Eintrag",
       history: "Verlauf",
+      community: "Gemeinschaft",
       privacy: "Ihre Daten werden sicher auf Ihrem Gerät gespeichert",
       light: "Hell",
       dark: "Dunkel",
@@ -71,6 +75,7 @@ const Index = () => {
       appName: "Mon Humeur",
       entry: "Entrée",
       history: "Historique",
+      community: "Communauté",
       privacy: "Vos données sont stockées en sécurité sur votre appareil",
       light: "Clair",
       dark: "Sombre",
@@ -80,6 +85,7 @@ const Index = () => {
       appName: "Mi Estado de Ánimo",
       entry: "Entrada",
       history: "Historial",
+      community: "Comunidad",
       privacy: "Sus datos se almacenan de forma segura en su dispositivo",
       light: "Claro",
       dark: "Oscuro",
@@ -89,6 +95,7 @@ const Index = () => {
       appName: "Il Mio Umore",
       entry: "Inserimento",
       history: "Cronologia",
+      community: "Comunità",
       privacy: "I tuoi dati sono memorizzati in sicurezza sul tuo dispositivo",
       light: "Chiaro",
       dark: "Scuro",
@@ -98,6 +105,7 @@ const Index = () => {
       appName: "Моё Настроение",
       entry: "Запись",
       history: "История",
+      community: "Сообщество",
       privacy: "Ваши данные надёжно хранятся на вашем устройстве",
       light: "Светлая",
       dark: "Тёмная",
@@ -343,7 +351,7 @@ const Index = () => {
 
         {/* Main Content */}
         <Tabs defaultValue="entry" className="w-full">
-          <TabsList className={`grid w-full grid-cols-2 backdrop-blur-sm rounded-xl p-1 mb-6 transition-colors duration-300 ${
+          <TabsList className={`grid w-full grid-cols-3 backdrop-blur-sm rounded-xl p-1 mb-6 transition-colors duration-300 ${
             theme === 'dark' 
               ? 'bg-gray-800/70' 
               : theme === 'feminine'
@@ -374,6 +382,18 @@ const Index = () => {
             >
               {t.history}
             </TabsTrigger>
+            <TabsTrigger 
+              value="community"
+              className={`rounded-lg transition-colors duration-300 ${
+                theme === 'dark'
+                  ? 'data-[state=active]:bg-gray-700 data-[state=active]:text-white text-gray-300'
+                  : theme === 'feminine'
+                  ? 'data-[state=active]:bg-pink-100 data-[state=active]:text-pink-800 text-pink-600'
+                  : 'data-[state=active]:bg-white data-[state=active]:shadow-sm'
+              }`}
+            >
+              {t.community}
+            </TabsTrigger>
           </TabsList>
           
           <TabsContent value="entry" className="mt-0">
@@ -382,6 +402,10 @@ const Index = () => {
           
           <TabsContent value="history" className="mt-0">
             <MoodHistory language={language} theme={theme} refreshTrigger={refreshTrigger} />
+          </TabsContent>
+          
+          <TabsContent value="community" className="mt-0">
+            <Community language={language} theme={theme} />
           </TabsContent>
         </Tabs>
 

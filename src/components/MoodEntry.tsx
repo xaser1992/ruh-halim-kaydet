@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -10,7 +11,7 @@ import { moodOptions } from "@/utils/moodData";
 import { translations } from "@/utils/translations";
 import { Camera, CameraResultType, CameraSource } from '@capacitor/camera';
 import { LocalNotifications } from '@capacitor/local-notifications';
-import { Camera as CameraIcon, Bell, BellOff } from "lucide-react";
+import { Camera as CameraIcon } from "lucide-react";
 
 interface MoodEntryProps {
   language: 'tr' | 'en' | 'de' | 'fr' | 'es' | 'it' | 'ru';
@@ -24,7 +25,6 @@ export const MoodEntry = ({ language, theme, onEntryUpdate }: MoodEntryProps) =>
   const [images, setImages] = useState<string[]>([]);
   const [todayEntry, setTodayEntry] = useState<any>(null);
   const [isSaving, setIsSaving] = useState(false);
-  const [isReminderActive, setIsReminderActive] = useState(false);
 
   const t = translations[language];
 
@@ -53,31 +53,68 @@ export const MoodEntry = ({ language, theme, onEntryUpdate }: MoodEntryProps) =>
     }
   };
 
+  const setupDailyNotifications = async () => {
+    try {
+      await LocalNotifications.requestPermissions();
+      
+      // Her gün için 2 rastgele saat belirleme (9-12 ve 16-20 arası)
+      const morningHour = Math.floor(Math.random() * 4) + 9; // 9-12
+      const eveningHour = Math.floor(Math.random() * 5) + 16; // 16-20
+      const morningMinute = Math.floor(Math.random() * 60);
+      const eveningMinute = Math.floor(Math.random() * 60);
+
+      // Sabah bildirimi
+      const morningTime = new Date();
+      morningTime.setHours(morningHour, morningMinute, 0, 0);
+      if (morningTime <= new Date()) {
+        morningTime.setDate(morningTime.getDate() + 1);
+      }
+
+      // Akşam bildirimi
+      const eveningTime = new Date();
+      eveningTime.setHours(eveningHour, eveningMinute, 0, 0);
+      if (eveningTime <= new Date()) {
+        eveningTime.setDate(eveningTime.getDate() + 1);
+      }
+
+      await LocalNotifications.schedule({
+        notifications: [
+          {
+            title: "Ruh Halim",
+            body: "Bugünkü ruh halinizi kaydetmeyi unutmayın!",
+            id: 1,
+            schedule: { at: morningTime },
+            sound: 'default',
+            attachments: undefined,
+            actionTypeId: "",
+            extra: null
+          },
+          {
+            title: "Ruh Halim", 
+            body: "Gününüzü nasıl geçirdiğinizi not etmek ister misiniz?",
+            id: 2,
+            schedule: { at: eveningTime },
+            sound: 'default',
+            attachments: undefined,
+            actionTypeId: "",
+            extra: null
+          }
+        ]
+      });
+
+      console.log('Daily notifications scheduled for:', {
+        morning: morningTime.toLocaleTimeString(),
+        evening: eveningTime.toLocaleTimeString()
+      });
+    } catch (error) {
+      console.error('Error setting up notifications:', error);
+    }
+  };
+
   useEffect(() => {
     loadTodayData();
-    requestNotificationPermission();
-    checkReminderStatus();
+    setupDailyNotifications();
   }, []);
-
-  const checkReminderStatus = async () => {
-    try {
-      const pending = await LocalNotifications.getPending();
-      const hasActiveReminder = pending.notifications.some(notif => notif.id === 1);
-      setIsReminderActive(hasActiveReminder);
-      console.log('Reminder status:', hasActiveReminder);
-    } catch (error) {
-      console.error('Error checking reminder status:', error);
-    }
-  };
-
-  const requestNotificationPermission = async () => {
-    try {
-      const permission = await LocalNotifications.requestPermissions();
-      console.log('Notification permission:', permission);
-    } catch (error) {
-      console.error('Error requesting notification permission:', error);
-    }
-  };
 
   const takePhoto = async () => {
     try {
@@ -100,52 +137,6 @@ export const MoodEntry = ({ language, theme, onEntryUpdate }: MoodEntryProps) =>
       toast({
         title: "Kamera Hatası",
         description: "Fotoğraf çekilirken bir hata oluştu.",
-        variant: "destructive"
-      });
-    }
-  };
-
-  const toggleReminder = async () => {
-    try {
-      if (isReminderActive) {
-        // Hatırlatıcıyı kapat
-        await LocalNotifications.cancel({
-          notifications: [{ id: 1 }]
-        });
-        setIsReminderActive(false);
-        toast({
-          title: "Hatırlatıcı Kapatıldı",
-          description: "Günlük hatırlatıcı iptal edildi."
-        });
-      } else {
-        // Hatırlatıcıyı aç
-        await LocalNotifications.schedule({
-          notifications: [
-            {
-              title: "Ruh Halim",
-              body: "Bugünkü ruh halinizi kaydetmeyi unutmayın!",
-              id: 1,
-              schedule: { 
-                at: new Date(Date.now() + 24 * 60 * 60 * 1000) // 24 saat sonra
-              },
-              sound: 'default',
-              attachments: undefined,
-              actionTypeId: "",
-              extra: null
-            }
-          ]
-        });
-        setIsReminderActive(true);
-        toast({
-          title: "Hatırlatıcı Ayarlandı",
-          description: "Yarın aynı saatte size hatırlatacağız."
-        });
-      }
-    } catch (error) {
-      console.error('Notification toggle error:', error);
-      toast({
-        title: "Bildirim Hatası",
-        description: "Hatırlatıcı ayarlanırken bir hata oluştu.",
         variant: "destructive"
       });
     }
@@ -335,13 +326,13 @@ export const MoodEntry = ({ language, theme, onEntryUpdate }: MoodEntryProps) =>
             {t.photosLabel}
           </label>
           
-          {/* Camera and Reminder buttons */}
-          <div className="flex gap-2 mb-2">
+          {/* Camera button */}
+          <div className="mb-2">
             <Button
               onClick={takePhoto}
               variant="outline"
               size="sm"
-              className={`flex-1 transition-colors duration-300 ${
+              className={`w-full transition-colors duration-300 ${
                 theme === 'dark' 
                   ? 'bg-gray-700/70 border-purple-600 text-white hover:bg-gray-600/70' 
                   : theme === 'feminine'
@@ -351,28 +342,6 @@ export const MoodEntry = ({ language, theme, onEntryUpdate }: MoodEntryProps) =>
             >
               <CameraIcon className="w-4 h-4 mr-2" />
               Kamera
-            </Button>
-            
-            <Button
-              onClick={toggleReminder}
-              variant="outline"
-              size="sm"
-              className={`flex-1 transition-all duration-300 ${
-                isReminderActive
-                  ? theme === 'dark'
-                    ? 'bg-purple-700/70 border-purple-500 text-purple-200 hover:bg-purple-600/70'
-                    : theme === 'feminine'
-                    ? 'bg-pink-200/70 border-pink-400 text-pink-800 hover:bg-pink-300/70'
-                    : 'bg-purple-100/70 border-purple-400 text-purple-800 hover:bg-purple-200/70'
-                  : theme === 'dark' 
-                    ? 'bg-gray-700/70 border-purple-600 text-white hover:bg-gray-600/70' 
-                    : theme === 'feminine'
-                    ? 'bg-pink-50/70 border-pink-300 text-pink-800 hover:bg-pink-100/70'
-                    : 'bg-white/70 border-purple-200 hover:bg-white/90'
-              }`}
-            >
-              {isReminderActive ? <Bell className="w-4 h-4 mr-2" /> : <BellOff className="w-4 h-4 mr-2" />}
-              {isReminderActive ? "Hatırlatıcı Açık" : "Hatırlatıcı"}
             </Button>
           </div>
 
