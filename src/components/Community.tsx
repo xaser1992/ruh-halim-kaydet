@@ -131,7 +131,14 @@ export const Community = ({ language, theme, onShare }: CommunityProps) => {
   const formatTimeAgo = (timestamp: string) => {
     const now = new Date();
     const postTime = new Date(timestamp);
-    const diffInMinutes = Math.floor((now.getTime() - postTime.getTime()) / (1000 * 60));
+    
+    // Geçerli tarih kontrolü
+    if (isNaN(postTime.getTime())) {
+      return "Bilinmiyor";
+    }
+    
+    const diffInMilliseconds = now.getTime() - postTime.getTime();
+    const diffInMinutes = Math.floor(diffInMilliseconds / (1000 * 60));
     
     if (diffInMinutes < 1) return "Şimdi";
     if (diffInMinutes < 60) return `${diffInMinutes} dakika önce`;
@@ -140,7 +147,17 @@ export const Community = ({ language, theme, onShare }: CommunityProps) => {
     if (diffInHours < 24) return `${diffInHours} saat önce`;
     
     const diffInDays = Math.floor(diffInHours / 24);
-    return `${diffInDays} gün önce`;
+    if (diffInDays === 1) return "Dün";
+    if (diffInDays < 7) return `${diffInDays} gün önce`;
+    
+    const diffInWeeks = Math.floor(diffInDays / 7);
+    if (diffInWeeks < 4) return `${diffInWeeks} hafta önce`;
+    
+    const diffInMonths = Math.floor(diffInDays / 30);
+    if (diffInMonths < 12) return `${diffInMonths} ay önce`;
+    
+    const diffInYears = Math.floor(diffInDays / 365);
+    return `${diffInYears} yıl önce`;
   };
 
   return (
