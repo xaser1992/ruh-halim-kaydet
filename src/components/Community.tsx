@@ -35,7 +35,7 @@ export const Community = ({ language, theme, onShare }: CommunityProps) => {
     try {
       const { data, error } = await supabase
         .from('community_posts')
-        .select('*')
+        .select('id, mood, message, created_at, user_ip, post_date')
         .order('created_at', { ascending: false })
         .limit(10);
 
