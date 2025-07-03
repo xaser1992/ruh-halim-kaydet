@@ -42,8 +42,7 @@ export const ShareButton = ({
           {
             mood: mood,
             message: message.trim(),
-            user_ip: 'anonymous',
-            post_date: new Date().toISOString().split('T')[0] // Today's date in YYYY-MM-DD format
+            user_ip: 'anonymous'
           }
         ]);
 

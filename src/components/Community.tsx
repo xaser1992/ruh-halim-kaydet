@@ -19,7 +19,6 @@ interface CommunityPost {
   message: string;
   created_at: string;
   user_ip: string;
-  post_date: string;
 }
 
 export const Community = ({ language, theme, onShare }: CommunityProps) => {
@@ -35,7 +34,7 @@ export const Community = ({ language, theme, onShare }: CommunityProps) => {
     try {
       const { data, error } = await supabase
         .from('community_posts')
-        .select('id, mood, message, created_at, user_ip, post_date')
+        .select('id, mood, message, created_at, user_ip')
         .order('created_at', { ascending: false })
         .limit(10);
 
@@ -69,8 +68,7 @@ export const Community = ({ language, theme, onShare }: CommunityProps) => {
           {
             mood: mood,
             message: message,
-            user_ip: 'anonymous',
-            post_date: new Date().toISOString().split('T')[0] // Today's date in YYYY-MM-DD format
+            user_ip: 'anonymous'
           }
         ]);
 
