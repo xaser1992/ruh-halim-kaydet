@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -20,6 +19,7 @@ interface CommunityPost {
   message: string;
   created_at: string;
   user_ip: string;
+  post_date: string;
 }
 
 export const Community = ({ language, theme, onShare }: CommunityProps) => {
@@ -69,17 +69,26 @@ export const Community = ({ language, theme, onShare }: CommunityProps) => {
           {
             mood: mood,
             message: message,
-            user_ip: 'anonymous'
+            user_ip: 'anonymous',
+            post_date: new Date().toISOString().split('T')[0] // Today's date in YYYY-MM-DD format
           }
         ]);
 
       if (error) {
         console.error('Error sharing post:', error);
-        toast({
-          title: "Hata",
-          description: "Paylaşım yapılırken bir hata oluştu.",
-          variant: "destructive",
-        });
+        if (error.code === '23505' && error.message.includes('one_post_per_ip_per_day')) {
+          toast({
+            title: "Günlük Limit",
+            description: "Günde sadece 1 mesaj paylaşabilirsiniz. Yarın tekrar deneyin! 😊",
+            variant: "destructive",
+          });
+        } else {
+          toast({
+            title: "Hata",
+            description: "Paylaşım yapılırken bir hata oluştu.",
+            variant: "destructive",
+          });
+        }
         return;
       }
 
@@ -190,7 +199,7 @@ export const Community = ({ language, theme, onShare }: CommunityProps) => {
                 <textarea
                   value={shareData.message}
                   onChange={(e) => setShareData({ ...shareData, message: e.target.value })}
-                  placeholder="Nasıl hissediyorsun?"
+                  placeholder="Nasıl hissediyorsun? (Günde sadece 1 mesaj paylaşabilirsin)"
                   rows={3}
                   className={`w-full p-2 rounded-lg border transition-colors duration-300 ${
                     theme === 'dark' 

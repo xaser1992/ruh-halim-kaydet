@@ -42,23 +42,34 @@ export const ShareButton = ({
           {
             mood: mood,
             message: message.trim(),
-            user_ip: 'anonymous'
+            user_ip: 'anonymous',
+            post_date: new Date().toISOString().split('T')[0] // Today's date in YYYY-MM-DD format
           }
         ]);
 
       if (error) {
         console.error('Error sharing post:', error);
-        toast({
-          title: "Hata",
-          description: "Paylaşım yapılırken bir hata oluştu.",
-          variant: "destructive",
-        });
+        
+        // Check if it's a duplicate constraint error (daily limit exceeded)
+        if (error.code === '23505' && error.message.includes('one_post_per_ip_per_day')) {
+          toast({
+            title: "Günlük Limit",
+            description: "Günde sadece 1 mesaj paylaşabilirsiniz. Yarın tekrar deneyin! 😊",
+            variant: "destructive",
+          });
+        } else {
+          toast({
+            title: "Hata",
+            description: "Paylaşım yapılırken bir hata oluştu.",
+            variant: "destructive",
+          });
+        }
         return;
       }
 
       toast({
         title: "Başarılı! 🌟",
-        description: "Kayıtınız anonim olarak toplulukla paylaşıldı.",
+        description: "Paylaşımınız toplulukla paylaşıldı! Yarın yeni bir paylaşım yapabilirsiniz.",
       });
 
       if (onShareSuccess) {
