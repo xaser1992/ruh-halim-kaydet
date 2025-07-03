@@ -5,6 +5,7 @@ const config: CapacitorConfig = {
   appId: 'app.lovable.2db1032edae140e088c824fe4b03a6c9',
   appName: 'ruh-halim-kaydet',
   webDir: 'dist',
+  bundledWebRuntime: false,
   android: {
     allowMixedContent: true,
     permissions: [
@@ -16,7 +17,9 @@ const config: CapacitorConfig = {
       'android.permission.POST_NOTIFICATIONS',
       'android.permission.SCHEDULE_EXACT_ALARM',
       'android.permission.USE_EXACT_ALARM'
-    ]
+    ],
+    // Version code'u artır ki güncelleme olarak gelsin
+    versionCode: 2
   },
   ios: {
     contentInset: 'automatic'

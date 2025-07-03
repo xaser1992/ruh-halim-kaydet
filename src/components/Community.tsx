@@ -129,35 +129,49 @@ export const Community = ({ language, theme, onShare }: CommunityProps) => {
   };
 
   const formatTimeAgo = (timestamp: string) => {
-    const now = new Date();
-    const postTime = new Date(timestamp);
-    
-    // Geçerli tarih kontrolü
-    if (isNaN(postTime.getTime())) {
+    try {
+      // Timestamp'i düzgün parse et
+      const postTime = new Date(timestamp);
+      const now = new Date();
+      
+      // Geçerli tarih kontrolü
+      if (isNaN(postTime.getTime())) {
+        console.error('Invalid timestamp:', timestamp);
+        return "Bilinmiyor";
+      }
+      
+      // Zaman farkını hesapla (milisaniye cinsinden)
+      const diffInMs = now.getTime() - postTime.getTime();
+      
+      // Negatif değer kontrolü (gelecek tarih)
+      if (diffInMs < 0) {
+        return "Şimdi";
+      }
+      
+      const diffInMinutes = Math.floor(diffInMs / (1000 * 60));
+      const diffInHours = Math.floor(diffInMs / (1000 * 60 * 60));
+      const diffInDays = Math.floor(diffInMs / (1000 * 60 * 60 * 24));
+      
+      // Zaman aralıklarına göre format
+      if (diffInMinutes < 1) return "Şimdi";
+      if (diffInMinutes < 60) return `${diffInMinutes} dakika önce`;
+      if (diffInHours < 24) return `${diffInHours} saat önce`;
+      if (diffInDays === 1) return "Dün";
+      if (diffInDays < 7) return `${diffInDays} gün önce`;
+      
+      const diffInWeeks = Math.floor(diffInDays / 7);
+      if (diffInWeeks < 4) return `${diffInWeeks} hafta önce`;
+      
+      const diffInMonths = Math.floor(diffInDays / 30);
+      if (diffInMonths < 12) return `${diffInMonths} ay önce`;
+      
+      const diffInYears = Math.floor(diffInDays / 365);
+      return `${diffInYears} yıl önce`;
+      
+    } catch (error) {
+      console.error('Error formatting time:', error, 'for timestamp:', timestamp);
       return "Bilinmiyor";
     }
-    
-    const diffInMilliseconds = now.getTime() - postTime.getTime();
-    const diffInMinutes = Math.floor(diffInMilliseconds / (1000 * 60));
-    
-    if (diffInMinutes < 1) return "Şimdi";
-    if (diffInMinutes < 60) return `${diffInMinutes} dakika önce`;
-    
-    const diffInHours = Math.floor(diffInMinutes / 60);
-    if (diffInHours < 24) return `${diffInHours} saat önce`;
-    
-    const diffInDays = Math.floor(diffInHours / 24);
-    if (diffInDays === 1) return "Dün";
-    if (diffInDays < 7) return `${diffInDays} gün önce`;
-    
-    const diffInWeeks = Math.floor(diffInDays / 7);
-    if (diffInWeeks < 4) return `${diffInWeeks} hafta önce`;
-    
-    const diffInMonths = Math.floor(diffInDays / 30);
-    if (diffInMonths < 12) return `${diffInMonths} ay önce`;
-    
-    const diffInYears = Math.floor(diffInDays / 365);
-    return `${diffInYears} yıl önce`;
   };
 
   return (
