@@ -43,8 +43,7 @@ export const Community = ({ language, theme, onShare }: CommunityProps) => {
           mood, 
           message, 
           created_at, 
-          user_ip,
-          community_likes(count)
+          user_ip
         `)
         .order('created_at', { ascending: false })
         .limit(10);
@@ -133,55 +132,6 @@ export const Community = ({ language, theme, onShare }: CommunityProps) => {
     }
   };
 
-  const handleShare = async (mood: string, message: string) => {
-    try {
-      const { error } = await supabase
-        .from('community_posts')
-        .insert([
-          {
-            mood: mood,
-            message: message,
-            user_ip: 'anonymous'
-          }
-        ]);
-
-      if (error) {
-        console.error('Error sharing post:', error);
-        if (error.code === '23505' && error.message.includes('one_post_per_ip_per_day')) {
-          toast({
-            title: "Günlük Limit",
-            description: "Günde sadece 1 mesaj paylaşabilirsiniz. Yarın tekrar deneyin! 😊",
-            variant: "destructive",
-          });
-        } else {
-          toast({
-            title: "Hata",
-            description: "Paylaşım yapılırken bir hata oluştu.",
-            variant: "destructive",
-          });
-        }
-        return;
-      }
-
-      toast({
-        title: "Başarılı",
-        description: "Paylaşımınız toplulukla paylaşıldı! 🌟",
-      });
-
-      // Paylaşımları yenile
-      fetchPosts();
-      setShareMode(false);
-      setShareData({ mood: '', message: '' });
-    } catch (error) {
-      console.error('Error:', error);
-      toast({
-        title: "Hata",
-        description: "Beklenmeyen bir hata oluştu.",
-        variant: "destructive",
-      });
-    }
-  };
-
   const getMoodEmoji = (mood: string) => {
     const moodEmojis: Record<string, string> = {
       "very-bad": "😢",
@@ -203,15 +153,8 @@ export const Community = ({ language, theme, onShare }: CommunityProps) => {
 
   const formatTimeAgo = (timestamp: string) => {
     try {
-      // Timestamp'i Türkiye saati olarak parse et
-      let postTime = new Date(timestamp);
-      
-      // Eğer timestamp zaten timezone bilgisi içermiyorsa, UTC+3 ekle
-      if (!timestamp.includes('T') || (!timestamp.includes('+') && !timestamp.includes('Z'))) {
-        // Basit format kontrolü ve düzeltme
-        postTime = new Date(timestamp.replace(' ', 'T') + (timestamp.includes('Z') ? '' : '+03:00'));
-      }
-      
+      // UTC timestamp'i Türkiye saatine çevir
+      const postTime = new Date(timestamp);
       const now = new Date();
       
       // Geçerli tarih kontrolü
@@ -220,8 +163,17 @@ export const Community = ({ language, theme, onShare }: CommunityProps) => {
         return "Az önce";
       }
       
+      // Türkiye saat dilimi (+3) ayarlaması
+      const turkeyOffset = 3 * 60 * 60 * 1000; // 3 saat milisaniye cinsinden
+      const turkeyTime = new Date(postTime.getTime() + turkeyOffset);
+      const turkeyNow = new Date(now.getTime() + turkeyOffset);
+      
       // Zaman farkını hesapla (milisaniye cinsinden)
-      const diffInMs = Math.abs(now.getTime() - postTime.getTime());
+      const diffInMs = turkeyNow.getTime() - turkeyTime.getTime();
+      
+      if (diffInMs < 0) {
+        return "Az önce"; // Gelecek tarih için
+      }
       
       const diffInSeconds = Math.floor(diffInMs / 1000);
       const diffInMinutes = Math.floor(diffInSeconds / 60);
@@ -234,7 +186,7 @@ export const Community = ({ language, theme, onShare }: CommunityProps) => {
       if (diffInHours < 24) return `${diffInHours} saat önce`;
       if (diffInDays === 1) return "Dün";
       if (diffInDays < 7) return `${diffInDays} gün önce`;
-      if (diffInDays < 30) return `${diffInDays} gün önce`;
+      if (diffInDays < 30) return `${Math.floor(diffInDays)} gün önce`;
       if (diffInDays < 365) return `${Math.floor(diffInDays / 30)} ay önce`;
       
       return `${Math.floor(diffInDays / 365)} yıl önce`;
