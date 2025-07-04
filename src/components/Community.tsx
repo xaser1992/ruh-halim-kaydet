@@ -132,6 +132,13 @@ export const Community = ({ language, theme, onShare }: CommunityProps) => {
     }
   };
 
+  // Paylaşım başarı callback'i
+  const handleShareSuccess = () => {
+    fetchPosts();
+    setShareMode(false);
+    setShareData({ mood: '', message: '' });
+  };
+
   const getMoodEmoji = (mood: string) => {
     const moodEmojis: Record<string, string> = {
       "very-bad": "😢",
@@ -282,11 +289,7 @@ export const Community = ({ language, theme, onShare }: CommunityProps) => {
                 mood={shareData.mood}
                 message={shareData.message}
                 theme={theme}
-                onShareSuccess={() => {
-                  fetchPosts();
-                  setShareMode(false);
-                  setShareData({ mood: '', message: '' });
-                }}
+                onShareSuccess={handleShareSuccess}
               />
             </div>
           </div>
