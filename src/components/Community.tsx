@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -19,6 +20,8 @@ interface CommunityPost {
   message: string;
   created_at: string;
   user_ip: string;
+  likes_count?: number;
+  user_liked?: boolean;
 }
 
 export const Community = ({ language, theme, onShare }: CommunityProps) => {
@@ -29,17 +32,25 @@ export const Community = ({ language, theme, onShare }: CommunityProps) => {
   const [shareMode, setShareMode] = useState(false);
   const [shareData, setShareData] = useState({ mood: '', message: '' });
 
-  // Paylaşımları yükle
+  // Paylaşımları ve beğenileri yükle
   const fetchPosts = async () => {
     try {
-      const { data, error } = await supabase
+      // Posts ve beğeni sayılarını al
+      const { data: postsData, error: postsError } = await supabase
         .from('community_posts')
-        .select('id, mood, message, created_at, user_ip')
+        .select(`
+          id, 
+          mood, 
+          message, 
+          created_at, 
+          user_ip,
+          community_likes(count)
+        `)
         .order('created_at', { ascending: false })
         .limit(10);
 
-      if (error) {
-        console.error('Error fetching posts:', error);
+      if (postsError) {
+        console.error('Error fetching posts:', postsError);
         toast({
           title: "Hata",
           description: "Paylaşımlar yüklenirken bir hata oluştu.",
@@ -48,7 +59,32 @@ export const Community = ({ language, theme, onShare }: CommunityProps) => {
         return;
       }
 
-      setPosts(data || []);
+      // Her post için beğeni sayısını hesapla
+      const postsWithLikes = await Promise.all(
+        (postsData || []).map(async (post) => {
+          // Beğeni sayısını al
+          const { count } = await supabase
+            .from('community_likes')
+            .select('*', { count: 'exact', head: true })
+            .eq('post_id', post.id);
+
+          // Kullanıcının bu postu beğenip beğenmediğini kontrol et
+          const { data: userLike } = await supabase
+            .from('community_likes')
+            .select('id')
+            .eq('post_id', post.id)
+            .eq('user_ip', 'anonymous')
+            .single();
+
+          return {
+            ...post,
+            likes_count: count || 0,
+            user_liked: !!userLike
+          };
+        })
+      );
+
+      setPosts(postsWithLikes);
     } catch (error) {
       console.error('Error:', error);
     } finally {
@@ -59,6 +95,43 @@ export const Community = ({ language, theme, onShare }: CommunityProps) => {
   useEffect(() => {
     fetchPosts();
   }, []);
+
+  // Beğeni toggle fonksiyonu
+  const toggleLike = async (postId: string, currentlyLiked: boolean) => {
+    try {
+      if (currentlyLiked) {
+        // Beğeniyi kaldır
+        const { error } = await supabase
+          .from('community_likes')
+          .delete()
+          .eq('post_id', postId)
+          .eq('user_ip', 'anonymous');
+
+        if (error) {
+          console.error('Error removing like:', error);
+          return;
+        }
+      } else {
+        // Beğeni ekle
+        const { error } = await supabase
+          .from('community_likes')
+          .insert({
+            post_id: postId,
+            user_ip: 'anonymous'
+          });
+
+        if (error) {
+          console.error('Error adding like:', error);
+          return;
+        }
+      }
+
+      // Posts listesini yenile
+      fetchPosts();
+    } catch (error) {
+      console.error('Error toggling like:', error);
+    }
+  };
 
   const handleShare = async (mood: string, message: string) => {
     try {
@@ -130,47 +203,45 @@ export const Community = ({ language, theme, onShare }: CommunityProps) => {
 
   const formatTimeAgo = (timestamp: string) => {
     try {
-      // Timestamp'i düzgün parse et
-      const postTime = new Date(timestamp);
+      // Timestamp'i Türkiye saati olarak parse et
+      let postTime = new Date(timestamp);
+      
+      // Eğer timestamp zaten timezone bilgisi içermiyorsa, UTC+3 ekle
+      if (!timestamp.includes('T') || (!timestamp.includes('+') && !timestamp.includes('Z'))) {
+        // Basit format kontrolü ve düzeltme
+        postTime = new Date(timestamp.replace(' ', 'T') + (timestamp.includes('Z') ? '' : '+03:00'));
+      }
+      
       const now = new Date();
       
       // Geçerli tarih kontrolü
       if (isNaN(postTime.getTime())) {
         console.error('Invalid timestamp:', timestamp);
-        return "Bilinmiyor";
+        return "Az önce";
       }
       
       // Zaman farkını hesapla (milisaniye cinsinden)
-      const diffInMs = now.getTime() - postTime.getTime();
+      const diffInMs = Math.abs(now.getTime() - postTime.getTime());
       
-      // Negatif değer kontrolü (gelecek tarih)
-      if (diffInMs < 0) {
-        return "Şimdi";
-      }
-      
-      const diffInMinutes = Math.floor(diffInMs / (1000 * 60));
-      const diffInHours = Math.floor(diffInMs / (1000 * 60 * 60));
-      const diffInDays = Math.floor(diffInMs / (1000 * 60 * 60 * 24));
+      const diffInSeconds = Math.floor(diffInMs / 1000);
+      const diffInMinutes = Math.floor(diffInSeconds / 60);
+      const diffInHours = Math.floor(diffInMinutes / 60);
+      const diffInDays = Math.floor(diffInHours / 24);
       
       // Zaman aralıklarına göre format
-      if (diffInMinutes < 1) return "Şimdi";
+      if (diffInSeconds < 60) return "Az önce";
       if (diffInMinutes < 60) return `${diffInMinutes} dakika önce`;
       if (diffInHours < 24) return `${diffInHours} saat önce`;
       if (diffInDays === 1) return "Dün";
       if (diffInDays < 7) return `${diffInDays} gün önce`;
+      if (diffInDays < 30) return `${diffInDays} gün önce`;
+      if (diffInDays < 365) return `${Math.floor(diffInDays / 30)} ay önce`;
       
-      const diffInWeeks = Math.floor(diffInDays / 7);
-      if (diffInWeeks < 4) return `${diffInWeeks} hafta önce`;
-      
-      const diffInMonths = Math.floor(diffInDays / 30);
-      if (diffInMonths < 12) return `${diffInMonths} ay önce`;
-      
-      const diffInYears = Math.floor(diffInDays / 365);
-      return `${diffInYears} yıl önce`;
+      return `${Math.floor(diffInDays / 365)} yıl önce`;
       
     } catch (error) {
       console.error('Error formatting time:', error, 'for timestamp:', timestamp);
-      return "Bilinmiyor";
+      return "Az önce";
     }
   };
 
@@ -360,17 +431,23 @@ export const Community = ({ language, theme, onShare }: CommunityProps) => {
                   <Button
                     variant="ghost"
                     size="sm"
+                    onClick={() => toggleLike(post.id, post.user_liked || false)}
                     className={`flex items-center gap-2 transition-colors duration-300 ${
-                      theme === 'dark' 
-                        ? 'text-gray-300 hover:text-pink-400 hover:bg-gray-700/50' 
-                        : theme === 'feminine'
-                        ? 'text-pink-600 hover:text-pink-700 hover:bg-pink-100/50'
-                        : 'text-gray-600 hover:text-purple-600 hover:bg-purple-50'
+                      post.user_liked
+                        ? theme === 'dark' 
+                          ? 'text-pink-400 hover:text-pink-300 hover:bg-gray-700/50' 
+                          : theme === 'feminine'
+                          ? 'text-pink-600 hover:text-pink-700 hover:bg-pink-100/50'
+                          : 'text-purple-600 hover:text-purple-700 hover:bg-purple-50'
+                        : theme === 'dark' 
+                          ? 'text-gray-300 hover:text-pink-400 hover:bg-gray-700/50' 
+                          : theme === 'feminine'
+                          ? 'text-pink-400 hover:text-pink-600 hover:bg-pink-100/50'
+                          : 'text-gray-600 hover:text-purple-600 hover:bg-purple-50'
                     }`}
-                    disabled
                   >
-                    <Heart className="w-4 h-4" />
-                    <span>0 Beğeni</span>
+                    <Heart className={`w-4 h-4 ${post.user_liked ? 'fill-current' : ''}`} />
+                    <span>{post.likes_count || 0} Beğeni</span>
                   </Button>
                 </div>
               </div>
