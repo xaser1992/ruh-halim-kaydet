@@ -35,6 +35,8 @@ export const Community = ({ language, theme, onShare }: CommunityProps) => {
   // Paylaşımları ve beğenileri yükle
   const fetchPosts = async () => {
     try {
+      console.log('Paylaşımlar yükleniyor...');
+      
       // Posts ve beğeni sayılarını al
       const { data: postsData, error: postsError } = await supabase
         .from('community_posts')
@@ -57,6 +59,8 @@ export const Community = ({ language, theme, onShare }: CommunityProps) => {
         });
         return;
       }
+
+      console.log('Yüklenen paylaşımlar:', postsData);
 
       // Her post için beğeni sayısını hesapla
       const postsWithLikes = await Promise.all(
@@ -83,6 +87,7 @@ export const Community = ({ language, theme, onShare }: CommunityProps) => {
         })
       );
 
+      console.log('Beğenilerle birlikte paylaşımlar:', postsWithLikes);
       setPosts(postsWithLikes);
     } catch (error) {
       console.error('Error:', error);
@@ -134,6 +139,7 @@ export const Community = ({ language, theme, onShare }: CommunityProps) => {
 
   // Paylaşım başarı callback'i
   const handleShareSuccess = () => {
+    console.log('Paylaşım başarılı callback çağrıldı');
     fetchPosts();
     setShareMode(false);
     setShareData({ mood: '', message: '' });
@@ -160,23 +166,24 @@ export const Community = ({ language, theme, onShare }: CommunityProps) => {
 
   const formatTimeAgo = (timestamp: string) => {
     try {
-      // UTC timestamp'i Türkiye saatine çevir
+      console.log('Formatlanacak zaman:', timestamp);
+      
+      // UTC timestamp'i doğrudan kullan
       const postTime = new Date(timestamp);
       const now = new Date();
       
       // Geçerli tarih kontrolü
       if (isNaN(postTime.getTime())) {
-        console.error('Invalid timestamp:', timestamp);
+        console.error('Geçersiz timestamp:', timestamp);
         return "Az önce";
       }
       
-      // Türkiye saat dilimi (+3) ayarlaması
-      const turkeyOffset = 3 * 60 * 60 * 1000; // 3 saat milisaniye cinsinden
-      const turkeyTime = new Date(postTime.getTime() + turkeyOffset);
-      const turkeyNow = new Date(now.getTime() + turkeyOffset);
+      console.log('Post zamanı:', postTime);
+      console.log('Şu anki zaman:', now);
       
       // Zaman farkını hesapla (milisaniye cinsinden)
-      const diffInMs = turkeyNow.getTime() - turkeyTime.getTime();
+      const diffInMs = now.getTime() - postTime.getTime();
+      console.log('Zaman farkı (ms):', diffInMs);
       
       if (diffInMs < 0) {
         return "Az önce"; // Gelecek tarih için
@@ -186,6 +193,8 @@ export const Community = ({ language, theme, onShare }: CommunityProps) => {
       const diffInMinutes = Math.floor(diffInSeconds / 60);
       const diffInHours = Math.floor(diffInMinutes / 60);
       const diffInDays = Math.floor(diffInHours / 24);
+      
+      console.log('Zaman farkları:', { diffInSeconds, diffInMinutes, diffInHours, diffInDays });
       
       // Zaman aralıklarına göre format
       if (diffInSeconds < 60) return "Az önce";
@@ -199,7 +208,7 @@ export const Community = ({ language, theme, onShare }: CommunityProps) => {
       return `${Math.floor(diffInDays / 365)} yıl önce`;
       
     } catch (error) {
-      console.error('Error formatting time:', error, 'for timestamp:', timestamp);
+      console.error('Zaman formatlama hatası:', error, 'timestamp:', timestamp);
       return "Az önce";
     }
   };

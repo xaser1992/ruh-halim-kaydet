@@ -36,7 +36,9 @@ export const ShareButton = ({
     setIsSharing(true);
     
     try {
-      const { error } = await supabase
+      console.log('Paylaşım başlıyor:', { mood, message: message.trim() });
+      
+      const { data, error } = await supabase
         .from('community_posts')
         .insert([
           {
@@ -44,12 +46,12 @@ export const ShareButton = ({
             message: message.trim(),
             user_ip: 'anonymous'
           }
-        ]);
+        ])
+        .select();
 
       if (error) {
-        console.error('Error sharing post:', error);
+        console.error('Paylaşım hatası:', error);
         
-        // Check if it's a duplicate constraint error (daily limit exceeded)
         if (error.code === '23505' && error.message.includes('one_post_per_ip_per_day')) {
           toast({
             title: "Günlük Limit",
@@ -66,16 +68,20 @@ export const ShareButton = ({
         return;
       }
 
+      console.log('Paylaşım başarılı:', data);
+      
       toast({
         title: "Başarılı! 🌟",
         description: "Paylaşımınız toplulukla paylaşıldı! Yarın yeni bir paylaşım yapabilirsiniz.",
       });
 
+      // onShareSuccess callback'ini çağır
       if (onShareSuccess) {
+        console.log('onShareSuccess callback çağrılıyor');
         onShareSuccess();
       }
     } catch (error) {
-      console.error('Error:', error);
+      console.error('Beklenmeyen hata:', error);
       toast({
         title: "Hata",
         description: "Beklenmeyen bir hata oluştu.",
