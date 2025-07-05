@@ -38,7 +38,7 @@ export const ShareButton = ({
     try {
       console.log('Paylaşım başlıyor:', { mood, message: message.trim() });
       
-      // Doğru zaman damgası oluştur
+      // ISO 8601 formatında zaman damgası oluştur
       const now = new Date().toISOString();
       console.log('Oluşturulan zaman damgası:', now);
       
@@ -49,13 +49,14 @@ export const ShareButton = ({
             mood: mood,
             message: message.trim(),
             user_ip: 'anonymous',
-            created_at: now // ISO 8601 formatında zaman damgası ekle
+            created_at: now
           }
         ])
         .select();
 
+      // Hata kontrolü - önce error varsa kontrol et
       if (error) {
-        console.error('Paylaşım hatası:', error);
+        console.error('Supabase paylaşım hatası:', error);
         
         if (error.code === '23505' && error.message.includes('one_post_per_ip_per_day')) {
           toast({
@@ -65,16 +66,28 @@ export const ShareButton = ({
           });
         } else {
           toast({
-            title: "Hata",
-            description: "Paylaşım yapılırken bir hata oluştu.",
+            title: "Paylaşım Başarısız",
+            description: `Paylaşım yapılırken hata oluştu: ${error.message}`,
             variant: "destructive",
           });
         }
         return;
       }
 
-      console.log('Paylaşım başarılı:', data);
+      // Data kontrolü - başarılı insert sonrası data olmalı
+      if (!data || data.length === 0) {
+        console.error('Paylaşım başarısız: Veri döndürülmedi');
+        toast({
+          title: "Paylaşım Başarısız",
+          description: "Paylaşım kaydedilemedi. Lütfen tekrar deneyin.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      console.log('Paylaşım başarıyla tamamlandı:', data);
       
+      // Sadece başarılı olduğunda success mesajı göster
       toast({
         title: "Başarılı! 🌟",
         description: "Paylaşımınız toplulukla paylaşıldı! Yarın yeni bir paylaşım yapabilirsiniz.",
@@ -86,10 +99,10 @@ export const ShareButton = ({
         onShareSuccess();
       }
     } catch (error) {
-      console.error('Beklenmeyen hata:', error);
+      console.error('Beklenmeyen paylaşım hatası:', error);
       toast({
-        title: "Hata",
-        description: "Beklenmeyen bir hata oluştu.",
+        title: "Paylaşım Başarısız",
+        description: "Beklenmeyen bir hata oluştu. Lütfen tekrar deneyin.",
         variant: "destructive",
       });
     } finally {
