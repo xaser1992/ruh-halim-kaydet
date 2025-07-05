@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -36,21 +37,15 @@ export const Community = ({ language, theme, onShare }: CommunityProps) => {
     try {
       console.log('Paylaşımlar yükleniyor...');
       
-      // Posts ve beğeni sayılarını al
+      // Posts'u al - HİÇBİR FİLTRE KULLANMA, sadece tarihe göre sırala
       const { data: postsData, error: postsError } = await supabase
         .from('community_posts')
-        .select(`
-          id, 
-          mood, 
-          message, 
-          created_at, 
-          user_ip
-        `)
+        .select('*')
         .order('created_at', { ascending: false })
-        .limit(10);
+        .limit(20);
 
       if (postsError) {
-        console.error('Error fetching posts:', postsError);
+        console.error('Posts yükleme hatası:', postsError);
         toast({
           title: "Hata",
           description: "Paylaşımlar yüklenirken bir hata oluştu.",
@@ -59,11 +54,17 @@ export const Community = ({ language, theme, onShare }: CommunityProps) => {
         return;
       }
 
-      console.log('Yüklenen paylaşımlar:', postsData);
+      console.log('Yüklenen posts verisi:', postsData);
+
+      if (!postsData || postsData.length === 0) {
+        console.log('Hiç post bulunamadı');
+        setPosts([]);
+        return;
+      }
 
       // Her post için beğeni sayısını hesapla
       const postsWithLikes = await Promise.all(
-        (postsData || []).map(async (post) => {
+        postsData.map(async (post) => {
           // Beğeni sayısını al
           const { count } = await supabase
             .from('community_likes')
@@ -86,10 +87,15 @@ export const Community = ({ language, theme, onShare }: CommunityProps) => {
         })
       );
 
-      console.log('Beğenilerle birlikte paylaşımlar:', postsWithLikes);
+      console.log('Beğenilerle birlikte posts:', postsWithLikes);
       setPosts(postsWithLikes);
     } catch (error) {
-      console.error('Error:', error);
+      console.error('fetchPosts hatası:', error);
+      toast({
+        title: "Hata",
+        description: "Paylaşımlar yüklenirken beklenmeyen bir hata oluştu.",
+        variant: "destructive",
+      });
     } finally {
       setLoading(false);
     }
@@ -111,7 +117,7 @@ export const Community = ({ language, theme, onShare }: CommunityProps) => {
           .eq('user_ip', 'anonymous');
 
         if (error) {
-          console.error('Error removing like:', error);
+          console.error('Beğeni kaldırma hatası:', error);
           return;
         }
       } else {
@@ -124,7 +130,7 @@ export const Community = ({ language, theme, onShare }: CommunityProps) => {
           });
 
         if (error) {
-          console.error('Error adding like:', error);
+          console.error('Beğeni ekleme hatası:', error);
           return;
         }
       }
@@ -132,7 +138,7 @@ export const Community = ({ language, theme, onShare }: CommunityProps) => {
       // Posts listesini yenile
       fetchPosts();
     } catch (error) {
-      console.error('Error toggling like:', error);
+      console.error('toggleLike hatası:', error);
     }
   };
 
@@ -167,31 +173,36 @@ export const Community = ({ language, theme, onShare }: CommunityProps) => {
     try {
       console.log('Formatlanacak zaman:', timestamp);
       
-      // Timestamp kontrolü ve düzeltmesi
       if (!timestamp) {
         console.error('Timestamp boş veya undefined');
         return "Az önce";
       }
       
-      // ISO string formatında zaman damgasını parse et
+      // Türkiye saatine çevir ve göster
+      const turkeyTime = new Date(timestamp).toLocaleString('tr-TR', { 
+        timeZone: 'Europe/Istanbul',
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+      
+      console.log('Türkiye saatine çevrilmiş zaman:', turkeyTime);
+      
+      // Zaman farkını hesapla
       const postTime = new Date(timestamp);
       const now = new Date();
       
-      // Geçerli tarih kontrolü
       if (isNaN(postTime.getTime())) {
         console.error('Geçersiz timestamp:', timestamp);
-        return "Az önce";
+        return turkeyTime; // Hatalı durumda tam tarihi göster
       }
       
-      console.log('Post zamanı:', postTime.toISOString());
-      console.log('Şu anki zaman:', now.toISOString());
-      
-      // Zaman farkını hesapla (milisaniye cinsinden)
       const diffInMs = now.getTime() - postTime.getTime();
-      console.log('Zaman farkı (ms):', diffInMs);
       
       if (diffInMs < 0) {
-        return "Az önce"; // Gelecek tarih için
+        return turkeyTime; // Gelecek tarih için tam tarihi göster
       }
       
       const diffInSeconds = Math.floor(diffInMs / 1000);
@@ -207,14 +218,25 @@ export const Community = ({ language, theme, onShare }: CommunityProps) => {
       if (diffInHours < 24) return `${diffInHours} saat önce`;
       if (diffInDays === 1) return "Dün";
       if (diffInDays < 7) return `${diffInDays} gün önce`;
-      if (diffInDays < 30) return `${Math.floor(diffInDays)} gün önce`;
-      if (diffInDays < 365) return `${Math.floor(diffInDays / 30)} ay önce`;
       
-      return `${Math.floor(diffInDays / 365)} yıl önce`;
+      // 1 haftadan fazlaysa tam tarihi göster (Türkiye saati ile)
+      return turkeyTime;
       
     } catch (error) {
       console.error('Zaman formatlama hatası:', error, 'timestamp:', timestamp);
-      return "Az önce";
+      // Hata durumunda tam tarihi göster
+      try {
+        return new Date(timestamp).toLocaleString('tr-TR', { 
+          timeZone: 'Europe/Istanbul',
+          year: 'numeric',
+          month: '2-digit',
+          day: '2-digit',
+          hour: '2-digit',
+          minute: '2-digit'
+        });
+      } catch {
+        return "Bilinmiyor";
+      }
     }
   };
 
@@ -316,7 +338,7 @@ export const Community = ({ language, theme, onShare }: CommunityProps) => {
           <h3 className={`text-lg font-semibold transition-colors duration-300 ${
             theme === 'dark' ? 'text-white' : theme === 'feminine' ? 'text-pink-800' : 'text-gray-800'
           }`}>
-            Topluluk Paylaşımları
+            Topluluk Paylaşımları ({posts.length})
           </h3>
           
           {!shareMode && (
