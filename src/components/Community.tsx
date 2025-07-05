@@ -177,11 +177,17 @@ export const Community = ({ language, theme, onShare }: CommunityProps) => {
         return "Az önce";
       }
       
-      // UTC timestamp'ı Türkiye saatine çevir
-      const postTime = new Date(timestamp);
-      const now = new Date();
+      // Türkiye saatine çevrilmiş zamanları hesapla
+      const turkeyPostTime = new Date(
+        new Date(timestamp).toLocaleString('en-US', { timeZone: 'Europe/Istanbul' })
+      );
+      const turkeyNow = new Date(
+        new Date().toLocaleString('en-US', { timeZone: 'Europe/Istanbul' })
+      );
       
-      if (isNaN(postTime.getTime())) {
+      console.log('Türkiye saatine çevrilmiş zamanlar:', { turkeyPostTime, turkeyNow });
+      
+      if (isNaN(turkeyPostTime.getTime())) {
         console.error('Geçersiz timestamp:', timestamp);
         // Hatalı durumda Türkiye saatine çevrilmiş tarihi göster
         return new Date(timestamp).toLocaleString('tr-TR', { 
@@ -194,15 +200,11 @@ export const Community = ({ language, theme, onShare }: CommunityProps) => {
         });
       }
       
-      // Türkiye saatine çevrilmiş zamanları kullanarak fark hesapla
-      const turkeyPostTime = new Date(postTime.toLocaleString('en-US', { timeZone: 'Europe/Istanbul' }));
-      const turkeyNow = new Date(now.toLocaleString('en-US', { timeZone: 'Europe/Istanbul' }));
-      
       const diffInMs = turkeyNow.getTime() - turkeyPostTime.getTime();
       
       if (diffInMs < 0) {
         // Gelecek tarih için tam tarihi göster
-        return new Date(timestamp).toLocaleString('tr-TR', { 
+        return turkeyPostTime.toLocaleString('tr-TR', {
           timeZone: 'Europe/Istanbul',
           year: 'numeric',
           month: '2-digit',
@@ -227,7 +229,7 @@ export const Community = ({ language, theme, onShare }: CommunityProps) => {
       if (diffInDays < 7) return `${diffInDays} gün önce`;
       
       // 1 haftadan fazlaysa tam tarihi göster (Türkiye saati ile)
-      return new Date(timestamp).toLocaleString('tr-TR', { 
+      return turkeyPostTime.toLocaleString('tr-TR', {
         timeZone: 'Europe/Istanbul',
         year: 'numeric',
         month: '2-digit',
