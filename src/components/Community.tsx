@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -168,7 +167,13 @@ export const Community = ({ language, theme, onShare }: CommunityProps) => {
     try {
       console.log('Formatlanacak zaman:', timestamp);
       
-      // UTC timestamp'i doğrudan kullan
+      // Timestamp kontrolü ve düzeltmesi
+      if (!timestamp) {
+        console.error('Timestamp boş veya undefined');
+        return "Az önce";
+      }
+      
+      // ISO string formatında zaman damgasını parse et
       const postTime = new Date(timestamp);
       const now = new Date();
       
@@ -178,8 +183,8 @@ export const Community = ({ language, theme, onShare }: CommunityProps) => {
         return "Az önce";
       }
       
-      console.log('Post zamanı:', postTime);
-      console.log('Şu anki zaman:', now);
+      console.log('Post zamanı:', postTime.toISOString());
+      console.log('Şu anki zaman:', now.toISOString());
       
       // Zaman farkını hesapla (milisaniye cinsinden)
       const diffInMs = now.getTime() - postTime.getTime();

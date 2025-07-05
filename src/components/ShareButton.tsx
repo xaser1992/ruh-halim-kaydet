@@ -38,13 +38,18 @@ export const ShareButton = ({
     try {
       console.log('Paylaşım başlıyor:', { mood, message: message.trim() });
       
+      // Doğru zaman damgası oluştur
+      const now = new Date().toISOString();
+      console.log('Oluşturulan zaman damgası:', now);
+      
       const { data, error } = await supabase
         .from('community_posts')
         .insert([
           {
             mood: mood,
             message: message.trim(),
-            user_ip: 'anonymous'
+            user_ip: 'anonymous',
+            created_at: now // ISO 8601 formatında zaman damgası ekle
           }
         ])
         .select();
