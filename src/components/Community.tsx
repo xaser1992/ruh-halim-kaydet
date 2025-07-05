@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -178,31 +177,39 @@ export const Community = ({ language, theme, onShare }: CommunityProps) => {
         return "Az önce";
       }
       
-      // Türkiye saatine çevir ve göster
-      const turkeyTime = new Date(timestamp).toLocaleString('tr-TR', { 
-        timeZone: 'Europe/Istanbul',
-        year: 'numeric',
-        month: '2-digit',
-        day: '2-digit',
-        hour: '2-digit',
-        minute: '2-digit'
-      });
-      
-      console.log('Türkiye saatine çevrilmiş zaman:', turkeyTime);
-      
-      // Zaman farkını hesapla
+      // UTC timestamp'ı Türkiye saatine çevir
       const postTime = new Date(timestamp);
       const now = new Date();
       
       if (isNaN(postTime.getTime())) {
         console.error('Geçersiz timestamp:', timestamp);
-        return turkeyTime; // Hatalı durumda tam tarihi göster
+        // Hatalı durumda Türkiye saatine çevrilmiş tarihi göster
+        return new Date(timestamp).toLocaleString('tr-TR', { 
+          timeZone: 'Europe/Istanbul',
+          year: 'numeric',
+          month: '2-digit',
+          day: '2-digit',
+          hour: '2-digit',
+          minute: '2-digit'
+        });
       }
       
-      const diffInMs = now.getTime() - postTime.getTime();
+      // Türkiye saatine çevrilmiş zamanları kullanarak fark hesapla
+      const turkeyPostTime = new Date(postTime.toLocaleString('en-US', { timeZone: 'Europe/Istanbul' }));
+      const turkeyNow = new Date(now.toLocaleString('en-US', { timeZone: 'Europe/Istanbul' }));
+      
+      const diffInMs = turkeyNow.getTime() - turkeyPostTime.getTime();
       
       if (diffInMs < 0) {
-        return turkeyTime; // Gelecek tarih için tam tarihi göster
+        // Gelecek tarih için tam tarihi göster
+        return new Date(timestamp).toLocaleString('tr-TR', { 
+          timeZone: 'Europe/Istanbul',
+          year: 'numeric',
+          month: '2-digit',
+          day: '2-digit',
+          hour: '2-digit',
+          minute: '2-digit'
+        });
       }
       
       const diffInSeconds = Math.floor(diffInMs / 1000);
@@ -210,7 +217,7 @@ export const Community = ({ language, theme, onShare }: CommunityProps) => {
       const diffInHours = Math.floor(diffInMinutes / 60);
       const diffInDays = Math.floor(diffInHours / 24);
       
-      console.log('Zaman farkları:', { diffInSeconds, diffInMinutes, diffInHours, diffInDays });
+      console.log('Türkiye saatine göre zaman farkları:', { diffInSeconds, diffInMinutes, diffInHours, diffInDays });
       
       // Zaman aralıklarına göre format
       if (diffInSeconds < 60) return "Az önce";
@@ -220,7 +227,14 @@ export const Community = ({ language, theme, onShare }: CommunityProps) => {
       if (diffInDays < 7) return `${diffInDays} gün önce`;
       
       // 1 haftadan fazlaysa tam tarihi göster (Türkiye saati ile)
-      return turkeyTime;
+      return new Date(timestamp).toLocaleString('tr-TR', { 
+        timeZone: 'Europe/Istanbul',
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
       
     } catch (error) {
       console.error('Zaman formatlama hatası:', error, 'timestamp:', timestamp);
