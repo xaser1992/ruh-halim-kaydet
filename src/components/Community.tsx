@@ -170,94 +170,36 @@ export const Community = ({ language, theme, onShare }: CommunityProps) => {
 
   const formatTimeAgo = (timestamp: string) => {
     try {
-      console.log('Formatlanacak zaman:', timestamp);
-      
-      if (!timestamp) {
-        console.error('Timestamp boş veya undefined');
-        return "Az önce";
-      }
-      
-      // UTC zamanları doğrudan kullan ve Türkiye saati offset'ini manuel olarak ekle
-      const postTimeUTC = new Date(timestamp);
-      const nowUTC = new Date();
-      
-      // UTC zamanlarını Türkiye saatine çevir (UTC+3)
-      const turkeyOffset = 3 * 60 * 60 * 1000; // 3 saat milisaniye cinsinden
-      const postTimeTurkey = new Date(postTimeUTC.getTime() + turkeyOffset);
-      const nowTurkey = new Date(nowUTC.getTime() + turkeyOffset);
-      
-      console.log('UTC ve Türkiye saatleri:', { 
-        postTimeUTC: postTimeUTC.toISOString(), 
-        nowUTC: nowUTC.toISOString(),
-        postTimeTurkey: postTimeTurkey.toISOString(),
-        nowTurkey: nowTurkey.toISOString()
-      });
-      
-      if (isNaN(postTimeUTC.getTime())) {
-        console.error('Geçersiz timestamp:', timestamp);
-        return postTimeUTC.toLocaleString('tr-TR', { 
-          timeZone: 'Europe/Istanbul',
-          year: 'numeric',
-          month: '2-digit',
-          day: '2-digit',
-          hour: '2-digit',
-          minute: '2-digit'
-        });
-      }
-      
-      const diffInMs = nowTurkey.getTime() - postTimeTurkey.getTime();
-      
-      if (diffInMs < 0) {
-        // Gelecek tarih için tam tarihi göster
-        return postTimeUTC.toLocaleString('tr-TR', {
-          timeZone: 'Europe/Istanbul',
-          year: 'numeric',
-          month: '2-digit',
-          day: '2-digit',
-          hour: '2-digit',
-          minute: '2-digit'
-        });
-      }
-      
+      if (!timestamp) return "Az önce";
+
+      const utcDate = new Date(timestamp);
+      const turkeyOffsetMs = 3 * 60 * 60 * 1000; // 3 saat fark
+      const turkeyDate = new Date(utcDate.getTime() + turkeyOffsetMs);
+
+      const now = new Date();
+      const nowInTurkey = new Date(now.getTime() + turkeyOffsetMs);
+
+      const diffInMs = nowInTurkey.getTime() - turkeyDate.getTime();
       const diffInSeconds = Math.floor(diffInMs / 1000);
       const diffInMinutes = Math.floor(diffInSeconds / 60);
       const diffInHours = Math.floor(diffInMinutes / 60);
       const diffInDays = Math.floor(diffInHours / 24);
-      
-      console.log('Zaman farkları:', { diffInSeconds, diffInMinutes, diffInHours, diffInDays });
-      
-      // Zaman aralıklarına göre format
+
       if (diffInSeconds < 60) return "Az önce";
       if (diffInMinutes < 60) return `${diffInMinutes} dakika önce`;
       if (diffInHours < 24) return `${diffInHours} saat önce`;
       if (diffInDays === 1) return "Dün";
       if (diffInDays < 7) return `${diffInDays} gün önce`;
-      
-      // 1 haftadan fazlaysa tam tarihi göster (Türkiye saati ile)
-      return postTimeUTC.toLocaleString('tr-TR', {
-        timeZone: 'Europe/Istanbul',
+
+      return turkeyDate.toLocaleString('tr-TR', {
         year: 'numeric',
         month: '2-digit',
         day: '2-digit',
         hour: '2-digit',
         minute: '2-digit'
       });
-      
-    } catch (error) {
-      console.error('Zaman formatlama hatası:', error, 'timestamp:', timestamp);
-      // Hata durumunda tam tarihi göster
-      try {
-        return new Date(timestamp).toLocaleString('tr-TR', { 
-          timeZone: 'Europe/Istanbul',
-          year: 'numeric',
-          month: '2-digit',
-          day: '2-digit',
-          hour: '2-digit',
-          minute: '2-digit'
-        });
-      } catch {
-        return "Bilinmiyor";
-      }
+    } catch {
+      return "Bilinmiyor";
     }
   };
 
