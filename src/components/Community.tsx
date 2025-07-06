@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -172,7 +173,15 @@ export const Community = ({ language, theme, onShare }: CommunityProps) => {
     try {
       if (!timestamp) return "Az önce";
 
-      const utcDate = new Date(timestamp);
+      console.log("Orijinal timestamp:", timestamp);
+      
+      // Güvenli UTC parse (Z eksikse ekle)
+      const rawTimestamp = timestamp.endsWith('Z') ? timestamp : `${timestamp}Z`;
+      const utcDate = new Date(rawTimestamp);
+      
+      console.log("UTC Date:", utcDate);
+      console.log("UTC millis:", utcDate.getTime());
+
       const turkeyOffsetMs = 3 * 60 * 60 * 1000; // 3 saat fark
       const turkeyDate = new Date(utcDate.getTime() + turkeyOffsetMs);
 
