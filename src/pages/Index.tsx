@@ -6,29 +6,17 @@ import { Button } from "@/components/ui/button";
 import { MoodEntry } from "@/components/MoodEntry";
 import { MoodHistory } from "@/components/MoodHistory";
 import { Community } from "@/components/Community";
+import { AuthButton } from "@/components/AuthButton";
+import { useAuth } from "@/contexts/AuthContext";
+import { useUserSettings } from "@/hooks/useUserSettings";
 import { Lock, Globe, ChevronDown, Sun, Moon, Heart, Menu } from "lucide-react";
 
 type Language = 'tr' | 'en' | 'de' | 'fr' | 'es' | 'it' | 'ru';
 
 const Index = () => {
-  const [theme, setTheme] = useState<'light' | 'dark' | 'feminine'>(() => {
-    // Sayfa yüklenirken localStorage'dan temayı hemen al
-    const savedTheme = localStorage.getItem('ruh-halim-theme') as 'light' | 'dark' | 'feminine';
-    return savedTheme || 'light';
-  });
-  
-  const [language, setLanguage] = useState<Language>(() => {
-    // Sayfa yüklenirken localStorage'dan dili hemen al
-    const savedLanguage = localStorage.getItem('ruh-halim-language') as Language;
-    return savedLanguage || 'tr';
-  });
-  
+  const { loading: authLoading } = useAuth();
+  const { settings, updateSettings, loading: settingsLoading } = useUserSettings();
   const [refreshTrigger, setRefreshTrigger] = useState(0);
-
-  // Tema değişikliğini hemen uygula
-  useEffect(() => {
-    document.documentElement.classList.toggle('dark', theme === 'dark');
-  }, [theme]);
 
   const languages = {
     tr: { name: 'Türkçe', code: 'TR' },
@@ -113,32 +101,21 @@ const Index = () => {
     }
   };
 
-  const t = translations[language];
+  const t = translations[settings.language];
+
+  // Tema değişikliğini hemen uygula
+  useEffect(() => {
+    document.documentElement.classList.toggle('dark', settings.theme === 'dark');
+  }, [settings.theme]);
 
   const handleLanguageChange = (newLanguage: Language) => {
     console.log('Changing language to:', newLanguage);
-    setLanguage(newLanguage);
-    
-    // Hemen localStorage'a kaydet
-    try {
-      localStorage.setItem('ruh-halim-language', newLanguage);
-      console.log('Language saved to localStorage:', newLanguage);
-    } catch (error) {
-      console.error('Error saving language to localStorage:', error);
-    }
+    updateSettings({ language: newLanguage });
   };
 
   const handleThemeChange = (newTheme: 'light' | 'dark' | 'feminine') => {
     console.log('Changing theme to:', newTheme);
-    setTheme(newTheme);
-    
-    // Hemen localStorage'a kaydet
-    try {
-      localStorage.setItem('ruh-halim-theme', newTheme);
-      console.log('Theme saved to localStorage:', newTheme);
-    } catch (error) {
-      console.error('Error saving theme to localStorage:', error);
-    }
+    updateSettings({ theme: newTheme });
   };
 
   const handleEntryUpdate = () => {
@@ -147,7 +124,7 @@ const Index = () => {
   };
 
   const getThemeBackground = () => {
-    switch(theme) {
+    switch(settings.theme) {
       case 'dark':
         return 'bg-gradient-to-br from-gray-900 via-purple-900 to-gray-800';
       case 'feminine':
@@ -158,7 +135,7 @@ const Index = () => {
   };
 
   const getThemeIcon = () => {
-    switch(theme) {
+    switch(settings.theme) {
       case 'dark':
         return <Moon className="w-4 h-4 mr-2" />;
       case 'feminine':
@@ -169,7 +146,7 @@ const Index = () => {
   };
 
   const getThemeText = () => {
-    switch(theme) {
+    switch(settings.theme) {
       case 'dark':
         return t.dark;
       case 'feminine':
@@ -179,17 +156,30 @@ const Index = () => {
     }
   };
 
+  if (authLoading || settingsLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Yükleniyor...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className={`min-h-screen transition-colors duration-300 ${getThemeBackground()}`}>
       <div className="container mx-auto px-4 py-6 max-w-md">
         <div className="text-center mb-8">
-          <div className="flex justify-end mb-4">
+          <div className="flex justify-between items-center mb-4">
+            <AuthButton theme={settings.theme} />
+            
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="outline" size="icon" className={`backdrop-blur-sm transition-colors duration-300 ${
-                  theme === 'dark' 
+                  settings.theme === 'dark' 
                     ? 'bg-gray-800/70 border-purple-600 text-white hover:bg-gray-700/70' 
-                    : theme === 'feminine'
+                    : settings.theme === 'feminine'
                     ? 'bg-pink-50/70 border-pink-300 text-pink-800 hover:bg-pink-100/70'
                     : 'bg-white/70 border-purple-200 hover:bg-white/90'
                 }`}>
@@ -197,16 +187,16 @@ const Index = () => {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className={`border-purple-200 z-50 transition-colors duration-300 ${
-                theme === 'dark' 
+                settings.theme === 'dark' 
                   ? 'bg-gray-800 border-purple-600' 
-                  : theme === 'feminine'
+                  : settings.theme === 'feminine'
                   ? 'bg-pink-50 border-pink-300'
                   : 'bg-white border-purple-200'
               }`}>
                 <DropdownMenuItem asChild className={`cursor-pointer transition-colors duration-300 ${
-                  theme === 'dark' 
+                  settings.theme === 'dark' 
                     ? 'text-white hover:bg-gray-700' 
-                    : theme === 'feminine'
+                    : settings.theme === 'feminine'
                     ? 'text-pink-800 hover:bg-pink-100'
                     : 'text-gray-900 hover:bg-gray-100'
                 }`}>
@@ -215,9 +205,9 @@ const Index = () => {
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild className={`cursor-pointer transition-colors duration-300 ${
-                  theme === 'dark' 
+                  settings.theme === 'dark' 
                     ? 'text-white hover:bg-gray-700' 
-                    : theme === 'feminine'
+                    : settings.theme === 'feminine'
                     ? 'text-pink-800 hover:bg-pink-100'
                     : 'text-gray-900 hover:bg-gray-100'
                 }`}>
@@ -226,9 +216,9 @@ const Index = () => {
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild className={`cursor-pointer transition-colors duration-300 ${
-                  theme === 'dark' 
+                  settings.theme === 'dark' 
                     ? 'text-white hover:bg-gray-700' 
-                    : theme === 'feminine'
+                    : settings.theme === 'feminine'
                     ? 'text-pink-800 hover:bg-pink-100'
                     : 'text-gray-900 hover:bg-gray-100'
                 }`}>
@@ -241,37 +231,37 @@ const Index = () => {
           </div>
 
           <div className={`w-16 h-16 rounded-2xl mx-auto mb-4 flex items-center justify-center shadow-lg transition-colors duration-300 ${
-            theme === 'dark' 
+            settings.theme === 'dark' 
               ? 'bg-gradient-to-br from-purple-700 to-pink-700' 
-              : theme === 'feminine'
+              : settings.theme === 'feminine'
               ? 'bg-gradient-to-br from-pink-300 to-rose-300'
               : 'bg-gradient-to-br from-purple-200 to-pink-200'
           }`}>
             <span className="text-2xl">😊</span>
           </div>
           <h1 className={`text-2xl font-bold mb-4 transition-colors duration-300 ${
-            theme === 'dark' ? 'text-white' : theme === 'feminine' ? 'text-pink-800' : 'text-gray-800'
+            settings.theme === 'dark' ? 'text-white' : settings.theme === 'feminine' ? 'text-pink-800' : 'text-gray-800'
           }`}>{t.appName}</h1>
           
           <div className="flex justify-center gap-3 mb-4">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="outline" className={`backdrop-blur-sm transition-colors duration-300 ${
-                  theme === 'dark' 
+                  settings.theme === 'dark' 
                     ? 'bg-gray-800/70 border-purple-600 text-white hover:bg-gray-700/70' 
-                    : theme === 'feminine'
+                    : settings.theme === 'feminine'
                     ? 'bg-pink-50/70 border-pink-300 text-pink-800 hover:bg-pink-100/70'
                     : 'bg-white/70 border-purple-200 hover:bg-white/90'
                 }`}>
                   <Globe className="w-4 h-4 mr-2" />
-                  {languages[language].code}
+                  {languages[settings.language].code}
                   <ChevronDown className="w-4 h-4 ml-2" />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent className={`border-purple-200 z-50 transition-colors duration-300 ${
-                theme === 'dark' 
+                settings.theme === 'dark' 
                   ? 'bg-gray-800 border-purple-600' 
-                  : theme === 'feminine'
+                  : settings.theme === 'feminine'
                   ? 'bg-pink-50 border-pink-300'
                   : 'bg-white border-purple-200'
               }`}>
@@ -280,9 +270,9 @@ const Index = () => {
                     key={key}
                     onClick={() => handleLanguageChange(key as Language)} 
                     className={`cursor-pointer transition-colors duration-300 ${
-                      theme === 'dark' 
+                      settings.theme === 'dark' 
                         ? 'text-white hover:bg-gray-700' 
-                        : theme === 'feminine'
+                        : settings.theme === 'feminine'
                         ? 'text-pink-800 hover:bg-pink-100'
                         : 'text-gray-900 hover:bg-gray-100'
                     }`}
@@ -296,9 +286,9 @@ const Index = () => {
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="outline" className={`backdrop-blur-sm transition-colors duration-300 ${
-                  theme === 'dark' 
+                  settings.theme === 'dark' 
                     ? 'bg-gray-800/70 border-purple-600 text-white hover:bg-gray-700/70' 
-                    : theme === 'feminine'
+                    : settings.theme === 'feminine'
                     ? 'bg-pink-50/70 border-pink-300 text-pink-800 hover:bg-pink-100/70'
                     : 'bg-white/70 border-purple-200 hover:bg-white/90'
                 }`}>
@@ -308,16 +298,16 @@ const Index = () => {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent className={`border-purple-200 z-50 transition-colors duration-300 ${
-                theme === 'dark' 
+                settings.theme === 'dark' 
                   ? 'bg-gray-800 border-purple-600' 
-                  : theme === 'feminine'
+                  : settings.theme === 'feminine'
                   ? 'bg-pink-50 border-pink-300'
                   : 'bg-white border-purple-200'
               }`}>
                 <DropdownMenuItem onClick={() => handleThemeChange('light')} className={`cursor-pointer transition-colors duration-300 ${
-                  theme === 'dark' 
+                  settings.theme === 'dark' 
                     ? 'text-white hover:bg-gray-700' 
-                    : theme === 'feminine'
+                    : settings.theme === 'feminine'
                     ? 'text-pink-800 hover:bg-pink-100'
                     : 'text-gray-900 hover:bg-gray-100'
                 }`}>
@@ -325,9 +315,9 @@ const Index = () => {
                   {t.light}
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => handleThemeChange('dark')} className={`cursor-pointer transition-colors duration-300 ${
-                  theme === 'dark' 
+                  settings.theme === 'dark' 
                     ? 'text-white hover:bg-gray-700' 
-                    : theme === 'feminine'
+                    : settings.theme === 'feminine'
                     ? 'text-pink-800 hover:bg-pink-100'
                     : 'text-gray-900 hover:bg-gray-100'
                 }`}>
@@ -335,9 +325,9 @@ const Index = () => {
                   {t.dark}
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => handleThemeChange('feminine')} className={`cursor-pointer transition-colors duration-300 ${
-                  theme === 'dark' 
+                  settings.theme === 'dark' 
                     ? 'text-white hover:bg-gray-700' 
-                    : theme === 'feminine'
+                    : settings.theme === 'feminine'
                     ? 'text-pink-800 hover:bg-pink-100'
                     : 'text-gray-900 hover:bg-gray-100'
                 }`}>
@@ -352,18 +342,18 @@ const Index = () => {
         {/* Main Content */}
         <Tabs defaultValue="entry" className="w-full">
           <TabsList className={`grid w-full grid-cols-3 backdrop-blur-sm rounded-xl p-1 mb-6 transition-colors duration-300 ${
-            theme === 'dark' 
+            settings.theme === 'dark' 
               ? 'bg-gray-800/70' 
-              : theme === 'feminine'
+              : settings.theme === 'feminine'
               ? 'bg-pink-50/70'
               : 'bg-white/70'
           }`}>
             <TabsTrigger 
               value="entry" 
               className={`rounded-lg transition-colors duration-300 ${
-                theme === 'dark'
+                settings.theme === 'dark'
                   ? 'data-[state=active]:bg-gray-700 data-[state=active]:text-white text-gray-300'
-                  : theme === 'feminine'
+                  : settings.theme === 'feminine'
                   ? 'data-[state=active]:bg-pink-100 data-[state=active]:text-pink-800 text-pink-600'
                   : 'data-[state=active]:bg-white data-[state=active]:shadow-sm'
               }`}
@@ -373,9 +363,9 @@ const Index = () => {
             <TabsTrigger 
               value="history"
               className={`rounded-lg transition-colors duration-300 ${
-                theme === 'dark'
+                settings.theme === 'dark'
                   ? 'data-[state=active]:bg-gray-700 data-[state=active]:text-white text-gray-300'
-                  : theme === 'feminine'
+                  : settings.theme === 'feminine'
                   ? 'data-[state=active]:bg-pink-100 data-[state=active]:text-pink-800 text-pink-600'
                   : 'data-[state=active]:bg-white data-[state=active]:shadow-sm'
               }`}
@@ -385,9 +375,9 @@ const Index = () => {
             <TabsTrigger 
               value="community"
               className={`rounded-lg transition-colors duration-300 ${
-                theme === 'dark'
+                settings.theme === 'dark'
                   ? 'data-[state=active]:bg-gray-700 data-[state=active]:text-white text-gray-300'
-                  : theme === 'feminine'
+                  : settings.theme === 'feminine'
                   ? 'data-[state=active]:bg-pink-100 data-[state=active]:text-pink-800 text-pink-600'
                   : 'data-[state=active]:bg-white data-[state=active]:shadow-sm'
               }`}
@@ -397,22 +387,22 @@ const Index = () => {
           </TabsList>
           
           <TabsContent value="entry" className="mt-0">
-            <MoodEntry language={language} theme={theme} onEntryUpdate={handleEntryUpdate} />
+            <MoodEntry language={settings.language} theme={settings.theme} onEntryUpdate={handleEntryUpdate} />
           </TabsContent>
           
           <TabsContent value="history" className="mt-0">
-            <MoodHistory language={language} theme={theme} refreshTrigger={refreshTrigger} />
+            <MoodHistory language={settings.language} theme={settings.theme} refreshTrigger={refreshTrigger} />
           </TabsContent>
           
           <TabsContent value="community" className="mt-0">
-            <Community language={language} theme={theme} />
+            <Community language={settings.language} theme={settings.theme} />
           </TabsContent>
         </Tabs>
 
         {/* Privacy Notice */}
         <div className="mt-8 text-center">
           <div className={`flex items-center justify-center gap-2 text-sm transition-colors duration-300 ${
-            theme === 'dark' ? 'text-gray-300' : theme === 'feminine' ? 'text-pink-600' : 'text-gray-600'
+            settings.theme === 'dark' ? 'text-gray-300' : settings.theme === 'feminine' ? 'text-pink-600' : 'text-gray-600'
           }`}>
             <Lock size={16} />
             <span>{t.privacy}</span>
