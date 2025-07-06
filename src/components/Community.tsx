@@ -177,20 +177,25 @@ export const Community = ({ language, theme, onShare }: CommunityProps) => {
         return "Az önce";
       }
       
-      // Türkiye saatine çevrilmiş zamanları hesapla
-      const turkeyPostTime = new Date(
-        new Date(timestamp).toLocaleString('en-US', { timeZone: 'Europe/Istanbul' })
-      );
-      const turkeyNow = new Date(
-        new Date().toLocaleString('en-US', { timeZone: 'Europe/Istanbul' })
-      );
+      // UTC zamanları doğrudan kullan ve Türkiye saati offset'ini manuel olarak ekle
+      const postTimeUTC = new Date(timestamp);
+      const nowUTC = new Date();
       
-      console.log('Türkiye saatine çevrilmiş zamanlar:', { turkeyPostTime, turkeyNow });
+      // UTC zamanlarını Türkiye saatine çevir (UTC+3)
+      const turkeyOffset = 3 * 60 * 60 * 1000; // 3 saat milisaniye cinsinden
+      const postTimeTurkey = new Date(postTimeUTC.getTime() + turkeyOffset);
+      const nowTurkey = new Date(nowUTC.getTime() + turkeyOffset);
       
-      if (isNaN(turkeyPostTime.getTime())) {
+      console.log('UTC ve Türkiye saatleri:', { 
+        postTimeUTC: postTimeUTC.toISOString(), 
+        nowUTC: nowUTC.toISOString(),
+        postTimeTurkey: postTimeTurkey.toISOString(),
+        nowTurkey: nowTurkey.toISOString()
+      });
+      
+      if (isNaN(postTimeUTC.getTime())) {
         console.error('Geçersiz timestamp:', timestamp);
-        // Hatalı durumda Türkiye saatine çevrilmiş tarihi göster
-        return new Date(timestamp).toLocaleString('tr-TR', { 
+        return postTimeUTC.toLocaleString('tr-TR', { 
           timeZone: 'Europe/Istanbul',
           year: 'numeric',
           month: '2-digit',
@@ -200,11 +205,11 @@ export const Community = ({ language, theme, onShare }: CommunityProps) => {
         });
       }
       
-      const diffInMs = turkeyNow.getTime() - turkeyPostTime.getTime();
+      const diffInMs = nowTurkey.getTime() - postTimeTurkey.getTime();
       
       if (diffInMs < 0) {
         // Gelecek tarih için tam tarihi göster
-        return turkeyPostTime.toLocaleString('tr-TR', {
+        return postTimeUTC.toLocaleString('tr-TR', {
           timeZone: 'Europe/Istanbul',
           year: 'numeric',
           month: '2-digit',
@@ -219,7 +224,7 @@ export const Community = ({ language, theme, onShare }: CommunityProps) => {
       const diffInHours = Math.floor(diffInMinutes / 60);
       const diffInDays = Math.floor(diffInHours / 24);
       
-      console.log('Türkiye saatine göre zaman farkları:', { diffInSeconds, diffInMinutes, diffInHours, diffInDays });
+      console.log('Zaman farkları:', { diffInSeconds, diffInMinutes, diffInHours, diffInDays });
       
       // Zaman aralıklarına göre format
       if (diffInSeconds < 60) return "Az önce";
@@ -229,7 +234,7 @@ export const Community = ({ language, theme, onShare }: CommunityProps) => {
       if (diffInDays < 7) return `${diffInDays} gün önce`;
       
       // 1 haftadan fazlaysa tam tarihi göster (Türkiye saati ile)
-      return turkeyPostTime.toLocaleString('tr-TR', {
+      return postTimeUTC.toLocaleString('tr-TR', {
         timeZone: 'Europe/Istanbul',
         year: 'numeric',
         month: '2-digit',
