@@ -2,7 +2,7 @@
 import { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'app.lovable.2db1032edae140e088c824fe4b03a6c9',
+  appId: 'com.example.app',
   appName: 'ruh-halim-kaydet',
   webDir: 'dist',
   bundledWebRuntime: false,
