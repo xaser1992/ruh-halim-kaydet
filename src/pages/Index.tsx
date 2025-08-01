@@ -101,7 +101,41 @@ const Index = () => {
     }
   };
 
-  const t = translations[settings.language];
+  const t = translations[settings.language] || translations['en'];
+
+  // Tema ve dil için yardımcı fonksiyonlar
+  const getDropdownItemStyle = () => {
+    switch (settings.theme) {
+      case 'dark':
+        return 'text-white hover:bg-gray-700';
+      case 'feminine':
+        return 'text-pink-800 hover:bg-pink-100';
+      default:
+        return 'text-gray-900 hover:bg-gray-100';
+    }
+  };
+
+  const getButtonStyle = () => {
+    switch (settings.theme) {
+      case 'dark':
+        return 'bg-gray-800/70 border-purple-600 text-white hover:bg-gray-700/70';
+      case 'feminine':
+        return 'bg-pink-50/70 border-pink-300 text-pink-800 hover:bg-pink-100/70';
+      default:
+        return 'bg-white/70 border-purple-200 hover:bg-white/90';
+    }
+  };
+
+  const getMenuStyle = () => {
+    switch (settings.theme) {
+      case 'dark':
+        return 'bg-gray-800 border-purple-600';
+      case 'feminine':
+        return 'bg-pink-50 border-pink-300';
+      default:
+        return 'bg-white border-purple-200';
+    }
+  };
 
   // Tema değişikliğini hemen uygula
   useEffect(() => {
@@ -176,52 +210,22 @@ const Index = () => {
             
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="icon" className={`backdrop-blur-sm transition-colors duration-300 ${
-                  settings.theme === 'dark' 
-                    ? 'bg-gray-800/70 border-purple-600 text-white hover:bg-gray-700/70' 
-                    : settings.theme === 'feminine'
-                    ? 'bg-pink-50/70 border-pink-300 text-pink-800 hover:bg-pink-100/70'
-                    : 'bg-white/70 border-purple-200 hover:bg-white/90'
-                }`}>
+                <Button variant="outline" size="icon" className={`backdrop-blur-sm transition-colors duration-300 ${getButtonStyle()}`}>
                   <Menu className="w-4 h-4" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className={`border-purple-200 z-50 transition-colors duration-300 ${
-                settings.theme === 'dark' 
-                  ? 'bg-gray-800 border-purple-600' 
-                  : settings.theme === 'feminine'
-                  ? 'bg-pink-50 border-pink-300'
-                  : 'bg-white border-purple-200'
-              }`}>
-                <DropdownMenuItem asChild className={`cursor-pointer transition-colors duration-300 ${
-                  settings.theme === 'dark' 
-                    ? 'text-white hover:bg-gray-700' 
-                    : settings.theme === 'feminine'
-                    ? 'text-pink-800 hover:bg-pink-100'
-                    : 'text-gray-900 hover:bg-gray-100'
-                }`}>
+              <DropdownMenuContent align="end" className={`border-purple-200 z-50 transition-colors duration-300 ${getMenuStyle()}`}>
+                <DropdownMenuItem asChild className={`cursor-pointer transition-colors duration-300 ${getDropdownItemStyle()}`}>
                   <Link to="/privacy-policy">
                     Gizlilik Politikası
                   </Link>
                 </DropdownMenuItem>
-                <DropdownMenuItem asChild className={`cursor-pointer transition-colors duration-300 ${
-                  settings.theme === 'dark' 
-                    ? 'text-white hover:bg-gray-700' 
-                    : settings.theme === 'feminine'
-                    ? 'text-pink-800 hover:bg-pink-100'
-                    : 'text-gray-900 hover:bg-gray-100'
-                }`}>
+                <DropdownMenuItem asChild className={`cursor-pointer transition-colors duration-300 ${getDropdownItemStyle()}`}>
                   <Link to="/terms-of-service">
                     Kullanıcı Sözleşmesi
                   </Link>
                 </DropdownMenuItem>
-                <DropdownMenuItem asChild className={`cursor-pointer transition-colors duration-300 ${
-                  settings.theme === 'dark' 
-                    ? 'text-white hover:bg-gray-700' 
-                    : settings.theme === 'feminine'
-                    ? 'text-pink-800 hover:bg-pink-100'
-                    : 'text-gray-900 hover:bg-gray-100'
-                }`}>
+                <DropdownMenuItem asChild className={`cursor-pointer transition-colors duration-300 ${getDropdownItemStyle()}`}>
                   <Link to="/license-info">
                     Lisans Bilgileri
                   </Link>
@@ -246,36 +250,18 @@ const Index = () => {
           <div className="flex justify-center gap-3 mb-4">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="outline" className={`backdrop-blur-sm transition-colors duration-300 ${
-                  settings.theme === 'dark' 
-                    ? 'bg-gray-800/70 border-purple-600 text-white hover:bg-gray-700/70' 
-                    : settings.theme === 'feminine'
-                    ? 'bg-pink-50/70 border-pink-300 text-pink-800 hover:bg-pink-100/70'
-                    : 'bg-white/70 border-purple-200 hover:bg-white/90'
-                }`}>
+                <Button variant="outline" className={`backdrop-blur-sm transition-colors duration-300 ${getButtonStyle()}`}>
                   <Globe className="w-4 h-4 mr-2" />
-                  {languages[settings.language].code}
+                  {languages[settings.language]?.code || 'EN'}
                   <ChevronDown className="w-4 h-4 ml-2" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent className={`border-purple-200 z-50 transition-colors duration-300 ${
-                settings.theme === 'dark' 
-                  ? 'bg-gray-800 border-purple-600' 
-                  : settings.theme === 'feminine'
-                  ? 'bg-pink-50 border-pink-300'
-                  : 'bg-white border-purple-200'
-              }`}>
+              <DropdownMenuContent className={`border-purple-200 z-50 transition-colors duration-300 ${getMenuStyle()}`}>
                 {Object.entries(languages).map(([key, lang]) => (
                   <DropdownMenuItem 
                     key={key}
                     onClick={() => handleLanguageChange(key as Language)} 
-                    className={`cursor-pointer transition-colors duration-300 ${
-                      settings.theme === 'dark' 
-                        ? 'text-white hover:bg-gray-700' 
-                        : settings.theme === 'feminine'
-                        ? 'text-pink-800 hover:bg-pink-100'
-                        : 'text-gray-900 hover:bg-gray-100'
-                    }`}
+                    className={`cursor-pointer transition-colors duration-300 ${getDropdownItemStyle()}`}
                   >
                     {lang.name}
                   </DropdownMenuItem>
@@ -285,52 +271,22 @@ const Index = () => {
 
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="outline" className={`backdrop-blur-sm transition-colors duration-300 ${
-                  settings.theme === 'dark' 
-                    ? 'bg-gray-800/70 border-purple-600 text-white hover:bg-gray-700/70' 
-                    : settings.theme === 'feminine'
-                    ? 'bg-pink-50/70 border-pink-300 text-pink-800 hover:bg-pink-100/70'
-                    : 'bg-white/70 border-purple-200 hover:bg-white/90'
-                }`}>
+                <Button variant="outline" className={`backdrop-blur-sm transition-colors duration-300 ${getButtonStyle()}`}>
                   {getThemeIcon()}
                   {getThemeText()}
                   <ChevronDown className="w-4 h-4 ml-2" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent className={`border-purple-200 z-50 transition-colors duration-300 ${
-                settings.theme === 'dark' 
-                  ? 'bg-gray-800 border-purple-600' 
-                  : settings.theme === 'feminine'
-                  ? 'bg-pink-50 border-pink-300'
-                  : 'bg-white border-purple-200'
-              }`}>
-                <DropdownMenuItem onClick={() => handleThemeChange('light')} className={`cursor-pointer transition-colors duration-300 ${
-                  settings.theme === 'dark' 
-                    ? 'text-white hover:bg-gray-700' 
-                    : settings.theme === 'feminine'
-                    ? 'text-pink-800 hover:bg-pink-100'
-                    : 'text-gray-900 hover:bg-gray-100'
-                }`}>
+              <DropdownMenuContent className={`border-purple-200 z-50 transition-colors duration-300 ${getMenuStyle()}`}>
+                <DropdownMenuItem onClick={() => handleThemeChange('light')} className={`cursor-pointer transition-colors duration-300 ${getDropdownItemStyle()}`}>
                   <Sun className="w-4 h-4 mr-2" />
                   {t.light}
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => handleThemeChange('dark')} className={`cursor-pointer transition-colors duration-300 ${
-                  settings.theme === 'dark' 
-                    ? 'text-white hover:bg-gray-700' 
-                    : settings.theme === 'feminine'
-                    ? 'text-pink-800 hover:bg-pink-100'
-                    : 'text-gray-900 hover:bg-gray-100'
-                }`}>
+                <DropdownMenuItem onClick={() => handleThemeChange('dark')} className={`cursor-pointer transition-colors duration-300 ${getDropdownItemStyle()}`}>
                   <Moon className="w-4 h-4 mr-2" />
                   {t.dark}
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => handleThemeChange('feminine')} className={`cursor-pointer transition-colors duration-300 ${
-                  settings.theme === 'dark' 
-                    ? 'text-white hover:bg-gray-700' 
-                    : settings.theme === 'feminine'
-                    ? 'text-pink-800 hover:bg-pink-100'
-                    : 'text-gray-900 hover:bg-gray-100'
-                }`}>
+                <DropdownMenuItem onClick={() => handleThemeChange('feminine')} className={`cursor-pointer transition-colors duration-300 ${getDropdownItemStyle()}`}>
                   <Heart className="w-4 h-4 mr-2" />
                   {t.feminine}
                 </DropdownMenuItem>
