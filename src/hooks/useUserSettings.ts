@@ -62,18 +62,24 @@ export const useUserSettings = () => {
     }
 
     try {
+      console.log('🟢 Updating settings:', { user_id: user.id, ...updatedSettings });
+      
       const { error } = await supabase
         .from('user_settings')
         .upsert({
           user_id: user.id,
           ...updatedSettings
+        }, {
+          onConflict: 'user_id'
         });
 
       if (error) {
-        console.error('Settings kaydetme hatası:', error);
+        console.error('❌ Settings kaydetme hatası:', error);
+      } else {
+        console.log('✅ Settings updated successfully');
       }
     } catch (error) {
-      console.error('Settings kaydetme hatası:', error);
+      console.error('❌ Settings kaydetme hatası:', error);
     }
   };
 

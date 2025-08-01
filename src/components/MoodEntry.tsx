@@ -12,6 +12,9 @@ import { translations } from "@/utils/translations";
 import { Camera, CameraResultType, CameraSource } from '@capacitor/camera';
 import { LocalNotifications } from '@capacitor/local-notifications';
 import { Camera as CameraIcon } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
+import { useMoodEntries } from "@/hooks/useMoodEntries";
 
 interface MoodEntryProps {
   language: 'tr' | 'en' | 'de' | 'fr' | 'es' | 'it' | 'ru';
@@ -20,6 +23,8 @@ interface MoodEntryProps {
 }
 
 export const MoodEntry = ({ language, theme, onEntryUpdate }: MoodEntryProps) => {
+  const { user } = useAuth();
+  const { saveEntry, getEntry } = useMoodEntries();
   const [selectedMood, setSelectedMood] = useState<string>("");
   const [note, setNote] = useState("");
   const [images, setImages] = useState<string[]>([]);
@@ -28,9 +33,19 @@ export const MoodEntry = ({ language, theme, onEntryUpdate }: MoodEntryProps) =>
 
   const t = translations[language];
 
-  const loadTodayData = () => {
+  const loadTodayData = async () => {
     const today = new Date().toDateString();
-    const entry = getMoodEntry(today);
+    
+    let entry = null;
+    if (user) {
+      // Giriş yapmış kullanıcı için Supabase'den yükle
+      entry = await getEntry(today);
+      console.log('Getting entry for', today, ':', entry);
+    } else {
+      // Giriş yapmamış kullanıcı için localStorage'dan yükle
+      entry = getMoodEntry(today);
+    }
+    
     const draft = getDraft(today);
     
     console.log('Loading today entry:', entry);
@@ -180,38 +195,38 @@ export const MoodEntry = ({ language, theme, onEntryUpdate }: MoodEntryProps) =>
     console.log('Saving entry with images count:', images.length);
     
     try {
-      await saveMoodEntry(entry);
-      
-      const savedEntry = getMoodEntry(today);
-      console.log('Verified saved entry:', savedEntry);
-      
-      if (savedEntry) {
-        setTodayEntry(savedEntry);
-        clearDraft(today);
-        
-        if (onEntryUpdate) {
-          console.log('Calling onEntryUpdate after successful save');
-          setTimeout(() => {
-            onEntryUpdate();
-          }, 100);
-        }
-        
-        toast({
-          title: t.saved,
-          description: new Date().toLocaleDateString(getLocaleString(language), {
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric'
-          }),
-        });
+      if (user) {
+        // Giriş yapmış kullanıcı için Supabase'e kaydet
+        await saveEntry(entry);
+        console.log('✅ Entry saved to Supabase successfully');
       } else {
-        throw new Error('Entry verification failed');
+        // Giriş yapmamış kullanıcı için localStorage'a kaydet
+        await saveMoodEntry(entry);
       }
+      
+      setTodayEntry(entry);
+      clearDraft(today);
+      
+      if (onEntryUpdate) {
+        console.log('Calling onEntryUpdate after successful save');
+        setTimeout(() => {
+          onEntryUpdate();
+        }, 100);
+      }
+      
+      toast({
+        title: t.saved,
+        description: new Date().toLocaleDateString(getLocaleString(language), {
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric'
+        }),
+      });
     } catch (error) {
-      console.error('Error saving entry:', error);
+      console.error('❌ Error saving entry:', error);
       toast({
         title: "Hata",
-        description: "Kayıt işlemi sırasında bir hata oluştu. Lütfen fotoğraf sayısını azaltmayı deneyin.",
+        description: "Kayıt işlemi sırasında bir hata oluştu. Lütfen tekrar deneyin.",
         variant: "destructive"
       });
     } finally {
