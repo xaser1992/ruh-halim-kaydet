@@ -7,6 +7,7 @@ import { MoodEntry } from "@/components/MoodEntry";
 import { MoodHistory } from "@/components/MoodHistory";
 import { Community } from "@/components/Community";
 import { AuthButton } from "@/components/AuthButton";
+import { SyncButton } from "@/components/SyncButton";
 import { useAuth } from "@/contexts/AuthContext";
 import { useUserSettings } from "@/hooks/useUserSettings";
 import { Lock, Globe, ChevronDown, Sun, Moon, Heart, Menu } from "lucide-react";
@@ -343,7 +344,10 @@ const Index = () => {
           </TabsList>
           
           <TabsContent value="entry" className="mt-0">
-            <MoodEntry language={settings.language} theme={settings.theme} onEntryUpdate={handleEntryUpdate} />
+            <div className="space-y-4">
+              <MoodEntry language={settings.language} theme={settings.theme} onEntryUpdate={handleEntryUpdate} />
+              <SyncButton language={settings.language} theme={settings.theme} />
+            </div>
           </TabsContent>
           
           <TabsContent value="history" className="mt-0">

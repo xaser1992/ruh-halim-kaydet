@@ -200,14 +200,10 @@ export const MoodEntry = ({ language, theme, onEntryUpdate }: MoodEntryProps) =>
     console.log('Saving entry with images count:', images.length);
     
     try {
-      if (user) {
-        // Giriş yapmış kullanıcı için Supabase'e kaydet
-        await saveEntry(entry);
-        console.log('✅ Entry saved to Supabase successfully');
-      } else {
-        // Giriş yapmamış kullanıcı için localStorage'a kaydet
-        await saveMoodEntry(entry);
-      }
+      // HER ZAMAN localStorage'a kaydet (artık Supabase'e günlük verisi yok)
+      console.log('💾 Saving mood entry to localStorage...');
+      await saveMoodEntry(entry);
+      console.log('✅ Entry saved to localStorage successfully');
       
       setTodayEntry(entry);
       clearDraft(today);
