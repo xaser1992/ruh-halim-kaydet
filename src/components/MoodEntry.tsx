@@ -39,11 +39,16 @@ export const MoodEntry = ({ language, theme, onEntryUpdate }: MoodEntryProps) =>
     let entry = null;
     if (user) {
       // Giriş yapmış kullanıcı için Supabase'den yükle
-      entry = await getEntry(today);
-      console.log('Getting entry for', today, ':', entry);
+      try {
+        entry = await getEntry(today);
+        console.log('🟢 User logged in, getting entry for', today, ':', entry);
+      } catch (error) {
+        console.error('❌ Error getting entry from Supabase:', error);
+      }
     } else {
       // Giriş yapmamış kullanıcı için localStorage'dan yükle
       entry = getMoodEntry(today);
+      console.log('🔵 User not logged in, getting entry from localStorage:', entry);
     }
     
     const draft = getDraft(today);
