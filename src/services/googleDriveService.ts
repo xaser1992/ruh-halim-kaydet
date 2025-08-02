@@ -14,10 +14,9 @@ export class GoogleDriveService {
 
   constructor() {
     // Google Drive API yapılandırması
-    // Bu değerler Google Cloud Console'dan alınacak
     this.config = {
-      clientId: process.env.GOOGLE_CLIENT_ID || '', // Supabase secrets'ten gelecek
-      apiKey: process.env.GOOGLE_API_KEY || '',     // Supabase secrets'ten gelecek  
+      clientId: '', // Google Cloud Console'dan OAuth 2.0 Client ID gerekli
+      apiKey: 'AIzaSyBZdDRtZS_smYJrGfcGpGMz4gV6urZPp9k',
       discoveryDoc: 'https://www.googleapis.com/discovery/v1/apis/drive/v3/rest',
       scopes: 'https://www.googleapis.com/auth/drive.file'
     };
