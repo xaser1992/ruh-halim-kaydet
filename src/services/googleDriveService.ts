@@ -15,7 +15,7 @@ export class GoogleDriveService {
   constructor() {
     // Google Drive API yapılandırması
     this.config = {
-      clientId: '889229051425-9vfbk6781g0ggbca1na902uhr0agmu2s.apps.googleusercontent.com',
+      clientId: '889229051425-sasf4jjhntk1mpfis6klblrh5ue8868j.apps.googleusercontent.com',
       apiKey: 'AIzaSyA4g3uJ7tXlVgzp62il-ROv66OIWL99t8c',
       discoveryDoc: 'https://www.googleapis.com/discovery/v1/apis/drive/v3/rest',
       scopes: 'https://www.googleapis.com/auth/drive.file'
@@ -31,7 +31,9 @@ export class GoogleDriveService {
           gapi.client.init({
             apiKey: this.config.apiKey,
             clientId: this.config.clientId,
-            scope: this.config.scopes
+            discoveryDocs: [this.config.discoveryDoc],
+            scope: this.config.scopes,
+            ux_mode: 'popup'
           }).then(() => {
             this.isInitialized = true;
             console.log('🟢 Google Drive API initialized');
