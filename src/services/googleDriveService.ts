@@ -62,6 +62,11 @@ export class GoogleDriveService {
 
     try {
       const authInstance = gapi.auth2.getAuthInstance();
+      if (!authInstance) {
+        console.error('❌ Auth instance is null, initialization may have failed');
+        return false;
+      }
+      
       const isSignedIn = authInstance.isSignedIn.get();
       
       if (!isSignedIn) {
@@ -109,12 +114,16 @@ export class GoogleDriveService {
           body: fileContent
         });
       } else {
-        // Yeni dosya oluştur
+        // Yeni dosya oluştur - FormData kullan
         const metadata = {
           name: fileName,
-          parents: ['appDataFolder'], // Kullanıcı görünümünde gizli kalır
+          parents: ['appDataFolder'],
           description: 'Ruh Halim uygulaması günlük yedekleri'
         };
+
+        const formData = new FormData();
+        formData.append('metadata', new Blob([JSON.stringify(metadata)], {type: 'application/json'}));
+        formData.append('file', new Blob([fileContent], {type: 'application/json'}));
 
         response = await gapi.client.request({
           path: 'https://www.googleapis.com/upload/drive/v3/files',
@@ -122,20 +131,7 @@ export class GoogleDriveService {
           params: {
             uploadType: 'multipart'
           },
-          headers: {
-            'Content-Type': 'multipart/related; boundary="foo_bar_baz"'
-          },
-          body: [
-            '--foo_bar_baz',
-            'Content-Type: application/json; charset=UTF-8',
-            '',
-            JSON.stringify(metadata),
-            '--foo_bar_baz',
-            'Content-Type: application/json',
-            '',
-            fileContent,
-            '--foo_bar_baz--'
-          ].join('\r\n')
+          body: formData
         });
       }
 
@@ -184,7 +180,7 @@ export class GoogleDriveService {
   private async findBackupFile(): Promise<any> {
     try {
       const response = await gapi.client.drive.files.list({
-        q: "name contains 'mood_backup' and parents in 'appDataFolder'",
+        q: "name contains 'mood_backup' and 'appDataFolder' in parents",
         spaces: 'appDataFolder'
       });
 
