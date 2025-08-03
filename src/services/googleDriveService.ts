@@ -15,8 +15,8 @@ export class GoogleDriveService {
   constructor() {
     // Google Drive API yapılandırması
     this.config = {
-      clientId: '', // Google Cloud Console'dan OAuth 2.0 Client ID gerekli
-      apiKey: 'AIzaSyBZdDRtZS_smYJrGfcGpGMz4gV6urZPp9k',
+      clientId: '889229051425-9vfbk6781g0ggbca1na902uhr0agmu2s.apps.googleusercontent.com',
+      apiKey: 'AIzaSyA4g3uJ7tXlVgzp62il-ROv66OIWL99t8c',
       discoveryDoc: 'https://www.googleapis.com/discovery/v1/apis/drive/v3/rest',
       scopes: 'https://www.googleapis.com/auth/drive.file'
     };
