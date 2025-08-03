@@ -27,21 +27,19 @@ export class GoogleDriveService {
 
     try {
       return new Promise((resolve, reject) => {
-        gapi.load('client:auth2', async () => {
-          try {
-            await gapi.client.init({
-              apiKey: this.config.apiKey,
-              clientId: this.config.clientId,
-              discoveryDocs: [this.config.discoveryDoc],
-              scope: this.config.scopes
-            });
+        gapi.load('client:auth2', () => {
+          gapi.client.init({
+            apiKey: this.config.apiKey,
+            clientId: this.config.clientId,
+            scope: this.config.scopes
+          }).then(() => {
             this.isInitialized = true;
             console.log('🟢 Google Drive API initialized');
             resolve();
-          } catch (error) {
+          }).catch((error) => {
             console.error('❌ Google Drive client init failed:', error);
             reject(error);
-          }
+          });
         });
       });
     } catch (error) {
