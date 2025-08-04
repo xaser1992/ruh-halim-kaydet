@@ -28,20 +28,43 @@ export class GoogleDriveService {
     try {
       return new Promise((resolve, reject) => {
         gapi.load('client:auth2', {
-          callback: () => {
-            gapi.client.init({
-              apiKey: this.config.apiKey,
-              clientId: this.config.clientId,
-              discoveryDocs: [this.config.discoveryDoc],
-              scope: this.config.scopes
-            }).then(() => {
+          callback: async () => {
+            try {
+              // İlk olarak discoveryDoc olmadan dene
+              await gapi.client.init({
+                apiKey: this.config.apiKey,
+                clientId: this.config.clientId,
+                scope: this.config.scopes
+              });
+
+              // Manuel olarak Drive API'yi yükle
+              await gapi.client.load('drive', 'v3');
+              
               this.isInitialized = true;
-              console.log('🟢 Google Drive API initialized');
+              console.log('🟢 Google Drive API initialized (manual load)');
               resolve();
-            }).catch((error) => {
-              console.error('❌ Google Drive client init failed:', error);
-              reject(error);
-            });
+            } catch (initError) {
+              console.warn('⚠️ Manual load failed, trying with discoveryDocs:', initError);
+              
+              try {
+                // Fallback: discoveryDocs ile dene
+                await gapi.client.init({
+                  apiKey: this.config.apiKey,
+                  clientId: this.config.clientId,
+                  discoveryDocs: [this.config.discoveryDoc],
+                  scope: this.config.scopes
+                });
+                
+                this.isInitialized = true;
+                console.log('🟢 Google Drive API initialized (discoveryDocs)');
+                resolve();
+              } catch (discoveryError) {
+                console.error('❌ Both initialization methods failed');
+                console.error('Manual load error:', initError);
+                console.error('DiscoveryDocs error:', discoveryError);
+                reject(discoveryError);
+              }
+            }
           },
           onerror: () => {
             console.error('❌ Failed to load gapi client');
