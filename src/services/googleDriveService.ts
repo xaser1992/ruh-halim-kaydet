@@ -1,9 +1,16 @@
 import { getAllMoodEntries } from '@/utils/moodStorage';
 
-// Google API type declarations
+// Google Identity Services type declarations
 declare global {
   interface Window {
     gapi: any;
+    google: {
+      accounts: {
+        oauth2: {
+          initTokenClient: (config: any) => any;
+        };
+      };
+    };
   }
 }
 
@@ -17,6 +24,8 @@ interface GoogleDriveConfig {
 export class GoogleDriveService {
   private isInitialized = false;
   private config: GoogleDriveConfig;
+  private tokenClient: any = null;
+  private accessToken: string | null = null;
 
   constructor() {
     // Google Drive API yapılandırması
@@ -31,51 +40,61 @@ export class GoogleDriveService {
   async initialize(): Promise<void> {
     if (this.isInitialized) return;
 
-    // gapi'nin yüklendiğini bekle
-    const waitForGapi = (): Promise<void> => {
+    // Google APIs'nin yüklendiğini bekle
+    const waitForGoogle = (): Promise<void> => {
       return new Promise((resolve, reject) => {
-        if (typeof window.gapi !== 'undefined') {
+        if (typeof window.gapi !== 'undefined' && typeof window.google !== 'undefined') {
           resolve();
           return;
         }
         
         let attempts = 0;
-        const checkGapi = () => {
+        const checkGoogle = () => {
           attempts++;
-          if (typeof window.gapi !== 'undefined') {
+          if (typeof window.gapi !== 'undefined' && typeof window.google !== 'undefined') {
             resolve();
           } else if (attempts > 50) { // 5 saniye bekle
-            reject(new Error('gapi could not be loaded'));
+            reject(new Error('Google APIs could not be loaded'));
           } else {
-            setTimeout(checkGapi, 100);
+            setTimeout(checkGoogle, 100);
           }
         };
-        checkGapi();
+        checkGoogle();
       });
     };
 
     try {
-      // gapi'nin yüklenmesini bekle
-      await waitForGapi();
+      // Google APIs'nin yüklenmesini bekle
+      await waitForGoogle();
       
       return new Promise((resolve, reject) => {
-        window.gapi.load('client:auth2', {
+        window.gapi.load('client', {
           callback: async () => {
             try {
-              console.log('🔄 Initializing Google Drive API...');
+              console.log('🔄 Initializing Google Drive API with GIS...');
               
-              // Basit initialization - discoveryDocs kullanma
+              // gapi.client'ı initialize et
               await window.gapi.client.init({
                 apiKey: this.config.apiKey,
-                clientId: this.config.clientId,
-                scope: this.config.scopes
+                discoveryDocs: [this.config.discoveryDoc]
               });
 
-              // Manuel olarak Drive API'yi yükle
-              await window.gapi.client.load('drive', 'v3');
+              // Google Identity Services token client'ı oluştur
+              this.tokenClient = window.google.accounts.oauth2.initTokenClient({
+                client_id: this.config.clientId,
+                scope: this.config.scopes,
+                callback: (response: any) => {
+                  if (response.error) {
+                    console.error('❌ Token client error:', response.error);
+                    return;
+                  }
+                  this.accessToken = response.access_token;
+                  console.log('🟢 Access token received');
+                },
+              });
               
               this.isInitialized = true;
-              console.log('🟢 Google Drive API initialized successfully');
+              console.log('🟢 Google Drive API initialized successfully with GIS');
               resolve();
             } catch (error) {
               console.error('❌ Google Drive initialization failed:', error);
@@ -100,19 +119,39 @@ export class GoogleDriveService {
     }
 
     try {
-      const authInstance = window.gapi.auth2.getAuthInstance();
-      if (!authInstance) {
-        console.error('❌ Auth instance is null, initialization may have failed');
+      console.log('🔄 Starting Google sign in...');
+      
+      if (!this.tokenClient) {
+        console.error('❌ Token client not initialized');
         return false;
       }
-      
-      const isSignedIn = authInstance.isSignedIn.get();
-      
-      if (!isSignedIn) {
-        await authInstance.signIn();
+
+      // Access token varsa ve geçerliyse direkt true döndür
+      if (this.accessToken) {
+        window.gapi.client.setToken({ access_token: this.accessToken });
+        console.log('✅ Using existing access token');
+        return true;
       }
-      
-      return authInstance.isSignedIn.get();
+
+      // Yeni token al
+      return new Promise((resolve) => {
+        const originalCallback = this.tokenClient.callback;
+        this.tokenClient.callback = (response: any) => {
+          if (response.error) {
+            console.error('❌ Sign in failed:', response.error);
+            resolve(false);
+          } else {
+            this.accessToken = response.access_token;
+            window.gapi.client.setToken({ access_token: this.accessToken });
+            console.log('🟢 Google Drive sign in successful');
+            resolve(true);
+          }
+          // Restore original callback
+          this.tokenClient.callback = originalCallback;
+        };
+        
+        this.tokenClient.requestAccessToken({ prompt: 'consent' });
+      });
     } catch (error) {
       console.error('❌ Google Drive sign in failed:', error);
       return false;
