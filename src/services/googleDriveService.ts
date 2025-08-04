@@ -121,13 +121,19 @@ export class GoogleDriveService {
 
   async uploadMoodData(): Promise<{ success: boolean; fileId?: string; error?: string }> {
     try {
+      console.log('🔄 Starting Google Drive upload process...');
+      
       const isSignedIn = await this.signIn();
       if (!isSignedIn) {
         return { success: false, error: 'Google Drive authentication failed' };
       }
 
+      console.log('✅ Google Drive authentication successful');
+
       // localStorage'dan tüm mood entries'i al
       const moodEntries = getAllMoodEntries();
+      console.log('📊 Mood entries to upload:', moodEntries.length, 'entries');
+      
       const backupData = {
         version: '1.0',
         exportDate: new Date().toISOString(),
@@ -137,12 +143,15 @@ export class GoogleDriveService {
 
       const fileName = `mood_backup_${new Date().toISOString().split('T')[0]}.json`;
       const fileContent = JSON.stringify(backupData, null, 2);
+      console.log('📄 Backup file prepared:', fileName, 'size:', fileContent.length, 'bytes');
 
       // Önce mevcut yedek dosyası var mı kontrol et
       const existingFile = await this.findBackupFile();
+      console.log('🔍 Existing backup file:', existingFile ? 'Found' : 'Not found');
       
       let response;
       if (existingFile) {
+        console.log('🔄 Updating existing file...');
         // Mevcut dosyayı güncelle
         response = await window.gapi.client.request({
           path: `https://www.googleapis.com/upload/drive/v3/files/${existingFile.id}`,
@@ -153,6 +162,7 @@ export class GoogleDriveService {
           body: fileContent
         });
       } else {
+        console.log('📁 Creating new file...');
         // Yeni dosya oluştur - FormData kullan
         const metadata = {
           name: fileName,
@@ -174,15 +184,24 @@ export class GoogleDriveService {
         });
       }
 
+      console.log('📤 Upload response status:', response.status);
+      console.log('📤 Upload response:', response);
+
       if (response.status === 200) {
-        console.log('🟢 Mood data uploaded to Google Drive');
+        console.log('🟢 Mood data uploaded to Google Drive successfully');
         return { success: true, fileId: response.result.id };
       } else {
-        return { success: false, error: 'Upload failed' };
+        console.error('❌ Upload failed with status:', response.status);
+        return { success: false, error: `Upload failed with status: ${response.status}` };
       }
     } catch (error) {
       console.error('❌ Google Drive upload failed:', error);
-      return { success: false, error: error.message };
+      console.error('❌ Error details:', {
+        name: error.name,
+        message: error.message,
+        stack: error.stack
+      });
+      return { success: false, error: error.message || 'Unknown error occurred' };
     }
   }
 

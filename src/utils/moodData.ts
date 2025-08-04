@@ -61,7 +61,7 @@ export const moodOptions: MoodOption[] = [
   { 
     id: "neutral", 
     emoji: "😐", 
-    labelTr: "Orta", 
+    labelTr: "İdare Eder", 
     labelEn: "Neutral",
     labelDe: "Neutral",
     labelFr: "Neutre",
