@@ -25,12 +25,24 @@ export class GoogleDriveService {
   async initialize(): Promise<void> {
     if (this.isInitialized) return;
 
+    // İnternet bağlantısını kontrol et
+    if (!navigator.onLine) {
+      throw new Error('No internet connection available');
+    }
+
+    // gapi'nin yüklendiğini kontrol et
+    if (typeof gapi === 'undefined') {
+      throw new Error('gapi-script not loaded properly');
+    }
+
     try {
       return new Promise((resolve, reject) => {
         gapi.load('client:auth2', {
           callback: async () => {
             try {
-              // İlk olarak discoveryDoc olmadan dene
+              console.log('🔄 Attempting Google Drive API initialization...');
+              
+              // İlk olarak discoveryDoc olmadan dene (daha güvenilir)
               await gapi.client.init({
                 apiKey: this.config.apiKey,
                 clientId: this.config.clientId,
@@ -41,33 +53,38 @@ export class GoogleDriveService {
               await gapi.client.load('drive', 'v3');
               
               this.isInitialized = true;
-              console.log('🟢 Google Drive API initialized (manual load)');
+              console.log('🟢 Google Drive API initialized successfully (manual load)');
               resolve();
             } catch (initError) {
-              console.warn('⚠️ Manual load failed, trying with discoveryDocs:', initError);
+              console.warn('⚠️ Manual load failed, error:', initError.message);
               
-              try {
-                // Fallback: discoveryDocs ile dene
-                await gapi.client.init({
-                  apiKey: this.config.apiKey,
-                  clientId: this.config.clientId,
-                  discoveryDocs: [this.config.discoveryDoc],
-                  scope: this.config.scopes
-                });
-                
-                this.isInitialized = true;
-                console.log('🟢 Google Drive API initialized (discoveryDocs)');
-                resolve();
-              } catch (discoveryError) {
-                console.error('❌ Both initialization methods failed');
-                console.error('Manual load error:', initError);
-                console.error('DiscoveryDocs error:', discoveryError);
-                reject(discoveryError);
+              // Sadece internet bağlantısı varsa discoveryDocs ile dene
+              if (navigator.onLine) {
+                try {
+                  console.log('🔄 Trying fallback with discoveryDocs...');
+                  await gapi.client.init({
+                    apiKey: this.config.apiKey,
+                    clientId: this.config.clientId,
+                    discoveryDocs: [this.config.discoveryDoc],
+                    scope: this.config.scopes
+                  });
+                  
+                  this.isInitialized = true;
+                  console.log('🟢 Google Drive API initialized (discoveryDocs fallback)');
+                  resolve();
+                } catch (discoveryError) {
+                  console.error('❌ Both initialization methods failed');
+                  console.error('Manual load error:', initError.message);
+                  console.error('DiscoveryDocs error:', discoveryError.message);
+                  reject(new Error(`Google Drive initialization failed: ${discoveryError.message}`));
+                }
+              } else {
+                reject(new Error('No internet connection for discoveryDocs fallback'));
               }
             }
           },
-          onerror: () => {
-            console.error('❌ Failed to load gapi client');
+          onerror: (error) => {
+            console.error('❌ Failed to load gapi client:', error);
             reject(new Error('Failed to load gapi client'));
           }
         });
