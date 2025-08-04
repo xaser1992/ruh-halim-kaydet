@@ -1,5 +1,11 @@
-import { gapi } from 'gapi-script';
 import { getAllMoodEntries } from '@/utils/moodStorage';
+
+// Google API type declarations
+declare global {
+  interface Window {
+    gapi: any;
+  }
+}
 
 interface GoogleDriveConfig {
   clientId: string;
@@ -25,62 +31,55 @@ export class GoogleDriveService {
   async initialize(): Promise<void> {
     if (this.isInitialized) return;
 
-    // İnternet bağlantısını kontrol et
-    if (!navigator.onLine) {
-      throw new Error('No internet connection available');
-    }
-
-    // gapi'nin yüklendiğini kontrol et
-    if (typeof gapi === 'undefined') {
-      throw new Error('gapi-script not loaded properly');
-    }
+    // gapi'nin yüklendiğini bekle
+    const waitForGapi = (): Promise<void> => {
+      return new Promise((resolve, reject) => {
+        if (typeof window.gapi !== 'undefined') {
+          resolve();
+          return;
+        }
+        
+        let attempts = 0;
+        const checkGapi = () => {
+          attempts++;
+          if (typeof window.gapi !== 'undefined') {
+            resolve();
+          } else if (attempts > 50) { // 5 saniye bekle
+            reject(new Error('gapi could not be loaded'));
+          } else {
+            setTimeout(checkGapi, 100);
+          }
+        };
+        checkGapi();
+      });
+    };
 
     try {
+      // gapi'nin yüklenmesini bekle
+      await waitForGapi();
+      
       return new Promise((resolve, reject) => {
-        gapi.load('client:auth2', {
+        window.gapi.load('client:auth2', {
           callback: async () => {
             try {
-              console.log('🔄 Attempting Google Drive API initialization...');
+              console.log('🔄 Initializing Google Drive API...');
               
-              // İlk olarak discoveryDoc olmadan dene (daha güvenilir)
-              await gapi.client.init({
+              // Basit initialization - discoveryDocs kullanma
+              await window.gapi.client.init({
                 apiKey: this.config.apiKey,
                 clientId: this.config.clientId,
                 scope: this.config.scopes
               });
 
               // Manuel olarak Drive API'yi yükle
-              await gapi.client.load('drive', 'v3');
+              await window.gapi.client.load('drive', 'v3');
               
               this.isInitialized = true;
-              console.log('🟢 Google Drive API initialized successfully (manual load)');
+              console.log('🟢 Google Drive API initialized successfully');
               resolve();
-            } catch (initError) {
-              console.warn('⚠️ Manual load failed, error:', initError.message);
-              
-              // Sadece internet bağlantısı varsa discoveryDocs ile dene
-              if (navigator.onLine) {
-                try {
-                  console.log('🔄 Trying fallback with discoveryDocs...');
-                  await gapi.client.init({
-                    apiKey: this.config.apiKey,
-                    clientId: this.config.clientId,
-                    discoveryDocs: [this.config.discoveryDoc],
-                    scope: this.config.scopes
-                  });
-                  
-                  this.isInitialized = true;
-                  console.log('🟢 Google Drive API initialized (discoveryDocs fallback)');
-                  resolve();
-                } catch (discoveryError) {
-                  console.error('❌ Both initialization methods failed');
-                  console.error('Manual load error:', initError.message);
-                  console.error('DiscoveryDocs error:', discoveryError.message);
-                  reject(new Error(`Google Drive initialization failed: ${discoveryError.message}`));
-                }
-              } else {
-                reject(new Error('No internet connection for discoveryDocs fallback'));
-              }
+            } catch (error) {
+              console.error('❌ Google Drive initialization failed:', error);
+              reject(error);
             }
           },
           onerror: (error) => {
@@ -101,7 +100,7 @@ export class GoogleDriveService {
     }
 
     try {
-      const authInstance = gapi.auth2.getAuthInstance();
+      const authInstance = window.gapi.auth2.getAuthInstance();
       if (!authInstance) {
         console.error('❌ Auth instance is null, initialization may have failed');
         return false;
@@ -145,7 +144,7 @@ export class GoogleDriveService {
       let response;
       if (existingFile) {
         // Mevcut dosyayı güncelle
-        response = await gapi.client.request({
+        response = await window.gapi.client.request({
           path: `https://www.googleapis.com/upload/drive/v3/files/${existingFile.id}`,
           method: 'PATCH',
           params: {
@@ -165,7 +164,7 @@ export class GoogleDriveService {
         formData.append('metadata', new Blob([JSON.stringify(metadata)], {type: 'application/json'}));
         formData.append('file', new Blob([fileContent], {type: 'application/json'}));
 
-        response = await gapi.client.request({
+        response = await window.gapi.client.request({
           path: 'https://www.googleapis.com/upload/drive/v3/files',
           method: 'POST',
           params: {
@@ -199,7 +198,7 @@ export class GoogleDriveService {
         return { success: false, error: 'No backup file found' };
       }
 
-      const response = await gapi.client.drive.files.get({
+      const response = await window.gapi.client.drive.files.get({
         fileId: backupFile.id,
         alt: 'media'
       });
@@ -219,7 +218,7 @@ export class GoogleDriveService {
 
   private async findBackupFile(): Promise<any> {
     try {
-      const response = await gapi.client.drive.files.list({
+      const response = await window.gapi.client.drive.files.list({
         q: "name contains 'mood_backup' and 'appDataFolder' in parents",
         spaces: 'appDataFolder'
       });
