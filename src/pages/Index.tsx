@@ -7,7 +7,7 @@ import { MoodEntry } from "@/components/MoodEntry";
 import { MoodHistory } from "@/components/MoodHistory";
 import { Community } from "@/components/Community";
 import { AuthButton } from "@/components/AuthButton";
-import { SyncButton } from "@/components/SyncButton";
+import { LocalBackup } from "@/components/LocalBackup";
 import { useAuth } from "@/contexts/AuthContext";
 import { useUserSettings } from "@/hooks/useUserSettings";
 import { Lock, Globe, ChevronDown, Sun, Moon, Heart, Menu } from "lucide-react";
@@ -207,7 +207,7 @@ const Index = () => {
       <div className="container mx-auto px-4 py-6 max-w-md">
         <div className="text-center mb-8">
           <div className="flex justify-between items-center mb-4">
-            <AuthButton theme={settings.theme} />
+            <AuthButton language={settings.language} theme={settings.theme} />
             
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -346,7 +346,7 @@ const Index = () => {
           <TabsContent value="entry" className="mt-0">
             <div className="space-y-4">
               <MoodEntry language={settings.language} theme={settings.theme} onEntryUpdate={handleEntryUpdate} />
-              <SyncButton language={settings.language} theme={settings.theme} />
+              <LocalBackup language={settings.language} theme={settings.theme} />
             </div>
           </TabsContent>
           

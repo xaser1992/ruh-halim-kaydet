@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Share } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface ShareButtonProps {
   mood: string;
@@ -22,6 +23,7 @@ export const ShareButton = ({
 }: ShareButtonProps) => {
   const [isSharing, setIsSharing] = useState(false);
   const { toast } = useToast();
+  const { user } = useAuth();
 
   const handleShare = async () => {
     if (!mood || !message.trim()) {
@@ -42,13 +44,27 @@ export const ShareButton = ({
       const now = new Date().toISOString();
       console.log('Oluşturulan zaman damgası:', now);
       
+      // Eğer kullanıcı giriş yapmışsa profil bilgisini al
+      let displayName = 'Anonim';
+      if (user) {
+        const { data: profileData } = await supabase
+          .from('profiles')
+          .select('full_name')
+          .eq('id', user.id)
+          .single();
+        
+        displayName = profileData?.full_name || user.email?.split('@')[0] || 'Kullanıcı';
+      }
+
       const { data, error } = await supabase
         .from('community_posts')
         .insert([
           {
             mood: mood,
             message: message.trim(),
-            user_ip: 'anonymous',
+            user_ip: user ? 'authenticated' : 'anonymous',
+            user_id: user?.id || null,
+            display_name: displayName,
             created_at: now
           }
         ])

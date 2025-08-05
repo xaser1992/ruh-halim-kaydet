@@ -1,100 +1,237 @@
-
+import { useState } from 'react';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { LogIn, LogOut, User } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from '@/hooks/use-toast';
 
 interface AuthButtonProps {
+  language: 'tr' | 'en' | 'de' | 'fr' | 'es' | 'it' | 'ru';
   theme: 'light' | 'dark' | 'feminine';
 }
 
-export const AuthButton = ({ theme }: AuthButtonProps) => {
-  const { user, signInWithGoogle, signOut } = useAuth();
-  const { toast } = useToast();
+export const AuthButton = ({ language, theme }: AuthButtonProps) => {
+  const { user } = useAuth();
+  const [profile, setProfile] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [showForm, setShowForm] = useState(false);
+  const [displayName, setDisplayName] = useState(profile?.full_name || '');
 
-  const handleSignIn = async () => {
-    try {
-      await signInWithGoogle();
-    } catch (error: any) {
-      toast({
-        title: "Giriş Hatası",
-        description: error.message || "Google ile giriş yapılırken bir hata oluştu.",
-        variant: "destructive",
-      });
+  const texts = {
+    tr: {
+      signIn: "Google ile Giriş Yap",
+      signOut: "Çıkış Yap", 
+      profile: "Profil",
+      displayName: "Görünen Ad",
+      updateProfile: "Profili Güncelle",
+      signInSuccess: "Giriş başarılı",
+      signOutSuccess: "Çıkış yapıldı",
+      updateSuccess: "Profil güncellendi",
+      signInError: "Giriş hatası",
+      updateError: "Güncelleme hatası"
+    },
+    en: {
+      signIn: "Sign in with Google",
+      signOut: "Sign Out",
+      profile: "Profile", 
+      displayName: "Display Name",
+      updateProfile: "Update Profile",
+      signInSuccess: "Signed in successfully",
+      signOutSuccess: "Signed out successfully",
+      updateSuccess: "Profile updated",
+      signInError: "Sign in error",
+      updateError: "Update error"
     }
   };
 
-  const handleSignOut = async () => {
+  const t = texts[language] || texts.tr;
+
+  const signInWithGoogle = async () => {
+    setIsLoading(true);
     try {
-      await signOut();
-      toast({
-        title: "Çıkış Yapıldı",
-        description: "Başarıyla çıkış yapıldı.",
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/`
+        }
       });
-    } catch (error: any) {
+
+      if (error) {
+        toast({
+          title: t.signInError,
+          description: error.message,
+          variant: "destructive"
+        });
+      }
+    } catch (error) {
+      console.error('Sign in error:', error);
       toast({
-        title: "Çıkış Hatası",
-        description: error.message || "Çıkış yapılırken bir hata oluştu.",
-        variant: "destructive",
+        title: t.signInError,
+        variant: "destructive"
       });
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  if (user) {
+  const signOut = async () => {
+    setIsLoading(true);
+    try {
+      const { error } = await supabase.auth.signOut();
+      
+      if (error) {
+        toast({
+          title: t.signInError,
+          description: error.message,
+          variant: "destructive"
+        });
+      } else {
+        toast({
+          title: t.signOutSuccess
+        });
+      }
+    } catch (error) {
+      console.error('Sign out error:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const updateProfile = async () => {
+    if (!user) return;
+    
+    setIsLoading(true);
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .upsert({
+          id: user.id,
+          full_name: displayName,
+          email: user.email,
+          updated_at: new Date().toISOString()
+        });
+
+      if (error) {
+        toast({
+          title: t.updateError,
+          description: error.message,
+          variant: "destructive"
+        });
+      } else {
+        toast({
+          title: t.updateSuccess
+        });
+        setShowForm(false);
+      }
+    } catch (error) {
+      console.error('Update profile error:', error);
+      toast({
+        title: t.updateError,
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const themeClasses = {
+    light: 'bg-white border-gray-200',
+    dark: 'bg-gray-800 border-gray-700', 
+    feminine: 'bg-pink-50 border-pink-200'
+  };
+
+  if (!user) {
     return (
-      <div className="flex items-center gap-2">
-        <div className={`flex items-center gap-2 px-3 py-1 rounded-lg transition-colors duration-300 ${
-          theme === 'dark' 
-            ? 'bg-gray-700/50 text-gray-300' 
-            : theme === 'feminine'
-            ? 'bg-pink-100/50 text-pink-700'
-            : 'bg-gray-100/50 text-gray-700'
-        }`}>
-          {user.user_metadata?.avatar_url ? (
-            <img 
-              src={user.user_metadata.avatar_url} 
-              alt="Profile" 
-              className="w-6 h-6 rounded-full"
+      <Button
+        onClick={signInWithGoogle}
+        disabled={isLoading}
+        className="gap-2"
+        variant="outline"
+      >
+        <LogIn className="h-4 w-4" />
+        {t.signIn}
+      </Button>
+    );
+  }
+
+  if (showForm) {
+    return (
+      <Card className={`w-full max-w-md ${themeClasses[theme]}`}>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <User className="h-5 w-5" />
+            {t.profile}
+          </CardTitle>
+          <CardDescription>
+            {user.email}
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="displayName">{t.displayName}</Label>
+            <Input
+              id="displayName"
+              value={displayName}
+              onChange={(e) => setDisplayName(e.target.value)}
+              placeholder="Adınız"
             />
-          ) : (
-            <User className="w-4 h-4" />
-          )}
-          <span className="text-sm font-medium">
-            {user.user_metadata?.full_name || user.email}
-          </span>
-        </div>
-        <Button
-          onClick={handleSignOut}
-          variant="outline"
-          size="sm"
-          className={`transition-colors duration-300 ${
-            theme === 'dark' 
-              ? 'bg-gray-800/70 border-gray-600 text-gray-300 hover:bg-gray-700/70' 
-              : theme === 'feminine'
-              ? 'bg-pink-50/70 border-pink-300 text-pink-700 hover:bg-pink-100/70'
-              : 'bg-white/70 border-gray-200 hover:bg-white/90'
-          }`}
-        >
-          <LogOut className="w-4 h-4" />
-        </Button>
-      </div>
+          </div>
+          
+          <div className="flex gap-2">
+            <Button
+              onClick={updateProfile}
+              disabled={isLoading}
+              className="flex-1"
+            >
+              {t.updateProfile}
+            </Button>
+            
+            <Button
+              onClick={() => setShowForm(false)}
+              variant="outline"
+              className="flex-1"
+            >
+              İptal
+            </Button>
+          </div>
+          
+          <Button
+            onClick={signOut}
+            disabled={isLoading}
+            variant="destructive"
+            className="w-full gap-2"
+          >
+            <LogOut className="h-4 w-4" />
+            {t.signOut}
+          </Button>
+        </CardContent>
+      </Card>
     );
   }
 
   return (
-    <Button
-      onClick={handleSignIn}
-      variant="outline"
-      className={`flex items-center gap-2 transition-colors duration-300 ${
-        theme === 'dark' 
-          ? 'bg-gray-800/70 border-gray-600 text-gray-300 hover:bg-gray-700/70' 
-          : theme === 'feminine'
-          ? 'bg-pink-50/70 border-pink-300 text-pink-700 hover:bg-pink-100/70'
-          : 'bg-white/70 border-gray-200 hover:bg-white/90'
-      }`}
-    >
-      <LogIn className="w-4 h-4" />
-      Google ile Giriş
-    </Button>
+    <div className="flex items-center gap-2">
+      <Button
+        onClick={() => setShowForm(true)}
+        variant="outline"
+        className="gap-2"
+      >
+        <User className="h-4 w-4" />
+        {profile?.full_name || user.email?.split('@')[0] || t.profile}
+      </Button>
+      
+      <Button
+        onClick={signOut}
+        disabled={isLoading}
+        variant="ghost"
+        size="sm"
+        className="gap-2"
+      >
+        <LogOut className="h-4 w-4" />
+      </Button>
+    </div>
   );
 };

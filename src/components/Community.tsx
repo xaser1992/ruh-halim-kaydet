@@ -7,6 +7,7 @@ import { translations } from "@/utils/translations";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { ShareButton } from "./ShareButton";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface CommunityProps {
   language: 'tr' | 'en' | 'de' | 'fr' | 'es' | 'it' | 'ru';
@@ -20,6 +21,8 @@ interface CommunityPost {
   message: string;
   created_at: string;
   user_ip: string;
+  display_name?: string;
+  user_id?: string;
   likes_count?: number;
   user_liked?: boolean;
 }
@@ -27,6 +30,7 @@ interface CommunityPost {
 export const Community = ({ language, theme, onShare }: CommunityProps) => {
   const t = translations[language];
   const { toast } = useToast();
+  const { user } = useAuth();
   const [posts, setPosts] = useState<CommunityPost[]>([]);
   const [loading, setLoading] = useState(true);
   const [shareMode, setShareMode] = useState(false);
@@ -372,14 +376,23 @@ export const Community = ({ language, theme, onShare }: CommunityProps) => {
                 : 'bg-white/80'
             }`}>
               <div className="space-y-3">
-                {/* Ruh Hali */}
-                <div className="flex items-center gap-2">
-                  <span className="text-2xl">{getMoodEmoji(post.mood)}</span>
-                  <span className={`text-sm transition-colors duration-300 ${
-                    theme === 'dark' ? 'text-gray-400' : theme === 'feminine' ? 'text-pink-500' : 'text-gray-500'
-                  }`}>
-                    {formatTimeAgo(post.created_at)}
-                  </span>
+                {/* Kullanıcı Bilgisi ve Ruh Hali */}
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span className="text-2xl">{getMoodEmoji(post.mood)}</span>
+                    <div className="flex flex-col">
+                      <span className={`text-sm font-medium transition-colors duration-300 ${
+                        theme === 'dark' ? 'text-gray-200' : theme === 'feminine' ? 'text-pink-700' : 'text-gray-700'
+                      }`}>
+                        {post.display_name || 'Anonim'}
+                      </span>
+                      <span className={`text-xs transition-colors duration-300 ${
+                        theme === 'dark' ? 'text-gray-400' : theme === 'feminine' ? 'text-pink-500' : 'text-gray-500'
+                      }`}>
+                        {formatTimeAgo(post.created_at)}
+                      </span>
+                    </div>
+                  </div>
                 </div>
                 
                 {/* Mesaj */}
