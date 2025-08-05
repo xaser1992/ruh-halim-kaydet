@@ -6,6 +6,10 @@ const config: CapacitorConfig = {
   appName: 'ruh-halim-kaydet',
   webDir: 'dist',
   bundledWebRuntime: false,
+  server: {
+    androidScheme: 'https',
+    hostname: 'emqnadrryrvswxhzgont.supabase.co'
+  },
   android: {
     allowMixedContent: true,
     permissions: [

@@ -52,20 +52,9 @@ export const AuthButton = ({ language, theme }: AuthButtonProps) => {
   const signInWithGoogle = async () => {
     setIsLoading(true);
     try {
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo: `${window.location.origin}/`
-        }
-      });
-
-      if (error) {
-        toast({
-          title: t.signInError,
-          description: error.message,
-          variant: "destructive"
-        });
-      }
+      // AuthContext'teki signInWithGoogle metodunu kullan
+      const { signInWithGoogle } = useAuth();
+      await signInWithGoogle();
     } catch (error) {
       console.error('Sign in error:', error);
       toast({

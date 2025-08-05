@@ -41,14 +41,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   const signInWithGoogle = async () => {
-    // Mobil cihaz kontrolü
-    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    // Capacitor platform kontrolü
+    const { Capacitor } = await import('@capacitor/core');
+    const isNative = Capacitor.isNativePlatform();
     
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        redirectTo: isMobile ? `${window.location.origin}/` : window.location.origin,
-        skipBrowserRedirect: isMobile
+        redirectTo: isNative 
+          ? 'com.googleusercontent.apps.889229051425-j5nthl0bbjh91iktp0tm0i3si2hv800f:/oauth2redirect'
+          : `${window.location.origin}/`,
+        skipBrowserRedirect: false
       }
     });
     
