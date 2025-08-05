@@ -32,7 +32,7 @@ export class GoogleDriveService {
     this.config = {
       clientId: '889229051425-sasf4jjhntk1mpfis6klblrh5ue8868j.apps.googleusercontent.com',
       apiKey: 'AIzaSyA4g3uJ7tXlVgzp62il-ROv66OIWL99t8c',
-      discoveryDoc: 'https://www.googleapis.com/discovery/v1/apis/drive/v3/rest.json',
+      discoveryDoc: 'https://www.googleapis.com/discovery/v1/apis/drive/v3/rest',
       scopes: 'https://www.googleapis.com/auth/drive.file'
     };
   }
