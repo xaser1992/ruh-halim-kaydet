@@ -1,12 +1,13 @@
 import { useState, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Download, Upload, FileText, Archive } from 'lucide-react';
+import { Upload, Archive } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { getAllMoodEntries, saveMoodEntry } from '@/utils/moodStorage';
 import JSZip from 'jszip';
 import { Capacitor } from '@capacitor/core';
 import { Filesystem, Directory } from '@capacitor/filesystem';
+import { FilePicker } from '@capawesome/capacitor-file-picker';
 
 const isNative = () => Capacitor.isNativePlatform();
 
@@ -55,8 +56,7 @@ export const LocalBackup = ({ language, theme }: LocalBackupProps) => {
     tr: {
       title: "Yerel Yedekleme",
       description: "Günlük verilerinizi cihazınıza yedekleyin veya geri yükleyin",
-      exportJson: "JSON Yedekle",
-      exportZip: "ZIP Yedekle", 
+      backup: "Yedekle",
       importData: "Veri Geri Yükle",
       exportSuccess: "Yedekleme başarılı",
       importSuccess: "Geri yükleme başarılı",
@@ -66,8 +66,7 @@ export const LocalBackup = ({ language, theme }: LocalBackupProps) => {
     en: {
       title: "Local Backup",
       description: "Backup or restore your mood data to/from your device",
-      exportJson: "Export JSON",
-      exportZip: "Export ZIP",
+      backup: "Backup",
       importData: "Import Data", 
       exportSuccess: "Export successful",
       importSuccess: "Import successful",
@@ -190,6 +189,114 @@ export const LocalBackup = ({ language, theme }: LocalBackupProps) => {
     }
   };
 
+  const handleNativeImport = async () => {
+    try {
+      setIsImporting(true);
+      const result = await FilePicker.pickFiles({ types: ['application/zip','application/json'], multiple: false, readData: true } as any);
+      const file: any = (result as any).files?.[0];
+      if (!file) return;
+
+      let backupData: any;
+      let zipContent: JSZip | null = null;
+
+      const readBase64 = async (): Promise<string> => {
+        // @ts-ignore
+        if (file.data) return file.data as string;
+        // @ts-ignore
+        if (file.path) {
+          // @ts-ignore
+          const read = await Filesystem.readFile({ path: file.path as string });
+          return read.data;
+        }
+        throw new Error('Seçilen dosya okunamadı');
+      };
+
+      const base64 = await readBase64();
+      const toBlob = (b64: string, mime: string) => {
+        const byteChars = atob(b64);
+        const byteNumbers = new Array(byteChars.length);
+        for (let i = 0; i < byteChars.length; i++) {
+          byteNumbers[i] = byteChars.charCodeAt(i);
+        }
+        const byteArray = new Uint8Array(byteNumbers);
+        return new Blob([byteArray], { type: mime });
+      };
+
+      // @ts-ignore
+      if (file.mimeType?.includes('zip') || file.name?.toLowerCase().endsWith('.zip')) {
+        const blob = toBlob(base64, 'application/zip');
+        const zip = new JSZip();
+        zipContent = await zip.loadAsync(blob);
+        const jsonFile = zipContent.file('mood_data.json');
+        if (!jsonFile) throw new Error('ZIP içinde mood_data.json bulunamadı');
+        const jsonContent = await jsonFile.async('string');
+        backupData = JSON.parse(jsonContent);
+      } else {
+        const jsonText = decodeURIComponent(escape(atob(base64)));
+        backupData = JSON.parse(jsonText);
+      }
+
+      if (!backupData.data || !Array.isArray(backupData.data)) {
+        throw new Error('Geçersiz veri formatı');
+      }
+
+      if (zipContent) {
+        for (const entry of backupData.data) {
+          if (Array.isArray(entry.images)) {
+            const newImages: string[] = [];
+            for (const imgRef of entry.images) {
+              if (typeof imgRef === 'string' && !imgRef.startsWith('data:')) {
+                const fileInZip = zipContent.file(imgRef.startsWith('images/') ? imgRef : `images/${imgRef}`);
+                if (fileInZip) {
+                  const imgBase64 = await fileInZip.async('base64');
+                  const ext = (imgRef.split('.').pop() || 'png').toLowerCase();
+                  const mime = ext === 'jpg' ? 'image/jpeg' : `image/${ext}`;
+                  newImages.push(`data:${mime};base64,${imgBase64}`);
+                }
+              } else if (typeof imgRef === 'string' && imgRef.startsWith('data:')) {
+                newImages.push(imgRef);
+              }
+            }
+            entry.images = newImages;
+          }
+        }
+      }
+
+      const existingEntries = getAllMoodEntries();
+      const importEntries = backupData.data;
+
+      const shouldOverwrite = confirm(
+        `Mevcut cihazda ${existingEntries.length} kayıt var.\n` +
+        `Yedek dosyasında ${importEntries.length} kayıt bulundu.\n\n` +
+        `"Tamam" = Mevcut verilerin üzerine yaz\n` +
+        `"İptal" = Birleştir (yeni tarihleri ekle)`
+      );
+
+      if (shouldOverwrite) {
+        localStorage.removeItem('moodEntries');
+        for (const entry of importEntries) {
+          await saveMoodEntry(entry);
+        }
+        toast({ title: t.importSuccess, description: `${importEntries.length} kayıt geri yüklendi (üzerine yazıldı)` });
+      } else {
+        const existingDates = new Set(existingEntries.map(e => e.date));
+        const newEntries = importEntries.filter((e: any) => !existingDates.has(e.date));
+        for (const entry of newEntries) {
+          await saveMoodEntry(entry);
+        }
+        toast({ title: t.importSuccess, description: `${newEntries.length} yeni kayıt eklendi` });
+      }
+
+      window.location.reload();
+
+    } catch (error) {
+      console.error('Native import error:', error);
+      toast({ title: t.importError, description: "Dosya seçilemedi", variant: "destructive" });
+    } finally {
+      setIsImporting(false);
+    }
+  };
+
   const importData = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
@@ -299,28 +406,18 @@ export const LocalBackup = ({ language, theme }: LocalBackupProps) => {
       <CardContent className="space-y-4">
         <div className="flex gap-2">
           <Button
-            onClick={exportAsJSON}
-            disabled={isExporting}
-            className="flex-1 gap-2"
-            variant="outline"
-          >
-            <FileText className="h-4 w-4" />
-            {t.exportJson}
-          </Button>
-          
-          <Button
             onClick={exportAsZIP}
             disabled={isExporting}
-            className="flex-1 gap-2"
+            className="w-full gap-2"
             variant="outline"
           >
             <Archive className="h-4 w-4" />
-            {t.exportZip}
+            {t.backup || 'Yedekle'}
           </Button>
         </div>
         
         <Button
-          onClick={() => fileInputRef.current?.click()}
+          onClick={() => isNative() ? handleNativeImport() : fileInputRef.current?.click()}
           disabled={isImporting}
           className="w-full gap-2"
         >

@@ -70,23 +70,13 @@ export const ShareButton = ({
         ])
         .select();
 
-      // Hata kontrolü - önce error varsa kontrol et
       if (error) {
         console.error('Supabase paylaşım hatası:', error);
-        
-        if (error.code === '23505' && error.message.includes('one_post_per_ip_per_day')) {
-          toast({
-            title: "Günlük Limit",
-            description: "Günde sadece 1 mesaj paylaşabilirsiniz. Yarın tekrar deneyin! 😊",
-            variant: "destructive",
-          });
-        } else {
-          toast({
-            title: "Paylaşım Başarısız",
-            description: `Paylaşım yapılırken hata oluştu: ${error.message}`,
-            variant: "destructive",
-          });
-        }
+        toast({
+          title: "Paylaşım Başarısız",
+          description: `Paylaşım yapılırken hata oluştu: ${error.message}`,
+          variant: "destructive",
+        });
         return;
       }
 
@@ -103,10 +93,9 @@ export const ShareButton = ({
 
       console.log('Paylaşım başarıyla tamamlandı:', data);
       
-      // Sadece başarılı olduğunda success mesajı göster
       toast({
         title: "Başarılı! 🌟",
-        description: "Paylaşımınız toplulukla paylaşıldı! Yarın yeni bir paylaşım yapabilirsiniz.",
+        description: "Paylaşımınız toplulukla paylaşıldı!",
       });
 
       // onShareSuccess callback'ini çağır

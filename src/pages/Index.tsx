@@ -15,7 +15,7 @@ import { Lock, Globe, ChevronDown, Sun, Moon, Heart, Menu } from "lucide-react";
 type Language = 'tr' | 'en' | 'de' | 'fr' | 'es' | 'it' | 'ru';
 
 const Index = () => {
-  const { loading: authLoading } = useAuth();
+  const { loading: authLoading, user } = useAuth();
   const { settings, updateSettings, loading: settingsLoading } = useUserSettings();
   const [refreshTrigger, setRefreshTrigger] = useState(0);
 
@@ -329,18 +329,20 @@ const Index = () => {
             >
               {t.history}
             </TabsTrigger>
-            <TabsTrigger 
-              value="community"
-              className={`rounded-lg transition-colors duration-300 ${
-                settings.theme === 'dark'
-                  ? 'data-[state=active]:bg-gray-700 data-[state=active]:text-white text-gray-300'
-                  : settings.theme === 'feminine'
-                  ? 'data-[state=active]:bg-pink-100 data-[state=active]:text-pink-800 text-pink-600'
-                  : 'data-[state=active]:bg-white data-[state=active]:shadow-sm'
-              }`}
-            >
-              {t.community}
-            </TabsTrigger>
+            {user && (
+              <TabsTrigger 
+                value="community"
+                className={`rounded-lg transition-colors duration-300 ${
+                  settings.theme === 'dark'
+                    ? 'data-[state=active]:bg-gray-700 data-[state=active]:text-white text-gray-300'
+                    : settings.theme === 'feminine'
+                    ? 'data-[state=active]:bg-pink-100 data-[state=active]:text-pink-800 text-pink-600'
+                    : 'data-[state=active]:bg-white data-[state=active]:shadow-sm'
+                }`}
+              >
+                {t.community}
+              </TabsTrigger>
+            )}
           </TabsList>
           
           <TabsContent value="entry" className="mt-0">
@@ -355,7 +357,14 @@ const Index = () => {
           </TabsContent>
           
           <TabsContent value="community" className="mt-0">
-            <Community language={settings.language} theme={settings.theme} />
+            {user ? (
+              <Community language={settings.language} theme={settings.theme} />
+            ) : (
+              <div className="p-4 text-center opacity-80">
+                <p className="mb-3">Topluluk, Google ile giriş yapan kullanıcılar içindir.</p>
+                <AuthButton language={settings.language} theme={settings.theme} />
+              </div>
+            )}
           </TabsContent>
         </Tabs>
 

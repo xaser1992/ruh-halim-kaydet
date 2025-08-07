@@ -46,7 +46,7 @@ export const Community = ({ language, theme, onShare }: CommunityProps) => {
         .from('community_posts')
         .select('*')
         .order('created_at', { ascending: false })
-        .limit(20);
+        .limit(50);
 
       if (postsError) {
         console.error('Posts yükleme hatası:', postsError);
@@ -267,11 +267,11 @@ export const Community = ({ language, theme, onShare }: CommunityProps) => {
                 }`}>
                   Mesajın
                 </label>
-                <textarea
-                  value={shareData.message}
-                  onChange={(e) => setShareData({ ...shareData, message: e.target.value })}
-                  placeholder="Nasıl hissediyorsun? (Günde sadece 1 mesaj paylaşabilirsin)"
-                  rows={3}
+                  <textarea
+                    value={shareData.message}
+                    onChange={(e) => setShareData({ ...shareData, message: e.target.value })}
+                    placeholder="Nasıl hissediyorsun?"
+                    rows={3}
                   className={`w-full p-2 rounded-lg border transition-colors duration-300 ${
                     theme === 'dark' 
                       ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' 
