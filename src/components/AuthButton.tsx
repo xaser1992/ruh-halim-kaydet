@@ -14,7 +14,7 @@ interface AuthButtonProps {
 }
 
 export const AuthButton = ({ language, theme }: AuthButtonProps) => {
-  const { user } = useAuth();
+  const { user, signInWithGoogle: signInWithGoogleFromCtx } = useAuth();
   const [profile, setProfile] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [showForm, setShowForm] = useState(false);
@@ -53,8 +53,7 @@ export const AuthButton = ({ language, theme }: AuthButtonProps) => {
     setIsLoading(true);
     try {
       // AuthContext'teki signInWithGoogle metodunu kullan
-      const { signInWithGoogle } = useAuth();
-      await signInWithGoogle();
+      await signInWithGoogleFromCtx();
     } catch (error) {
       console.error('Sign in error:', error);
       toast({

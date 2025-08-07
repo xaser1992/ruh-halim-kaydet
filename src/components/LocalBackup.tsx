@@ -5,7 +5,42 @@ import { Download, Upload, FileText, Archive } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { getAllMoodEntries, saveMoodEntry } from '@/utils/moodStorage';
 import JSZip from 'jszip';
+import { Capacitor } from '@capacitor/core';
+import { Filesystem, Directory } from '@capacitor/filesystem';
 
+const isNative = () => Capacitor.isNativePlatform();
+
+const blobToBase64 = (blob: Blob): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const dataUrl = reader.result as string;
+      const base64 = dataUrl.split(',')[1] || '';
+      resolve(base64);
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(blob);
+  });
+};
+
+const saveTextToDownloadsNative = async (filename: string, text: string) => {
+  await Filesystem.writeFile({
+    path: `Download/${filename}`,
+    data: btoa(unescape(encodeURIComponent(text))),
+    directory: Directory.ExternalStorage,
+    recursive: true
+  });
+};
+
+const saveBlobToDownloadsNative = async (filename: string, blob: Blob) => {
+  const base64 = await blobToBase64(blob);
+  await Filesystem.writeFile({
+    path: `Download/${filename}`,
+    data: base64,
+    directory: Directory.ExternalStorage,
+    recursive: true
+  });
+};
 interface LocalBackupProps {
   language: 'tr' | 'en' | 'de' | 'fr' | 'es' | 'it' | 'ru';
   theme: 'light' | 'dark' | 'feminine';
@@ -66,19 +101,20 @@ export const LocalBackup = ({ language, theme }: LocalBackupProps) => {
       };
 
       const dataStr = JSON.stringify(backupData, null, 2);
-      const dataBlob = new Blob([dataStr], { type: 'application/json' });
-      
-      const link = document.createElement('a');
-      link.href = URL.createObjectURL(dataBlob);
-      link.download = `ruh_halim_backup_${new Date().toISOString().split('T')[0]}.json`;
-      link.click();
-      
-      URL.revokeObjectURL(link.href);
 
-      toast({
-        title: t.exportSuccess,
-        description: `${moodEntries.length} kayıt yedeklendi`
-      });
+      const filename = `ruh_halim_backup_${new Date().toISOString().split('T')[0]}.json`;
+      if (isNative()) {
+        await saveTextToDownloadsNative(filename, dataStr);
+        toast({ title: t.exportSuccess, description: `Downloads klasörüne kaydedildi` });
+      } else {
+        const dataBlob = new Blob([dataStr], { type: 'application/json' });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(dataBlob);
+        link.download = filename;
+        link.click();
+        URL.revokeObjectURL(link.href);
+        toast({ title: t.exportSuccess, description: `${moodEntries.length} kayıt yedeklendi` });
+      }
     } catch (error) {
       console.error('Export error:', error);
       toast({
@@ -96,56 +132,59 @@ export const LocalBackup = ({ language, theme }: LocalBackupProps) => {
       const moodEntries = getAllMoodEntries();
       
       if (moodEntries.length === 0) {
-        toast({
-          title: t.noData,
-          variant: "destructive"
-        });
+        toast({ title: t.noData, variant: "destructive" });
         return;
       }
 
       const zip = new JSZip();
-      
-      // Ana veri dosyası
+      const imagesFolder = zip.folder('images');
+
+      // JSON için entries'i kopyala ve image'leri dosya adına çevir
+      const entriesForJson = moodEntries.map((entry) => {
+        const images = (entry.images || []).map((img, idx) => {
+          if (!img.startsWith('data:')) return img; // zaten dosya adıysa
+          const match = img.match(/^data:(image\/(\w+));base64,(.*)$/);
+          const extRaw = match?.[2] || 'png';
+          const ext = extRaw === 'jpeg' ? 'jpg' : extRaw;
+          const base64 = match?.[3] || '';
+          const safeDate = entry.date.replace(/[^0-9A-Za-z_-]/g, '_');
+          const filename = `${safeDate}_${idx}.${ext}`;
+          imagesFolder?.file(filename, base64, { base64: true });
+          return `images/${filename}`;
+        });
+        return { ...entry, images };
+      });
+
       const backupData = {
         version: '2.0',
         exportDate: new Date().toISOString(),
         appName: 'Ruh Halim',
         dataType: 'mood_entries',
         totalEntries: moodEntries.length,
-        data: moodEntries
+        data: entriesForJson
       };
-      
-      zip.file('mood_data.json', JSON.stringify(backupData, null, 2));
-      
-      // README dosyası
-      const readme = `Ruh Halim Yedekleme Dosyası
-Oluşturulma Tarihi: ${new Date().toLocaleString('tr-TR')}
-Toplam Kayıt: ${moodEntries.length}
 
-Bu ZIP dosyası içerisinde mood_data.json dosyası bulunmaktadır.
-Geri yüklemek için uygulamada "Veri Geri Yükle" butonunu kullanın.`;
-      
+      zip.file('mood_data.json', JSON.stringify(backupData, null, 2));
+      const readme = `Ruh Halim Yedekleme Dosyası\nOluşturulma Tarihi: ${new Date().toLocaleString('tr-TR')}\nToplam Kayıt: ${moodEntries.length}\n\nTüm fotoğraflar images/ klasöründedir.`;
       zip.file('README.txt', readme);
 
-      const content = await zip.generateAsync({ type: 'blob' });
-      
-      const link = document.createElement('a');
-      link.href = URL.createObjectURL(content);
-      link.download = `ruh_halim_backup_${new Date().toISOString().split('T')[0]}.zip`;
-      link.click();
-      
-      URL.revokeObjectURL(link.href);
+      const blob = await zip.generateAsync({ type: 'blob' });
+      const filename = `ruh_halim_backup_${new Date().toISOString().split('T')[0]}.zip`;
 
-      toast({
-        title: t.exportSuccess,
-        description: `${moodEntries.length} kayıt ZIP olarak yedeklendi`
-      });
+      if (isNative()) {
+        await saveBlobToDownloadsNative(filename, blob);
+        toast({ title: t.exportSuccess, description: `Downloads klasörüne kaydedildi` });
+      } else {
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = filename;
+        link.click();
+        URL.revokeObjectURL(link.href);
+        toast({ title: t.exportSuccess, description: `${moodEntries.length} kayıt ZIP olarak yedeklendi` });
+      }
     } catch (error) {
       console.error('ZIP export error:', error);
-      toast({
-        title: "ZIP yedekleme hatası",
-        variant: "destructive"
-      });
+      toast({ title: "ZIP yedekleme hatası", variant: "destructive" });
     } finally {
       setIsExporting(false);
     }
@@ -159,17 +198,14 @@ Geri yüklemek için uygulamada "Veri Geri Yükle" butonunu kullanın.`;
     
     try {
       let backupData: any;
+      let zipContent: JSZip | null = null;
       
       if (file.name.endsWith('.zip')) {
         // ZIP dosyası işleme
         const zip = new JSZip();
-        const zipContent = await zip.loadAsync(file);
+        zipContent = await zip.loadAsync(file);
         const jsonFile = zipContent.file('mood_data.json');
-        
-        if (!jsonFile) {
-          throw new Error('ZIP içinde mood_data.json bulunamadı');
-        }
-        
+        if (!jsonFile) throw new Error('ZIP içinde mood_data.json bulunamadı');
         const jsonContent = await jsonFile.async('string');
         backupData = JSON.parse(jsonContent);
       } else {
@@ -182,11 +218,34 @@ Geri yüklemek için uygulamada "Veri Geri Yükle" butonunu kullanın.`;
         throw new Error('Geçersiz veri formatı');
       }
 
+      // ZIP ise, görüntü dosyalarını data URL'e çevir
+      if (zipContent) {
+        for (const entry of backupData.data) {
+          if (Array.isArray(entry.images)) {
+            const newImages: string[] = [];
+            for (const imgRef of entry.images) {
+              if (typeof imgRef === 'string' && !imgRef.startsWith('data:')) {
+                // images/ klasörü içindeki dosya
+                const fileInZip = zipContent.file(imgRef.startsWith('images/') ? imgRef : `images/${imgRef}`);
+                if (fileInZip) {
+                  const base64 = await fileInZip.async('base64');
+                  const ext = (imgRef.split('.').pop() || 'png').toLowerCase();
+                  const mime = ext === 'jpg' ? 'image/jpeg' : `image/${ext}`;
+                  newImages.push(`data:${mime};base64,${base64}`);
+                }
+              } else if (typeof imgRef === 'string' && imgRef.startsWith('data:')) {
+                newImages.push(imgRef);
+              }
+            }
+            entry.images = newImages;
+          }
+        }
+      }
+
       // Mevcut verilerle karşılaştırma
       const existingEntries = getAllMoodEntries();
       const importEntries = backupData.data;
       
-      // Kullanıcıya sor: Üzerine yaz mı yoksa birleştir mi?
       const shouldOverwrite = confirm(
         `Mevcut cihazda ${existingEntries.length} kayıt var.\n` +
         `Yedek dosyasında ${importEntries.length} kayıt bulundu.\n\n` +
@@ -195,46 +254,28 @@ Geri yüklemek için uygulamada "Veri Geri Yükle" butonunu kullanın.`;
       );
 
       if (shouldOverwrite) {
-        // Tüm localStorage'ı temizle ve yedek verisini yükle
         localStorage.removeItem('moodEntries');
         for (const entry of importEntries) {
           await saveMoodEntry(entry);
         }
-        
-        toast({
-          title: t.importSuccess,
-          description: `${importEntries.length} kayıt geri yüklendi (üzerine yazıldı)`
-        });
+        toast({ title: t.importSuccess, description: `${importEntries.length} kayıt geri yüklendi (üzerine yazıldı)` });
       } else {
-        // Sadece yeni tarihli kayıtları ekle
         const existingDates = new Set(existingEntries.map(e => e.date));
         const newEntries = importEntries.filter((e: any) => !existingDates.has(e.date));
-        
         for (const entry of newEntries) {
           await saveMoodEntry(entry);
         }
-        
-        toast({
-          title: t.importSuccess,
-          description: `${newEntries.length} yeni kayıt eklendi`
-        });
+        toast({ title: t.importSuccess, description: `${newEntries.length} yeni kayıt eklendi` });
       }
       
-      // Sayfayı yenile
       window.location.reload();
       
     } catch (error) {
       console.error('Import error:', error);
-      toast({
-        title: t.importError,
-        description: "Dosya formatı desteklenmiyor",
-        variant: "destructive"
-      });
+      toast({ title: t.importError, description: "Dosya formatı desteklenmiyor", variant: "destructive" });
     } finally {
       setIsImporting(false);
-      if (fileInputRef.current) {
-        fileInputRef.current.value = '';
-      }
+      if (fileInputRef.current) fileInputRef.current.value = '';
     }
   };
 
