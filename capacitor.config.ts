@@ -7,8 +7,7 @@ const config: CapacitorConfig = {
   webDir: 'dist',
   bundledWebRuntime: false,
   server: {
-    androidScheme: 'https',
-    hostname: 'emqnadrryrvswxhzgont.supabase.co'
+    androidScheme: 'https'
   },
   android: {
     allowMixedContent: true,

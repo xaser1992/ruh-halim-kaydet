@@ -60,37 +60,14 @@ export const Community = ({ language, theme, onShare }: CommunityProps) => {
         }
       }
       
-      // Mobil cihazlarda bazen network gecikmesi olabiliyor, retry mekanizması ekle
-      let postsData, postsError;
-      let retryCount = 0;
-      const maxRetries = 3;
+      // Basit ve güvenilir posts yükleme
+      console.log('Community posts yükleniyor...');
       
-      while (retryCount < maxRetries) {
-        try {
-          console.log(`Posts yükleme denemesi: ${retryCount + 1}`);
-          
-          const response = await supabase
-            .from('community_posts')
-            .select('*')
-            .order('created_at', { ascending: false })
-            .limit(50);
-            
-          postsData = response.data;
-          postsError = response.error;
-          
-          if (!postsError) break;
-          
-        } catch (error) {
-          console.error('Network error:', error);
-          postsError = error;
-        }
-        
-        retryCount++;
-        if (retryCount < maxRetries) {
-          console.log('Yeniden deneniyor...');
-          await new Promise(resolve => setTimeout(resolve, 1000 * retryCount));
-        }
-      }
+      const { data: postsData, error: postsError } = await supabase
+        .from('community_posts')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(50);
 
       if (postsError) {
         console.error('Posts yükleme hatası:', postsError);

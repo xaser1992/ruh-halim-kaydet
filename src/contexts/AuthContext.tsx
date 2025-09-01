@@ -50,11 +50,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       console.log('Google login başlatılıyor...');
       
       if (isNative) {
-        // Mobil cihazlarda browser açarak OAuth yapıyoruz
+        // Mobil cihazlarda deep link kullan
         const { error } = await supabase.auth.signInWithOAuth({
           provider: 'google',
           options: {
-            redirectTo: `${window.location.origin}/`,
+            redirectTo: 'com.example.app://oauth',
             skipBrowserRedirect: false
           }
         });
