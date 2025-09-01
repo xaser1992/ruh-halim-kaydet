@@ -206,7 +206,7 @@ export const LocalBackup = ({ language, theme }: LocalBackupProps) => {
         if (file.path) {
           // @ts-ignore
           const read = await Filesystem.readFile({ path: file.path as string });
-          return read.data;
+          return typeof read.data === 'string' ? read.data : await blobToBase64(read.data as Blob);
         }
         throw new Error('Seçilen dosya okunamadı');
       };
