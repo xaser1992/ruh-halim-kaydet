@@ -317,7 +317,7 @@ export const Community = ({ language, theme, onShare }: CommunityProps) => {
             Topluluk Paylaşımları ({posts.length})
           </h3>
           
-          {!shareMode && (
+          {!shareMode && user && (
             <Button
               onClick={() => setShareMode(true)}
               className={`flex items-center gap-2 text-white font-medium transition-all duration-200 ${
@@ -331,6 +331,18 @@ export const Community = ({ language, theme, onShare }: CommunityProps) => {
               <Share className="w-4 h-4" />
               Paylaş
             </Button>
+          )}
+          
+          {!user && (
+            <div className={`text-xs text-center p-2 rounded-lg transition-colors duration-300 ${
+              theme === 'dark' 
+                ? 'bg-gray-700/50 text-gray-300' 
+                : theme === 'feminine'
+                ? 'bg-pink-100/50 text-pink-600'
+                : 'bg-gray-100/50 text-gray-600'
+            }`}>
+              Paylaşım yapmak için Google ile giriş yapın
+            </div>
           )}
         </div>
         
@@ -404,27 +416,36 @@ export const Community = ({ language, theme, onShare }: CommunityProps) => {
                 
                 {/* Beğeni Butonu */}
                 <div className="flex items-center justify-between pt-2 border-t border-opacity-20">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => toggleLike(post.id, post.user_liked || false)}
-                    className={`flex items-center gap-2 transition-colors duration-300 ${
-                      post.user_liked
-                        ? theme === 'dark' 
-                          ? 'text-pink-400 hover:text-pink-300 hover:bg-gray-700/50' 
-                          : theme === 'feminine'
-                          ? 'text-pink-600 hover:text-pink-700 hover:bg-pink-100/50'
-                          : 'text-purple-600 hover:text-purple-700 hover:bg-purple-50'
-                        : theme === 'dark' 
-                          ? 'text-gray-300 hover:text-pink-400 hover:bg-gray-700/50' 
-                          : theme === 'feminine'
-                          ? 'text-pink-400 hover:text-pink-600 hover:bg-pink-100/50'
-                          : 'text-gray-600 hover:text-purple-600 hover:bg-purple-50'
-                    }`}
-                  >
-                    <Heart className={`w-4 h-4 ${post.user_liked ? 'fill-current' : ''}`} />
-                    <span>{post.likes_count || 0} Beğeni</span>
-                  </Button>
+                  {user ? (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => toggleLike(post.id, post.user_liked || false)}
+                      className={`flex items-center gap-2 transition-colors duration-300 ${
+                        post.user_liked
+                          ? theme === 'dark' 
+                            ? 'text-pink-400 hover:text-pink-300 hover:bg-gray-700/50' 
+                            : theme === 'feminine'
+                            ? 'text-pink-600 hover:text-pink-700 hover:bg-pink-100/50'
+                            : 'text-purple-600 hover:text-purple-700 hover:bg-purple-50'
+                          : theme === 'dark' 
+                            ? 'text-gray-300 hover:text-pink-400 hover:bg-gray-700/50' 
+                            : theme === 'feminine'
+                            ? 'text-pink-400 hover:text-pink-600 hover:bg-pink-100/50'
+                            : 'text-gray-600 hover:text-purple-600 hover:bg-purple-50'
+                      }`}
+                    >
+                      <Heart className={`w-4 h-4 ${post.user_liked ? 'fill-current' : ''}`} />
+                      <span>{post.likes_count || 0} Beğeni</span>
+                    </Button>
+                  ) : (
+                    <div className={`flex items-center gap-2 text-sm transition-colors duration-300 ${
+                      theme === 'dark' ? 'text-gray-400' : theme === 'feminine' ? 'text-pink-500' : 'text-gray-500'
+                    }`}>
+                      <Heart className="w-4 h-4" />
+                      <span>{post.likes_count || 0} Beğeni</span>
+                    </div>
+                  )}
                 </div>
               </div>
             </Card>

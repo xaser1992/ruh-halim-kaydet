@@ -26,6 +26,15 @@ export const ShareButton = ({
   const { user } = useAuth();
 
   const handleShare = async () => {
+    if (!user) {
+      toast({
+        title: "Uyarı",
+        description: "Paylaşım yapmak için Google ile giriş yapın.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     if (!mood || !message.trim()) {
       toast({
         title: "Uyarı",
