@@ -60,20 +60,45 @@ export const Community = ({ language, theme, onShare }: CommunityProps) => {
         }
       }
       
-      // Posts'u al - HİÇBİR FİLTRE KULLANMA, sadece tarihe göre sırala
-      const { data: postsData, error: postsError } = await supabase
-        .from('community_posts')
-        .select('*')
-        .order('created_at', { ascending: false })
-        .limit(50);
+      // Mobil cihazlarda bazen network gecikmesi olabiliyor, retry mekanizması ekle
+      let postsData, postsError;
+      let retryCount = 0;
+      const maxRetries = 3;
+      
+      while (retryCount < maxRetries) {
+        try {
+          console.log(`Posts yükleme denemesi: ${retryCount + 1}`);
+          
+          const response = await supabase
+            .from('community_posts')
+            .select('*')
+            .order('created_at', { ascending: false })
+            .limit(50);
+            
+          postsData = response.data;
+          postsError = response.error;
+          
+          if (!postsError) break;
+          
+        } catch (error) {
+          console.error('Network error:', error);
+          postsError = error;
+        }
+        
+        retryCount++;
+        if (retryCount < maxRetries) {
+          console.log('Yeniden deneniyor...');
+          await new Promise(resolve => setTimeout(resolve, 1000 * retryCount));
+        }
+      }
 
       if (postsError) {
         console.error('Posts yükleme hatası:', postsError);
         console.error('Error details:', JSON.stringify(postsError, null, 2));
         
         toast({
-          title: "Hata",
-          description: `Paylaşımlar yüklenirken hata: ${postsError.message}`,
+          title: "Bağlantı Hatası",
+          description: "Paylaşımlar yüklenemiyor. Lütfen internet bağlantınızı kontrol edin ve tekrar deneyin.",
           variant: "destructive",
         });
         return;

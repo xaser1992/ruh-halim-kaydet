@@ -41,24 +41,45 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   const signInWithGoogle = async () => {
-    // Capacitor platform kontrolü
-    const { Capacitor } = await import('@capacitor/core');
-    const isNative = Capacitor.isNativePlatform();
-    
-    console.log('Platform:', isNative ? 'Native' : 'Web');
-    
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: 'google',
-      options: {
-        redirectTo: isNative 
-          ? 'com.example.app://oauth2redirect'
-          : `${window.location.origin}/`,
-        skipBrowserRedirect: isNative
+    try {
+      // Capacitor platform kontrolü
+      const { Capacitor } = await import('@capacitor/core');
+      const isNative = Capacitor.isNativePlatform();
+      
+      console.log('Platform:', isNative ? 'Native' : 'Web');
+      console.log('Google login başlatılıyor...');
+      
+      if (isNative) {
+        // Mobil cihazlarda browser açarak OAuth yapıyoruz
+        const { error } = await supabase.auth.signInWithOAuth({
+          provider: 'google',
+          options: {
+            redirectTo: `${window.location.origin}/`,
+            skipBrowserRedirect: false
+          }
+        });
+        
+        if (error) {
+          console.error('Google sign in error:', error);
+          throw error;
+        }
+      } else {
+        // Web'de normal OAuth flow
+        const { error } = await supabase.auth.signInWithOAuth({
+          provider: 'google',
+          options: {
+            redirectTo: `${window.location.origin}/`,
+            skipBrowserRedirect: false
+          }
+        });
+        
+        if (error) {
+          console.error('Google sign in error:', error);
+          throw error;
+        }
       }
-    });
-    
-    if (error) {
-      console.error('Google sign in error:', error);
+    } catch (error) {
+      console.error('Sign in with Google failed:', error);
       throw error;
     }
   };
