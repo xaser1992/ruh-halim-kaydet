@@ -41,6 +41,25 @@ export const Community = ({ language, theme, onShare }: CommunityProps) => {
     try {
       console.log('Paylaşımlar yükleniyor...');
       
+      // Network bağlantısını kontrol et
+      const { Capacitor } = await import('@capacitor/core');
+      const { Network } = await import('@capacitor/network');
+      
+      if (Capacitor.isNativePlatform()) {
+        const status = await Network.getStatus();
+        console.log('Network status:', status);
+        
+        if (!status.connected) {
+          console.log('Network bağlantısı yok');
+          toast({
+            title: "Bağlantı Hatası",
+            description: "İnternet bağlantınızı kontrol edin.",
+            variant: "destructive",
+          });
+          return;
+        }
+      }
+      
       // Posts'u al - HİÇBİR FİLTRE KULLANMA, sadece tarihe göre sırala
       const { data: postsData, error: postsError } = await supabase
         .from('community_posts')
@@ -50,9 +69,11 @@ export const Community = ({ language, theme, onShare }: CommunityProps) => {
 
       if (postsError) {
         console.error('Posts yükleme hatası:', postsError);
+        console.error('Error details:', JSON.stringify(postsError, null, 2));
+        
         toast({
           title: "Hata",
-          description: "Paylaşımlar yüklenirken bir hata oluştu.",
+          description: `Paylaşımlar yüklenirken hata: ${postsError.message}`,
           variant: "destructive",
         });
         return;

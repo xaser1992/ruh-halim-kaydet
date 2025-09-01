@@ -45,13 +45,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const { Capacitor } = await import('@capacitor/core');
     const isNative = Capacitor.isNativePlatform();
     
+    console.log('Platform:', isNative ? 'Native' : 'Web');
+    
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
         redirectTo: isNative 
-          ? 'com.googleusercontent.apps.889229051425-j5nthl0bbjh91iktp0tm0i3si2hv800f:/oauth2redirect'
+          ? 'com.example.app://oauth2redirect'
           : `${window.location.origin}/`,
-        skipBrowserRedirect: false
+        skipBrowserRedirect: isNative
       }
     });
     
