@@ -50,18 +50,43 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       console.log('Google login başlatılıyor...');
       
       if (isNative) {
-        // Mobil cihazlarda deep link kullan
-        const { error } = await supabase.auth.signInWithOAuth({
+        // Mobil cihazlarda browser plugin ile OAuth
+        const { Browser } = await import('@capacitor/browser');
+        
+        // OAuth URL'ini oluştur
+        const { data, error } = await supabase.auth.signInWithOAuth({
           provider: 'google',
           options: {
-            redirectTo: 'com.example.app://oauth',
-            skipBrowserRedirect: false
+            skipBrowserRedirect: true
           }
         });
         
         if (error) {
-          console.error('Google sign in error:', error);
+          console.error('OAuth URL oluşturma hatası:', error);
           throw error;
+        }
+        
+        if (data.url) {
+          console.log('OAuth URL açılıyor:', data.url);
+          
+          // Browser'ı aç ve OAuth işlemini gerçekleştir
+          await Browser.open({
+            url: data.url,
+            windowName: '_self'
+          });
+          
+          // Browser kapanma olayını dinle
+          Browser.addListener('browserFinished', async () => {
+            console.log('Browser kapatıldı, session kontrol ediliyor');
+            
+            // Session'ı kontrol et
+            const { data: session } = await supabase.auth.getSession();
+            if (session.session) {
+              console.log('OAuth başarılı!');
+              setSession(session.session);
+              setUser(session.session.user);
+            }
+          });
         }
       } else {
         // Web'de normal OAuth flow

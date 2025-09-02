@@ -28,6 +28,12 @@ const config: CapacitorConfig = {
     contentInset: 'automatic'
   },
   plugins: {
+    Browser: {
+      windowOptions: {
+        "toolbar": "no",
+        "location": "no"
+      }
+    },
     Camera: {
       saveToGallery: false,
       permissions: ['camera', 'photos']
