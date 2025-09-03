@@ -6,18 +6,19 @@ import { Button } from "@/components/ui/button";
 import { MoodEntry } from "@/components/MoodEntry";
 import { MoodHistory } from "@/components/MoodHistory";
 import { Community } from "@/components/Community";
-import { AuthButton } from "@/components/AuthButton";
 import { LocalBackup } from "@/components/LocalBackup";
-import { useAuth } from "@/contexts/AuthContext";
+import { UsernameSelector } from "@/components/UsernameSelector";
 import { useUserSettings } from "@/hooks/useUserSettings";
-import { Lock, Globe, ChevronDown, Sun, Moon, Heart, Menu } from "lucide-react";
+import { useUsername } from "@/hooks/useUsername";
+import { Lock, Globe, ChevronDown, Sun, Moon, Heart, Menu, User } from "lucide-react";
 
 type Language = 'tr' | 'en' | 'de' | 'fr' | 'es' | 'it' | 'ru';
 
 const Index = () => {
-  const { loading: authLoading, user } = useAuth();
   const { settings, updateSettings, loading: settingsLoading } = useUserSettings();
+  const { username, updateUsername, hasUsername } = useUsername();
   const [refreshTrigger, setRefreshTrigger] = useState(0);
+  const [showUsernameSettings, setShowUsernameSettings] = useState(false);
 
   const languages = {
     tr: { name: 'Türkçe', code: 'TR' },
@@ -191,7 +192,12 @@ const Index = () => {
     }
   };
 
-  if (authLoading || settingsLoading) {
+  const handleUsernameSelected = (selectedUsername: string) => {
+    updateUsername(selectedUsername);
+    setShowUsernameSettings(false);
+  };
+
+  if (settingsLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
@@ -205,9 +211,32 @@ const Index = () => {
   return (
     <div className={`min-h-screen transition-colors duration-300 ${getThemeBackground()}`}>
       <div className="container mx-auto px-4 py-6 max-w-md">
+        {/* Username Settings Modal */}
+        {showUsernameSettings && (
+          <UsernameSelector
+            language={settings.language}
+            theme={settings.theme}
+            onUsernameSelected={handleUsernameSelected}
+            currentUsername={username || undefined}
+            showAsSettings={true}
+          />
+        )}
+
         <div className="text-center mb-8">
           <div className="flex justify-between items-center mb-4">
-            <AuthButton language={settings.language} theme={settings.theme} />
+            <div className="flex items-center gap-2">
+              {hasUsername && (
+                <Button
+                  onClick={() => setShowUsernameSettings(true)}
+                  variant="outline"
+                  size="sm"
+                  className={`backdrop-blur-sm transition-colors duration-300 ${getButtonStyle()}`}
+                >
+                  <User className="w-4 h-4 mr-2" />
+                  {username}
+                </Button>
+              )}
+            </div>
             
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -231,6 +260,15 @@ const Index = () => {
                     Lisans Bilgileri
                   </Link>
                 </DropdownMenuItem>
+                {hasUsername && (
+                  <DropdownMenuItem 
+                    onClick={() => setShowUsernameSettings(true)}
+                    className={`cursor-pointer transition-colors duration-300 ${getDropdownItemStyle()}`}
+                  >
+                    <User className="w-4 h-4 mr-2" />
+                    Kullanıcı Adı Ayarları
+                  </DropdownMenuItem>
+                )}
               </DropdownMenuContent>
             </DropdownMenu>
           </div>

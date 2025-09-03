@@ -4,12 +4,12 @@ import { Button } from "@/components/ui/button";
 import { Share } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { useAuth } from "@/contexts/AuthContext";
 
 interface ShareButtonProps {
   mood: string;
   message: string;
   theme: 'light' | 'dark' | 'feminine';
+  username: string;
   disabled?: boolean;
   onShareSuccess?: () => void;
 }
@@ -18,18 +18,18 @@ export const ShareButton = ({
   mood, 
   message, 
   theme, 
+  username,
   disabled = false,
   onShareSuccess 
 }: ShareButtonProps) => {
   const [isSharing, setIsSharing] = useState(false);
   const { toast } = useToast();
-  const { user } = useAuth();
 
   const handleShare = async () => {
-    if (!user) {
+    if (!username) {
       toast({
         title: "Uyarı",
-        description: "Paylaşım yapmak için Google ile giriş yapın.",
+        description: "Paylaşım yapmak için kullanıcı adı seçmelisiniz.",
         variant: "destructive",
       });
       return;
@@ -53,17 +53,8 @@ export const ShareButton = ({
       const now = new Date().toISOString();
       console.log('Oluşturulan zaman damgası:', now);
       
-      // Eğer kullanıcı giriş yapmışsa profil bilgisini al
-      let displayName = 'Anonim';
-      if (user) {
-        const { data: profileData } = await supabase
-          .from('profiles')
-          .select('full_name')
-          .eq('id', user.id)
-          .single();
-        
-        displayName = profileData?.full_name || user.email?.split('@')[0] || 'Kullanıcı';
-      }
+      // Kullanıcı adını kullan
+      const displayName = username;
 
       const { data, error } = await supabase
         .from('community_posts')
@@ -71,8 +62,8 @@ export const ShareButton = ({
           {
             mood: mood,
             message: message.trim(),
-            user_ip: user ? 'authenticated' : 'anonymous',
-            user_id: user?.id || null,
+            user_ip: 'user_' + username,
+            user_id: null,
             display_name: displayName,
             created_at: now
           }

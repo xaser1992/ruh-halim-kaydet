@@ -13,7 +13,6 @@ import { Camera, CameraResultType, CameraSource } from '@capacitor/camera';
 import { LocalNotifications } from '@capacitor/local-notifications';
 import { Camera as CameraIcon } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/contexts/AuthContext";
 import { useMoodEntries } from "@/hooks/useMoodEntries";
 
 interface MoodEntryProps {
@@ -23,7 +22,6 @@ interface MoodEntryProps {
 }
 
 export const MoodEntry = ({ language, theme, onEntryUpdate }: MoodEntryProps) => {
-  const { user } = useAuth();
   const { saveEntry, getEntry } = useMoodEntries();
   const [selectedMood, setSelectedMood] = useState<string>("");
   const [note, setNote] = useState("");
@@ -36,20 +34,9 @@ export const MoodEntry = ({ language, theme, onEntryUpdate }: MoodEntryProps) =>
   const loadTodayData = async () => {
     const today = new Date().toDateString();
     
-    let entry = null;
-    if (user) {
-      // Giriş yapmış kullanıcı için Supabase'den yükle
-      try {
-        entry = await getEntry(today);
-        console.log('🟢 User logged in, getting entry for', today, ':', entry);
-      } catch (error) {
-        console.error('❌ Error getting entry from Supabase:', error);
-      }
-    } else {
-      // Giriş yapmamış kullanıcı için localStorage'dan yükle
-      entry = getMoodEntry(today);
-      console.log('🔵 User not logged in, getting entry from localStorage:', entry);
-    }
+    // localStorage'dan yükle
+    const entry = getMoodEntry(today);
+    console.log('🔵 Getting entry from localStorage:', entry);
     
     const draft = getDraft(today);
     
@@ -200,7 +187,7 @@ export const MoodEntry = ({ language, theme, onEntryUpdate }: MoodEntryProps) =>
     console.log('Saving entry with images count:', images.length);
     
     try {
-      // HER ZAMAN localStorage'a kaydet (artık Supabase'e günlük verisi yok)
+      // localStorage'a kaydet
       console.log('💾 Saving mood entry to localStorage...');
       await saveMoodEntry(entry);
       console.log('✅ Entry saved to localStorage successfully');

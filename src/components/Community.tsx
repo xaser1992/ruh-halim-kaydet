@@ -7,7 +7,8 @@ import { translations } from "@/utils/translations";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { ShareButton } from "./ShareButton";
-import { useAuth } from "@/contexts/AuthContext";
+import { UsernameSelector } from "./UsernameSelector";
+import { useUsername } from "@/hooks/useUsername";
 
 interface CommunityProps {
   language: 'tr' | 'en' | 'de' | 'fr' | 'es' | 'it' | 'ru';
@@ -30,11 +31,12 @@ interface CommunityPost {
 export const Community = ({ language, theme, onShare }: CommunityProps) => {
   const t = translations[language];
   const { toast } = useToast();
-  const { user } = useAuth();
+  const { username, updateUsername, hasUsername, loading: usernameLoading } = useUsername();
   const [posts, setPosts] = useState<CommunityPost[]>([]);
   const [loading, setLoading] = useState(true);
   const [shareMode, setShareMode] = useState(false);
   const [shareData, setShareData] = useState({ mood: '', message: '' });
+  const [showUsernameSelector, setShowUsernameSelector] = useState(false);
 
   // Paylaşımları ve beğenileri yükle
   const fetchPosts = async () => {
@@ -98,12 +100,13 @@ export const Community = ({ language, theme, onShare }: CommunityProps) => {
             .select('*', { count: 'exact', head: true })
             .eq('post_id', post.id);
 
-          // Kullanıcının bu postu beğenip beğenmediğini kontrol et
+          // Kullanıcının bu postu beğenip beğenmediğini kontrol et (IP bazlı)
+          const userIP = 'user_' + (username || 'anonymous');
           const { data: userLike } = await supabase
             .from('community_likes')
             .select('id')
             .eq('post_id', post.id)
-            .eq('user_ip', 'anonymous')
+            .eq('user_ip', userIP)
             .single();
 
           return {
@@ -134,14 +137,21 @@ export const Community = ({ language, theme, onShare }: CommunityProps) => {
 
   // Beğeni toggle fonksiyonu
   const toggleLike = async (postId: string, currentlyLiked: boolean) => {
+    if (!hasUsername) {
+      setShowUsernameSelector(true);
+      return;
+    }
+
     try {
+      const userIP = 'user_' + username;
+      
       if (currentlyLiked) {
         // Beğeniyi kaldır
         const { error } = await supabase
           .from('community_likes')
           .delete()
           .eq('post_id', postId)
-          .eq('user_ip', 'anonymous');
+          .eq('user_ip', userIP);
 
         if (error) {
           console.error('Beğeni kaldırma hatası:', error);
@@ -153,7 +163,7 @@ export const Community = ({ language, theme, onShare }: CommunityProps) => {
           .from('community_likes')
           .insert({
             post_id: postId,
-            user_ip: 'anonymous'
+            user_ip: userIP
           });
 
         if (error) {
@@ -194,6 +204,19 @@ export const Community = ({ language, theme, onShare }: CommunityProps) => {
       tired: "😴"
     };
     return moodEmojis[mood] || "😊";
+  };
+
+  const handleUsernameSelected = (selectedUsername: string) => {
+    updateUsername(selectedUsername);
+    setShowUsernameSelector(false);
+  };
+
+  const handleShareClick = () => {
+    if (!hasUsername) {
+      setShowUsernameSelector(true);
+      return;
+    }
+    setShareMode(true);
   };
 
   const formatTimeAgo = (timestamp: string) => {
@@ -239,10 +262,33 @@ export const Community = ({ language, theme, onShare }: CommunityProps) => {
     }
   };
 
+  if (usernameLoading) {
+    return (
+      <div className="text-center p-4">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600 mx-auto mb-4"></div>
+        <p className={`text-sm ${
+          theme === 'dark' ? 'text-gray-400' : theme === 'feminine' ? 'text-pink-500' : 'text-gray-500'
+        }`}>
+          Yükleniyor...
+        </p>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-4">
+      {/* Username Selector */}
+      {showUsernameSelector && (
+        <UsernameSelector
+          language={language}
+          theme={theme}
+          onUsernameSelected={handleUsernameSelected}
+          currentUsername={username || undefined}
+        />
+      )}
+
       {/* Paylaşım Formu */}
-      {shareMode && (
+      {shareMode && hasUsername && (
         <Card className={`p-4 backdrop-blur-sm border-0 shadow-lg transition-colors duration-300 ${
           theme === 'dark' 
             ? 'bg-gray-800/80 text-white' 
@@ -324,6 +370,7 @@ export const Community = ({ language, theme, onShare }: CommunityProps) => {
                 mood={shareData.mood}
                 message={shareData.message}
                 theme={theme}
+                username={username!}
                 onShareSuccess={handleShareSuccess}
               />
             </div>
@@ -340,33 +387,19 @@ export const Community = ({ language, theme, onShare }: CommunityProps) => {
             Topluluk Paylaşımları ({posts.length})
           </h3>
           
-          {!shareMode && user && (
-            <Button
-              onClick={() => setShareMode(true)}
-              className={`flex items-center gap-2 text-white font-medium transition-all duration-200 ${
-                theme === 'dark' 
-                  ? 'bg-gradient-to-r from-purple-700 to-pink-700 hover:from-purple-600 hover:to-pink-600'
-                  : theme === 'feminine'
-                  ? 'bg-gradient-to-r from-pink-400 to-rose-400 hover:from-pink-500 hover:to-rose-500'
-                  : 'bg-gradient-to-r from-purple-400 to-pink-400 hover:from-purple-500 hover:to-pink-500'
-              }`}
-            >
-              <Share className="w-4 h-4" />
-              Paylaş
-            </Button>
-          )}
-          
-          {!user && (
-            <div className={`text-xs text-center p-2 rounded-lg transition-colors duration-300 ${
+          <Button
+            onClick={handleShareClick}
+            className={`flex items-center gap-2 text-white font-medium transition-all duration-200 ${
               theme === 'dark' 
-                ? 'bg-gray-700/50 text-gray-300' 
+                ? 'bg-gradient-to-r from-purple-700 to-pink-700 hover:from-purple-600 hover:to-pink-600'
                 : theme === 'feminine'
-                ? 'bg-pink-100/50 text-pink-600'
-                : 'bg-gray-100/50 text-gray-600'
-            }`}>
-              Paylaşım yapmak için Google ile giriş yapın
-            </div>
-          )}
+                ? 'bg-gradient-to-r from-pink-400 to-rose-400 hover:from-pink-500 hover:to-rose-500'
+                : 'bg-gradient-to-r from-purple-400 to-pink-400 hover:from-purple-500 hover:to-pink-500'
+            }`}
+          >
+            <Share className="w-4 h-4" />
+            {hasUsername ? 'Paylaş' : 'Kullanıcı Adı Seç'}
+          </Button>
         </div>
         
         {loading ? (
@@ -439,36 +472,27 @@ export const Community = ({ language, theme, onShare }: CommunityProps) => {
                 
                 {/* Beğeni Butonu */}
                 <div className="flex items-center justify-between pt-2 border-t border-opacity-20">
-                  {user ? (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => toggleLike(post.id, post.user_liked || false)}
-                      className={`flex items-center gap-2 transition-colors duration-300 ${
-                        post.user_liked
-                          ? theme === 'dark' 
-                            ? 'text-pink-400 hover:text-pink-300 hover:bg-gray-700/50' 
-                            : theme === 'feminine'
-                            ? 'text-pink-600 hover:text-pink-700 hover:bg-pink-100/50'
-                            : 'text-purple-600 hover:text-purple-700 hover:bg-purple-50'
-                          : theme === 'dark' 
-                            ? 'text-gray-300 hover:text-pink-400 hover:bg-gray-700/50' 
-                            : theme === 'feminine'
-                            ? 'text-pink-400 hover:text-pink-600 hover:bg-pink-100/50'
-                            : 'text-gray-600 hover:text-purple-600 hover:bg-purple-50'
-                      }`}
-                    >
-                      <Heart className={`w-4 h-4 ${post.user_liked ? 'fill-current' : ''}`} />
-                      <span>{post.likes_count || 0} Beğeni</span>
-                    </Button>
-                  ) : (
-                    <div className={`flex items-center gap-2 text-sm transition-colors duration-300 ${
-                      theme === 'dark' ? 'text-gray-400' : theme === 'feminine' ? 'text-pink-500' : 'text-gray-500'
-                    }`}>
-                      <Heart className="w-4 h-4" />
-                      <span>{post.likes_count || 0} Beğeni</span>
-                    </div>
-                  )}
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => toggleLike(post.id, post.user_liked || false)}
+                    className={`flex items-center gap-2 transition-colors duration-300 ${
+                      post.user_liked
+                        ? theme === 'dark' 
+                          ? 'text-pink-400 hover:text-pink-300 hover:bg-gray-700/50' 
+                          : theme === 'feminine'
+                          ? 'text-pink-600 hover:text-pink-700 hover:bg-pink-100/50'
+                          : 'text-purple-600 hover:text-purple-700 hover:bg-purple-50'
+                        : theme === 'dark' 
+                          ? 'text-gray-300 hover:text-pink-400 hover:bg-gray-700/50' 
+                          : theme === 'feminine'
+                          ? 'text-pink-400 hover:text-pink-600 hover:bg-pink-100/50'
+                          : 'text-gray-600 hover:text-purple-600 hover:bg-purple-50'
+                    }`}
+                  >
+                    <Heart className={`w-4 h-4 ${post.user_liked ? 'fill-current' : ''}`} />
+                    <span>{post.likes_count || 0} Beğeni</span>
+                  </Button>
                 </div>
               </div>
             </Card>
