@@ -57,7 +57,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const { data, error } = await supabase.auth.signInWithOAuth({
           provider: 'google',
           options: {
-            redirectTo: 'com.googleusercontent.apps.889229051425-j5nthl0bbjh91iktp0tm0i3si2hv800f:/oauth2redirect',
             skipBrowserRedirect: true
           }
         });
