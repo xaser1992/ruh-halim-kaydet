@@ -260,15 +260,6 @@ const Index = () => {
                     Lisans Bilgileri
                   </Link>
                 </DropdownMenuItem>
-                {hasUsername && (
-                  <DropdownMenuItem 
-                    onClick={() => setShowUsernameSettings(true)}
-                    className={`cursor-pointer transition-colors duration-300 ${getDropdownItemStyle()}`}
-                  >
-                    <User className="w-4 h-4 mr-2" />
-                    Kullanıcı Adı Ayarları
-                  </DropdownMenuItem>
-                )}
               </DropdownMenuContent>
             </DropdownMenu>
           </div>

@@ -23,13 +23,13 @@ export const moodOptions: MoodOption[] = [
   { 
     id: "very-bad", 
     emoji: "😢", 
-    labelTr: "Çok Kötü", 
-    labelEn: "Very Bad",
-    labelDe: "Sehr schlecht",
-    labelFr: "Très mauvais",
-    labelEs: "Muy malo",
-    labelIt: "Molto male",
-    labelRu: "Очень плохо",
+    labelTr: "Berbat", 
+    labelEn: "Terrible",
+    labelDe: "Schrecklich",
+    labelFr: "Terrible",
+    labelEs: "Terrible",
+    labelIt: "Terribile",
+    labelRu: "Ужасно",
     colors: {
       bg: "bg-red-100",
       hover: "hover:bg-red-200",
@@ -113,6 +113,101 @@ export const moodOptions: MoodOption[] = [
       darkBg: "dark:bg-emerald-900/30",
       darkHover: "dark:hover:bg-emerald-800/40",
       darkGradient: "dark:from-emerald-800 dark:to-emerald-900"
+    }
+  },
+  { 
+    id: "sad", 
+    emoji: "😔", 
+    labelTr: "Hüzünlü", 
+    labelEn: "Sad",
+    labelDe: "Traurig",
+    labelFr: "Triste",
+    labelEs: "Triste",
+    labelIt: "Triste",
+    labelRu: "Грустно",
+    colors: {
+      bg: "bg-blue-100",
+      hover: "hover:bg-blue-200",
+      gradient: "from-blue-200 to-blue-300",
+      darkBg: "dark:bg-blue-900/30",
+      darkHover: "dark:hover:bg-blue-800/40",
+      darkGradient: "dark:from-blue-800 dark:to-blue-900"
+    }
+  },
+  { 
+    id: "calm", 
+    emoji: "😌", 
+    labelTr: "Sakin", 
+    labelEn: "Calm",
+    labelDe: "Ruhig",
+    labelFr: "Calme",
+    labelEs: "Tranquilo",
+    labelIt: "Calmo",
+    labelRu: "Спокойно",
+    colors: {
+      bg: "bg-cyan-100",
+      hover: "hover:bg-cyan-200",
+      gradient: "from-cyan-200 to-cyan-300",
+      darkBg: "dark:bg-cyan-900/30",
+      darkHover: "dark:hover:bg-cyan-800/40",
+      darkGradient: "dark:from-cyan-800 dark:to-cyan-900"
+    }
+  },
+  { 
+    id: "stressed", 
+    emoji: "😰", 
+    labelTr: "Stresli", 
+    labelEn: "Stressed",
+    labelDe: "Gestresst",
+    labelFr: "Stressé",
+    labelEs: "Estresado",
+    labelIt: "Stressato",
+    labelRu: "В стрессе",
+    colors: {
+      bg: "bg-amber-100",
+      hover: "hover:bg-amber-200",
+      gradient: "from-amber-200 to-amber-300",
+      darkBg: "dark:bg-amber-900/30",
+      darkHover: "dark:hover:bg-amber-800/40",
+      darkGradient: "dark:from-amber-800 dark:to-amber-900"
+    }
+  },
+  { 
+    id: "excited", 
+    emoji: "🤩", 
+    labelTr: "Heyecanlı", 
+    labelEn: "Excited",
+    labelDe: "Aufgeregt",
+    labelFr: "Excité",
+    labelEs: "Emocionado",
+    labelIt: "Eccitato",
+    labelRu: "В восторге",
+    colors: {
+      bg: "bg-violet-100",
+      hover: "hover:bg-violet-200",
+      gradient: "from-violet-200 to-violet-300",
+      darkBg: "dark:bg-violet-900/30",
+      darkHover: "dark:hover:bg-violet-800/40",
+      darkGradient: "dark:from-violet-800 dark:to-violet-900"
+    }
+  },
+  { 
+    id: "angry", 
+    emoji: "😠", 
+    labelTr: "Sinirli", 
+    labelEn: "Angry",
+    labelDe: "Wütend",
+    labelFr: "En colère",
+    labelEs: "Enojado",
+    labelIt: "Arrabbiato",
+    labelRu: "Злой",
+    colors: {
+      bg: "bg-rose-100",
+      hover: "hover:bg-rose-200",
+      gradient: "from-rose-200 to-rose-300",
+      darkBg: "dark:bg-rose-900/30",
+      darkHover: "dark:hover:bg-rose-800/40",
+      darkGradient: "dark:from-rose-800 dark:to-rose-900"
     }
   }
 ];

@@ -122,6 +122,7 @@ export const UsernameSelector = ({
     if (showAsSettings) {
       setUsername(currentUsername || '');
       setError('');
+      onUsernameSelected(currentUsername || ''); // Close the modal by calling the callback
     }
   };
 
