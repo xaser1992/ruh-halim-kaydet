@@ -9,6 +9,7 @@ import { useToast } from "@/hooks/use-toast";
 import { ShareButton } from "./ShareButton";
 import { UsernameSelector } from "./UsernameSelector";
 import { useUsername } from "@/hooks/useUsername";
+import { moodOptions } from "@/utils/moodData";
 
 interface CommunityProps {
   language: 'tr' | 'en' | 'de' | 'fr' | 'es' | 'it' | 'ru';
@@ -188,22 +189,8 @@ export const Community = ({ language, theme, onShare }: CommunityProps) => {
   };
 
   const getMoodEmoji = (mood: string) => {
-    const moodEmojis: Record<string, string> = {
-      "very-bad": "😢",
-      bad: "😞",
-      neutral: "😐",
-      good: "😊",
-      great: "😄",
-      happy: "😊",
-      sad: "😢",
-      angry: "😠",
-      excited: "🤩",
-      calm: "😌",
-      anxious: "😰",
-      love: "😍",
-      tired: "😴"
-    };
-    return moodEmojis[mood] || "😊";
+    const foundMood = moodOptions.find(m => m.id === mood);
+    return foundMood ? foundMood.emoji : "😊";
   };
 
   const handleUsernameSelected = (selectedUsername: string) => {
@@ -222,23 +209,10 @@ export const Community = ({ language, theme, onShare }: CommunityProps) => {
   const formatTimeAgo = (timestamp: string) => {
     try {
       if (!timestamp) return "Az önce";
-
-      console.log("Orijinal timestamp:", timestamp);
       
-      // Güvenli UTC parse (Z eksikse ekle)
-      const rawTimestamp = timestamp.endsWith('Z') ? timestamp : `${timestamp}Z`;
-      const utcDate = new Date(rawTimestamp);
-      
-      console.log("UTC Date:", utcDate);
-      console.log("UTC millis:", utcDate.getTime());
-
-      const turkeyOffsetMs = 3 * 60 * 60 * 1000; // 3 saat fark
-      const turkeyDate = new Date(utcDate.getTime() + turkeyOffsetMs);
-
+      const postDate = new Date(timestamp);
       const now = new Date();
-      const nowInTurkey = new Date(now.getTime() + turkeyOffsetMs);
-
-      const diffInMs = nowInTurkey.getTime() - turkeyDate.getTime();
+      const diffInMs = now.getTime() - postDate.getTime();
       const diffInSeconds = Math.floor(diffInMs / 1000);
       const diffInMinutes = Math.floor(diffInSeconds / 60);
       const diffInHours = Math.floor(diffInMinutes / 60);
@@ -250,12 +224,10 @@ export const Community = ({ language, theme, onShare }: CommunityProps) => {
       if (diffInDays === 1) return "Dün";
       if (diffInDays < 7) return `${diffInDays} gün önce`;
 
-      return turkeyDate.toLocaleString('tr-TR', {
+      return postDate.toLocaleDateString('tr-TR', {
         year: 'numeric',
         month: '2-digit',
-        day: '2-digit',
-        hour: '2-digit',
-        minute: '2-digit'
+        day: '2-digit'
       });
     } catch {
       return "Bilinmiyor";
@@ -322,11 +294,11 @@ export const Community = ({ language, theme, onShare }: CommunityProps) => {
                   }`}
                 >
                   <option value="">Seç...</option>
-                  <option value="great">😄 Harika</option>
-                  <option value="good">😊 İyi</option>
-                  <option value="neutral">😐 Normal</option>
-                  <option value="bad">😞 Kötü</option>
-                  <option value="very-bad">😢 Çok Kötü</option>
+                  {moodOptions.map((mood) => (
+                    <option key={mood.id} value={mood.id}>
+                      {mood.emoji} {mood.labelTr}
+                    </option>
+                  ))}
                 </select>
               </div>
               
