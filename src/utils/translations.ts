@@ -9,7 +9,16 @@ export const translations = {
     update: "Güncelle",
     alreadyExists: "Bu gün için zaten bir kayıt var",
     saved: "Ruh haliniz kaydedildi!",
-    updated: "Kayıt güncellendi!"
+    updated: "Kayıt güncellendi!",
+    appName: "Ruh Halim",
+    mood: "Ruh Hali",
+    history: "Geçmiş",
+    community: "Topluluk",
+    changeTheme: "Tema Değiştir",
+    changeLanguage: "Dil Değiştir",
+    privacy: "Gizlilik Politikası",
+    terms: "Kullanım Koşulları",
+    license: "Lisans Bilgileri"
   },
   en: {
     question: "How are you feeling today?",
@@ -20,7 +29,16 @@ export const translations = {
     update: "Update",
     alreadyExists: "There is already an entry for today",
     saved: "Your mood has been saved!",
-    updated: "Entry updated!"
+    updated: "Entry updated!",
+    appName: "My Mood",
+    mood: "Mood",
+    history: "History",
+    community: "Community",
+    changeTheme: "Change Theme",
+    changeLanguage: "Change Language",
+    privacy: "Privacy Policy",
+    terms: "Terms of Service",
+    license: "License Information"
   },
   de: {
     question: "Wie fühlst du dich heute?",
@@ -31,7 +49,16 @@ export const translations = {
     update: "Aktualisieren",
     alreadyExists: "Für heute gibt es bereits einen Eintrag",
     saved: "Deine Stimmung wurde gespeichert!",
-    updated: "Eintrag aktualisiert!"
+    updated: "Eintrag aktualisiert!",
+    appName: "Meine Stimmung",
+    mood: "Stimmung",
+    history: "Verlauf",
+    community: "Gemeinschaft",
+    changeTheme: "Thema ändern",
+    changeLanguage: "Sprache ändern",
+    privacy: "Datenschutz",
+    terms: "Nutzungsbedingungen",
+    license: "Lizenzinformationen"
   },
   fr: {
     question: "Comment te sens-tu aujourd'hui?",
@@ -42,7 +69,16 @@ export const translations = {
     update: "Mettre à jour",
     alreadyExists: "Il y a déjà une entrée pour aujourd'hui",
     saved: "Votre humeur a été enregistrée!",
-    updated: "Entrée mise à jour!"
+    updated: "Entrée mise à jour!",
+    appName: "Mon Humeur",
+    mood: "Humeur",
+    history: "Historique",
+    community: "Communauté",
+    changeTheme: "Changer le thème",
+    changeLanguage: "Changer la langue",
+    privacy: "Politique de confidentialité",
+    terms: "Conditions d'utilisation",
+    license: "Informations de licence"
   },
   es: {
     question: "¿Cómo te sientes hoy?",
@@ -53,7 +89,16 @@ export const translations = {
     update: "Actualizar",
     alreadyExists: "Ya existe una entrada para hoy",
     saved: "¡Tu estado de ánimo ha sido guardado!",
-    updated: "¡Entrada actualizada!"
+    updated: "¡Entrada actualizada!",
+    appName: "Mi Estado de Ánimo",
+    mood: "Estado de Ánimo",
+    history: "Historial",
+    community: "Comunidad",
+    changeTheme: "Cambiar tema",
+    changeLanguage: "Cambiar idioma",
+    privacy: "Política de privacidad",
+    terms: "Términos de servicio",
+    license: "Información de licencia"
   },
   it: {
     question: "Come ti senti oggi?",
@@ -64,7 +109,16 @@ export const translations = {
     update: "Aggiorna",
     alreadyExists: "Esiste già una voce per oggi",
     saved: "Il tuo umore è stato salvato!",
-    updated: "Voce aggiornata!"
+    updated: "Voce aggiornata!",
+    appName: "Il Mio Umore",
+    mood: "Umore",
+    history: "Cronologia",
+    community: "Comunità",
+    changeTheme: "Cambia tema",
+    changeLanguage: "Cambia lingua",
+    privacy: "Informativa sulla privacy",
+    terms: "Termini di servizio",
+    license: "Informazioni sulla licenza"
   },
   ru: {
     question: "Как ты себя чувствуешь сегодня?",
@@ -75,6 +129,15 @@ export const translations = {
     update: "Обновить",
     alreadyExists: "На сегодня уже есть запись",
     saved: "Ваше настроение сохранено!",
-    updated: "Запись обновлена!"
+    updated: "Запись обновлена!",
+    appName: "Моё Настроение",
+    mood: "Настроение",
+    history: "История",
+    community: "Сообщество",
+    changeTheme: "Сменить тему",
+    changeLanguage: "Сменить язык",
+    privacy: "Политика конфиденциальности",
+    terms: "Условия использования",
+    license: "Информация о лицензии"
   }
 };

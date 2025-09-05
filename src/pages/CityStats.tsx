@@ -36,7 +36,7 @@ export const CityStats = ({ language, theme }: CityStatsProps) => {
     try {
       // mood_stats tablosundan şehir bazlı ruh hali verilerini çek
       const { data, error } = await supabase
-        .from('mood_stats')
+        .from('mood_stats' as any)
         .select('city, mood')
         .order('created_at', { ascending: false });
 
@@ -54,7 +54,7 @@ export const CityStats = ({ language, theme }: CityStatsProps) => {
       // Şehir ve ruh hali kombinasyonlarını say
       const cityMoodCounts: Record<string, Record<string, number>> = {};
       
-      data.forEach(entry => {
+      (data as any[]).forEach((entry: any) => {
         if (!cityMoodCounts[entry.city]) {
           cityMoodCounts[entry.city] = {};
         }
