@@ -210,7 +210,31 @@ export const Community = ({ language, theme, onShare }: CommunityProps) => {
     try {
       if (!timestamp) return "Az önce";
       
-      const postDate = new Date(timestamp);
+      // Parse the timestamp properly - handle both ISO string and database format
+      let postDate: Date;
+      
+      if (timestamp.includes('T')) {
+        // ISO format with timezone
+        postDate = new Date(timestamp);
+      } else if (timestamp.includes(' ')) {
+        // Database format without timezone (assume UTC)
+        postDate = new Date(timestamp + (timestamp.includes('Z') ? '' : 'Z'));
+      } else {
+        postDate = new Date(timestamp);
+      }
+      
+      // If the date is invalid, try to parse it differently
+      if (isNaN(postDate.getTime())) {
+        // Try to parse as MySQL datetime format
+        const mysqlFormat = timestamp.replace(' ', 'T') + 'Z';
+        postDate = new Date(mysqlFormat);
+        
+        if (isNaN(postDate.getTime())) {
+          console.warn('Could not parse timestamp:', timestamp);
+          return "Bilinmiyor";
+        }
+      }
+      
       const now = new Date();
       const diffInMs = now.getTime() - postDate.getTime();
       const diffInSeconds = Math.floor(diffInMs / 1000);
@@ -218,7 +242,8 @@ export const Community = ({ language, theme, onShare }: CommunityProps) => {
       const diffInHours = Math.floor(diffInMinutes / 60);
       const diffInDays = Math.floor(diffInHours / 24);
 
-      if (diffInSeconds < 60) return "Az önce";
+      if (diffInSeconds < 30) return "Az önce";
+      if (diffInSeconds < 60) return `${diffInSeconds} saniye önce`;
       if (diffInMinutes < 60) return `${diffInMinutes} dakika önce`;
       if (diffInHours < 24) return `${diffInHours} saat önce`;
       if (diffInDays === 1) return "Dün";
@@ -227,9 +252,12 @@ export const Community = ({ language, theme, onShare }: CommunityProps) => {
       return postDate.toLocaleDateString('tr-TR', {
         year: 'numeric',
         month: '2-digit',
-        day: '2-digit'
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit'
       });
-    } catch {
+    } catch (error) {
+      console.warn('Error formatting timestamp:', timestamp, error);
       return "Bilinmiyor";
     }
   };

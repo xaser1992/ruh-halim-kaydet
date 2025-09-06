@@ -36,10 +36,10 @@ export const MoodSelector = ({ selectedMood, onMoodSelect, language, theme }: Mo
             }`}
           >
             <span className="text-xl mb-1">{mood.emoji}</span>
-            <span className={`text-xs text-center font-medium transition-colors duration-300 ${
+            <span className={`text-xs text-center font-medium ${
               selectedMood === mood.id
-                ? 'text-gray-800 dark:text-white'
-                : theme === 'dark' ? 'text-gray-200' : theme === 'feminine' ? 'text-pink-700' : 'text-gray-700'
+                ? 'text-white drop-shadow-sm'
+                : theme === 'dark' ? 'text-white' : theme === 'feminine' ? 'text-pink-700' : 'text-gray-700'
             }`}>
               {getMoodLabel(mood)}
             </span>
@@ -59,10 +59,10 @@ export const MoodSelector = ({ selectedMood, onMoodSelect, language, theme }: Mo
             }`}
           >
             <span className="text-xl mb-1">{mood.emoji}</span>
-            <span className={`text-xs text-center font-medium transition-colors duration-300 ${
+            <span className={`text-xs text-center font-medium ${
               selectedMood === mood.id
-                ? 'text-gray-800 dark:text-white'
-                : theme === 'dark' ? 'text-gray-200' : theme === 'feminine' ? 'text-pink-700' : 'text-gray-700'
+                ? 'text-white drop-shadow-sm'
+                : theme === 'dark' ? 'text-white' : theme === 'feminine' ? 'text-pink-700' : 'text-gray-700'
             }`}>
               {getMoodLabel(mood)}
             </span>
