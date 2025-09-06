@@ -98,28 +98,146 @@ const Index = () => {
                   : 'bg-white'
               }`}>
                 <DropdownMenuItem 
-                  onClick={() => updateSettings({ 
-                    theme: settings.theme === 'light' ? 'dark' : settings.theme === 'dark' ? 'feminine' : 'light' 
-                  })}
                   className={`transition-colors duration-300 ${
                     settings.theme === 'dark' ? 'hover:bg-gray-700 text-gray-200' 
                     : settings.theme === 'feminine' ? 'hover:bg-pink-100 text-pink-800'
                     : 'hover:bg-gray-100'
                   }`}
                 >
-                  {translations[settings.language].changeTheme}
+                  <DropdownMenu>
+                    <DropdownMenuTrigger className="w-full text-left">
+                      {translations[settings.language].changeTheme}
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent side="right" className={`transition-colors duration-300 ${
+                      settings.theme === 'dark' 
+                        ? 'bg-gray-800 border-gray-700' 
+                        : settings.theme === 'feminine'
+                        ? 'bg-pink-50 border-pink-200'
+                        : 'bg-white'
+                    }`}>
+                      <DropdownMenuItem 
+                        onClick={() => updateSettings({ theme: 'light' })}
+                        className={`transition-colors duration-300 ${
+                          settings.theme === 'dark' ? 'hover:bg-gray-700 text-gray-200' 
+                          : settings.theme === 'feminine' ? 'hover:bg-pink-100 text-pink-800'
+                          : 'hover:bg-gray-100'
+                        } ${settings.theme === 'light' ? 'bg-gray-100 dark:bg-gray-700' : ''}`}
+                      >
+                        ☀️ Açık Tema
+                      </DropdownMenuItem>
+                      <DropdownMenuItem 
+                        onClick={() => updateSettings({ theme: 'dark' })}
+                        className={`transition-colors duration-300 ${
+                          settings.theme === 'dark' ? 'hover:bg-gray-700 text-gray-200' 
+                          : settings.theme === 'feminine' ? 'hover:bg-pink-100 text-pink-800'
+                          : 'hover:bg-gray-100'
+                        } ${settings.theme === 'dark' ? 'bg-gray-100 dark:bg-gray-700' : ''}`}
+                      >
+                        🌙 Koyu Tema
+                      </DropdownMenuItem>
+                      <DropdownMenuItem 
+                        onClick={() => updateSettings({ theme: 'feminine' })}
+                        className={`transition-colors duration-300 ${
+                          settings.theme === 'dark' ? 'hover:bg-gray-700 text-gray-200' 
+                          : settings.theme === 'feminine' ? 'hover:bg-pink-100 text-pink-800'
+                          : 'hover:bg-gray-100'
+                        } ${settings.theme === 'feminine' ? 'bg-gray-100 dark:bg-gray-700' : ''}`}
+                      >
+                        🌸 Kadınsı Tema
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </DropdownMenuItem>
                 <DropdownMenuItem 
-                  onClick={() => updateSettings({ 
-                    language: settings.language === 'tr' ? 'en' : settings.language === 'en' ? 'de' : settings.language === 'de' ? 'fr' : settings.language === 'fr' ? 'es' : settings.language === 'es' ? 'it' : settings.language === 'it' ? 'ru' : 'tr' 
-                  })}
                   className={`transition-colors duration-300 ${
                     settings.theme === 'dark' ? 'hover:bg-gray-700 text-gray-200' 
                     : settings.theme === 'feminine' ? 'hover:bg-pink-100 text-pink-800'
                     : 'hover:bg-gray-100'
                   }`}
                 >
-                  {translations[settings.language].changeLanguage}
+                  <DropdownMenu>
+                    <DropdownMenuTrigger className="w-full text-left">
+                      {translations[settings.language].changeLanguage}
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent side="right" className={`transition-colors duration-300 ${
+                      settings.theme === 'dark' 
+                        ? 'bg-gray-800 border-gray-700' 
+                        : settings.theme === 'feminine'
+                        ? 'bg-pink-50 border-pink-200'
+                        : 'bg-white'
+                    }`}>
+                      <DropdownMenuItem 
+                        onClick={() => updateSettings({ language: 'tr' })}
+                        className={`transition-colors duration-300 ${
+                          settings.theme === 'dark' ? 'hover:bg-gray-700 text-gray-200' 
+                          : settings.theme === 'feminine' ? 'hover:bg-pink-100 text-pink-800'
+                          : 'hover:bg-gray-100'
+                        } ${settings.language === 'tr' ? 'bg-gray-100 dark:bg-gray-700' : ''}`}
+                      >
+                        🇹🇷 Türkçe
+                      </DropdownMenuItem>
+                      <DropdownMenuItem 
+                        onClick={() => updateSettings({ language: 'en' })}
+                        className={`transition-colors duration-300 ${
+                          settings.theme === 'dark' ? 'hover:bg-gray-700 text-gray-200' 
+                          : settings.theme === 'feminine' ? 'hover:bg-pink-100 text-pink-800'
+                          : 'hover:bg-gray-100'
+                        } ${settings.language === 'en' ? 'bg-gray-100 dark:bg-gray-700' : ''}`}
+                      >
+                        🇺🇸 English
+                      </DropdownMenuItem>
+                      <DropdownMenuItem 
+                        onClick={() => updateSettings({ language: 'de' })}
+                        className={`transition-colors duration-300 ${
+                          settings.theme === 'dark' ? 'hover:bg-gray-700 text-gray-200' 
+                          : settings.theme === 'feminine' ? 'hover:bg-pink-100 text-pink-800'
+                          : 'hover:bg-gray-100'
+                        } ${settings.language === 'de' ? 'bg-gray-100 dark:bg-gray-700' : ''}`}
+                      >
+                        🇩🇪 Deutsch
+                      </DropdownMenuItem>
+                      <DropdownMenuItem 
+                        onClick={() => updateSettings({ language: 'fr' })}
+                        className={`transition-colors duration-300 ${
+                          settings.theme === 'dark' ? 'hover:bg-gray-700 text-gray-200' 
+                          : settings.theme === 'feminine' ? 'hover:bg-pink-100 text-pink-800'
+                          : 'hover:bg-gray-100'
+                        } ${settings.language === 'fr' ? 'bg-gray-100 dark:bg-gray-700' : ''}`}
+                      >
+                        🇫🇷 Français
+                      </DropdownMenuItem>
+                      <DropdownMenuItem 
+                        onClick={() => updateSettings({ language: 'es' })}
+                        className={`transition-colors duration-300 ${
+                          settings.theme === 'dark' ? 'hover:bg-gray-700 text-gray-200' 
+                          : settings.theme === 'feminine' ? 'hover:bg-pink-100 text-pink-800'
+                          : 'hover:bg-gray-100'
+                        } ${settings.language === 'es' ? 'bg-gray-100 dark:bg-gray-700' : ''}`}
+                      >
+                        🇪🇸 Español
+                      </DropdownMenuItem>
+                      <DropdownMenuItem 
+                        onClick={() => updateSettings({ language: 'it' })}
+                        className={`transition-colors duration-300 ${
+                          settings.theme === 'dark' ? 'hover:bg-gray-700 text-gray-200' 
+                          : settings.theme === 'feminine' ? 'hover:bg-pink-100 text-pink-800'
+                          : 'hover:bg-gray-100'
+                        } ${settings.language === 'it' ? 'bg-gray-100 dark:bg-gray-700' : ''}`}
+                      >
+                        🇮🇹 Italiano
+                      </DropdownMenuItem>
+                      <DropdownMenuItem 
+                        onClick={() => updateSettings({ language: 'ru' })}
+                        className={`transition-colors duration-300 ${
+                          settings.theme === 'dark' ? 'hover:bg-gray-700 text-gray-200' 
+                          : settings.theme === 'feminine' ? 'hover:bg-pink-100 text-pink-800'
+                          : 'hover:bg-gray-100'
+                        } ${settings.language === 'ru' ? 'bg-gray-100 dark:bg-gray-700' : ''}`}
+                      >
+                        🇷🇺 Русский
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
                   <a 
