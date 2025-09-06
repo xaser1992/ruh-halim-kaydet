@@ -19,7 +19,6 @@ import { translations } from '@/utils/translations';
 
 const Index = () => {
   const [selectedMood, setSelectedMood] = useState<string>('');
-  const [showMoodEntry, setShowMoodEntry] = useState(false);
   const { entries, saveEntry } = useMoodEntries();
   const { settings, updateSettings } = useUserSettings();
   const { username } = useUsername();
@@ -40,7 +39,6 @@ const Index = () => {
       return;
     }
     setSelectedMood(mood);
-    setShowMoodEntry(true);
   };
 
   const handleMoodSave = (note: string, images: string[], moodId: string) => {
@@ -51,7 +49,6 @@ const Index = () => {
       timestamp: new Date().toISOString(),
       date: new Date().toDateString()
     });
-    setShowMoodEntry(false);
     setSelectedMood('');
   };
 
@@ -224,22 +221,20 @@ const Index = () => {
           </TabsList>
 
           <TabsContent value="mood" className="space-y-6">
-            {!showMoodEntry ? (
-              <MoodSelector 
-                selectedMood=""
-                onMoodSelect={handleMoodSelect} 
-                theme={settings.theme} 
-                language={settings.language}
-              />
-            ) : (
-              <MoodEntry 
-                mood={selectedMood} 
-                onSave={handleMoodSave} 
-                theme={settings.theme}
-                username={username!}
-                city={city!}
-              />
-            )}
+            <MoodSelector 
+              selectedMood={selectedMood}
+              onMoodSelect={handleMoodSelect} 
+              theme={settings.theme} 
+              language={settings.language}
+            />
+            
+            <MoodEntry 
+              mood={selectedMood} 
+              onSave={handleMoodSave} 
+              theme={settings.theme}
+              username={username!}
+              city={city!}
+            />
           </TabsContent>
 
           <TabsContent value="history">
