@@ -23,11 +23,15 @@ export const useUserSettings = () => {
   // Ayarları kaydet
   const updateSettings = async (newSettings: Partial<UserSettings>) => {
     const updatedSettings = { ...settings, ...newSettings };
-    setSettings(updatedSettings);
     
     // localStorage'a kaydet
     if (newSettings.theme) localStorage.setItem('ruh-halim-theme', newSettings.theme);
     if (newSettings.language) localStorage.setItem('ruh-halim-language', newSettings.language);
+    
+    // State'i güncellemeden önce kısa bir delay ekle
+    setTimeout(() => {
+      setSettings(updatedSettings);
+    }, 10);
   };
 
   useEffect(() => {

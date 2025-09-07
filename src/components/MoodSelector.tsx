@@ -39,7 +39,7 @@ export const MoodSelector = ({ selectedMood, onMoodSelect, language, theme }: Mo
             <span className={`text-xs text-center font-medium ${
               selectedMood === mood.id
                 ? 'text-white drop-shadow-sm'
-                : theme === 'dark' ? 'text-white' : theme === 'feminine' ? 'text-pink-700' : 'text-gray-700'
+                : theme === 'dark' ? 'text-white' : theme === 'feminine' ? 'text-pink-800' : 'text-gray-800'
             }`}>
               {getMoodLabel(mood)}
             </span>
@@ -62,7 +62,7 @@ export const MoodSelector = ({ selectedMood, onMoodSelect, language, theme }: Mo
             <span className={`text-xs text-center font-medium ${
               selectedMood === mood.id
                 ? 'text-white drop-shadow-sm'
-                : theme === 'dark' ? 'text-white' : theme === 'feminine' ? 'text-pink-700' : 'text-gray-700'
+                : theme === 'dark' ? 'text-white' : theme === 'feminine' ? 'text-pink-800' : 'text-gray-800'
             }`}>
               {getMoodLabel(mood)}
             </span>
