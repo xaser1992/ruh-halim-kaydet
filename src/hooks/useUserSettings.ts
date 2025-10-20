@@ -28,10 +28,8 @@ export const useUserSettings = () => {
     if (newSettings.theme) localStorage.setItem('ruh-halim-theme', newSettings.theme);
     if (newSettings.language) localStorage.setItem('ruh-halim-language', newSettings.language);
     
-    // State'i güncellemeden önce kısa bir delay ekle
-    setTimeout(() => {
-      setSettings(updatedSettings);
-    }, 10);
+    // State'i hemen güncelle
+    setSettings(updatedSettings);
   };
 
   useEffect(() => {

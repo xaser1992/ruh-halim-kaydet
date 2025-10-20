@@ -57,7 +57,9 @@ const Index = () => {
   }
 
   return (
-    <div className={`min-h-screen transition-all duration-500 ${
+    <div className={`min-h-screen transition-all duration-300 ${
+      settings.theme === 'dark' ? 'dark' : ''
+    } ${
       settings.theme === 'dark'
         ? 'bg-gradient-to-br from-gray-900 via-purple-900 to-gray-900'
         : settings.theme === 'feminine'
@@ -68,9 +70,7 @@ const Index = () => {
         {/* Header */}
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-4">
-            <h1 className={`text-3xl font-bold transition-colors duration-300 ${
-              settings.theme === 'dark' ? 'text-white' : settings.theme === 'feminine' ? 'text-pink-800' : 'text-gray-800'
-            }`}>
+            <h1 className="text-3xl font-bold text-foreground">
               {translations[settings.language].appName}
             </h1>
           </div>
@@ -80,159 +80,83 @@ const Index = () => {
             
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="icon" className={`transition-colors duration-300 ${
-                  settings.theme === 'dark' 
-                    ? 'border-gray-700 text-gray-300 hover:bg-gray-800' 
-                    : settings.theme === 'feminine'
-                    ? 'border-pink-200 text-pink-600 hover:bg-pink-50'
-                    : 'border-gray-200 hover:bg-gray-50'
-                }`}>
+                <Button variant="outline" size="icon">
                   <Settings className="h-4 w-4" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className={`transition-colors duration-300 ${
-                settings.theme === 'dark' 
-                  ? 'bg-gray-800 border-gray-700' 
-                  : settings.theme === 'feminine'
-                  ? 'bg-pink-50 border-pink-200'
-                  : 'bg-white'
-              }`}>
-                <DropdownMenuItem 
-                  className={`transition-colors duration-300 ${
-                    settings.theme === 'dark' ? 'hover:bg-gray-700 text-gray-200' 
-                    : settings.theme === 'feminine' ? 'hover:bg-pink-100 text-pink-800'
-                    : 'hover:bg-gray-100'
-                  }`}
-                >
+              <DropdownMenuContent align="end" className="z-50 bg-card border-border shadow-lg">
+                <DropdownMenuItem className="focus:bg-accent focus:text-accent-foreground cursor-pointer">
                   <DropdownMenu>
                     <DropdownMenuTrigger className="w-full text-left">
                       {translations[settings.language].changeTheme}
                     </DropdownMenuTrigger>
-                    <DropdownMenuContent side="right" className={`transition-colors duration-300 ${
-                      settings.theme === 'dark' 
-                        ? 'bg-gray-800 border-gray-700' 
-                        : settings.theme === 'feminine'
-                        ? 'bg-pink-50 border-pink-200'
-                        : 'bg-white'
-                    }`}>
+                    <DropdownMenuContent side="right" className="z-50 bg-card border-border shadow-lg">
                       <DropdownMenuItem 
                         onClick={() => updateSettings({ theme: 'light' })}
-                        className={`transition-colors duration-300 ${
-                          settings.theme === 'dark' ? 'hover:bg-gray-700 text-gray-200' 
-                          : settings.theme === 'feminine' ? 'hover:bg-pink-100 text-pink-800'
-                          : 'hover:bg-gray-100'
-                        } ${settings.theme === 'light' ? 'bg-gray-100 dark:bg-gray-700' : ''}`}
+                        className={`focus:bg-accent focus:text-accent-foreground cursor-pointer ${settings.theme === 'light' ? 'bg-accent' : ''}`}
                       >
                         ☀️ Açık Tema
                       </DropdownMenuItem>
                       <DropdownMenuItem 
                         onClick={() => updateSettings({ theme: 'dark' })}
-                        className={`transition-colors duration-300 ${
-                          settings.theme === 'dark' ? 'hover:bg-gray-700 text-gray-200' 
-                          : settings.theme === 'feminine' ? 'hover:bg-pink-100 text-pink-800'
-                          : 'hover:bg-gray-100'
-                        } ${settings.theme === 'dark' ? 'bg-gray-100 dark:bg-gray-700' : ''}`}
+                        className={`focus:bg-accent focus:text-accent-foreground cursor-pointer ${settings.theme === 'dark' ? 'bg-accent' : ''}`}
                       >
                         🌙 Koyu Tema
                       </DropdownMenuItem>
                       <DropdownMenuItem 
                         onClick={() => updateSettings({ theme: 'feminine' })}
-                        className={`transition-colors duration-300 ${
-                          settings.theme === 'dark' ? 'hover:bg-gray-700 text-gray-200' 
-                          : settings.theme === 'feminine' ? 'hover:bg-pink-100 text-pink-800'
-                          : 'hover:bg-gray-100'
-                        } ${settings.theme === 'feminine' ? 'bg-gray-100 dark:bg-gray-700' : ''}`}
+                        className={`focus:bg-accent focus:text-accent-foreground cursor-pointer ${settings.theme === 'feminine' ? 'bg-accent' : ''}`}
                       >
                         🌸 Kadınsı Tema
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
                 </DropdownMenuItem>
-                <DropdownMenuItem 
-                  className={`transition-colors duration-300 ${
-                    settings.theme === 'dark' ? 'hover:bg-gray-700 text-gray-200' 
-                    : settings.theme === 'feminine' ? 'hover:bg-pink-100 text-pink-800'
-                    : 'hover:bg-gray-100'
-                  }`}
-                >
+                <DropdownMenuItem className="focus:bg-accent focus:text-accent-foreground cursor-pointer">
                   <DropdownMenu>
                     <DropdownMenuTrigger className="w-full text-left">
                       {translations[settings.language].changeLanguage}
                     </DropdownMenuTrigger>
-                    <DropdownMenuContent side="right" className={`transition-colors duration-300 ${
-                      settings.theme === 'dark' 
-                        ? 'bg-gray-800 border-gray-700' 
-                        : settings.theme === 'feminine'
-                        ? 'bg-pink-50 border-pink-200'
-                        : 'bg-white'
-                    }`}>
+                    <DropdownMenuContent side="right" className="z-50 bg-card border-border shadow-lg">
                       <DropdownMenuItem 
                         onClick={() => updateSettings({ language: 'tr' })}
-                        className={`transition-colors duration-300 ${
-                          settings.theme === 'dark' ? 'hover:bg-gray-700 text-gray-200' 
-                          : settings.theme === 'feminine' ? 'hover:bg-pink-100 text-pink-800'
-                          : 'hover:bg-gray-100'
-                        } ${settings.language === 'tr' ? 'bg-gray-100 dark:bg-gray-700' : ''}`}
+                        className={`focus:bg-accent focus:text-accent-foreground cursor-pointer ${settings.language === 'tr' ? 'bg-accent' : ''}`}
                       >
                         🇹🇷 Türkçe
                       </DropdownMenuItem>
                       <DropdownMenuItem 
                         onClick={() => updateSettings({ language: 'en' })}
-                        className={`transition-colors duration-300 ${
-                          settings.theme === 'dark' ? 'hover:bg-gray-700 text-gray-200' 
-                          : settings.theme === 'feminine' ? 'hover:bg-pink-100 text-pink-800'
-                          : 'hover:bg-gray-100'
-                        } ${settings.language === 'en' ? 'bg-gray-100 dark:bg-gray-700' : ''}`}
+                        className={`focus:bg-accent focus:text-accent-foreground cursor-pointer ${settings.language === 'en' ? 'bg-accent' : ''}`}
                       >
                         🇺🇸 English
                       </DropdownMenuItem>
                       <DropdownMenuItem 
                         onClick={() => updateSettings({ language: 'de' })}
-                        className={`transition-colors duration-300 ${
-                          settings.theme === 'dark' ? 'hover:bg-gray-700 text-gray-200' 
-                          : settings.theme === 'feminine' ? 'hover:bg-pink-100 text-pink-800'
-                          : 'hover:bg-gray-100'
-                        } ${settings.language === 'de' ? 'bg-gray-100 dark:bg-gray-700' : ''}`}
+                        className={`focus:bg-accent focus:text-accent-foreground cursor-pointer ${settings.language === 'de' ? 'bg-accent' : ''}`}
                       >
                         🇩🇪 Deutsch
                       </DropdownMenuItem>
                       <DropdownMenuItem 
                         onClick={() => updateSettings({ language: 'fr' })}
-                        className={`transition-colors duration-300 ${
-                          settings.theme === 'dark' ? 'hover:bg-gray-700 text-gray-200' 
-                          : settings.theme === 'feminine' ? 'hover:bg-pink-100 text-pink-800'
-                          : 'hover:bg-gray-100'
-                        } ${settings.language === 'fr' ? 'bg-gray-100 dark:bg-gray-700' : ''}`}
+                        className={`focus:bg-accent focus:text-accent-foreground cursor-pointer ${settings.language === 'fr' ? 'bg-accent' : ''}`}
                       >
                         🇫🇷 Français
                       </DropdownMenuItem>
                       <DropdownMenuItem 
                         onClick={() => updateSettings({ language: 'es' })}
-                        className={`transition-colors duration-300 ${
-                          settings.theme === 'dark' ? 'hover:bg-gray-700 text-gray-200' 
-                          : settings.theme === 'feminine' ? 'hover:bg-pink-100 text-pink-800'
-                          : 'hover:bg-gray-100'
-                        } ${settings.language === 'es' ? 'bg-gray-100 dark:bg-gray-700' : ''}`}
+                        className={`focus:bg-accent focus:text-accent-foreground cursor-pointer ${settings.language === 'es' ? 'bg-accent' : ''}`}
                       >
                         🇪🇸 Español
                       </DropdownMenuItem>
                       <DropdownMenuItem 
                         onClick={() => updateSettings({ language: 'it' })}
-                        className={`transition-colors duration-300 ${
-                          settings.theme === 'dark' ? 'hover:bg-gray-700 text-gray-200' 
-                          : settings.theme === 'feminine' ? 'hover:bg-pink-100 text-pink-800'
-                          : 'hover:bg-gray-100'
-                        } ${settings.language === 'it' ? 'bg-gray-100 dark:bg-gray-700' : ''}`}
+                        className={`focus:bg-accent focus:text-accent-foreground cursor-pointer ${settings.language === 'it' ? 'bg-accent' : ''}`}
                       >
                         🇮🇹 Italiano
                       </DropdownMenuItem>
                       <DropdownMenuItem 
                         onClick={() => updateSettings({ language: 'ru' })}
-                        className={`transition-colors duration-300 ${
-                          settings.theme === 'dark' ? 'hover:bg-gray-700 text-gray-200' 
-                          : settings.theme === 'feminine' ? 'hover:bg-pink-100 text-pink-800'
-                          : 'hover:bg-gray-100'
-                        } ${settings.language === 'ru' ? 'bg-gray-100 dark:bg-gray-700' : ''}`}
+                        className={`focus:bg-accent focus:text-accent-foreground cursor-pointer ${settings.language === 'ru' ? 'bg-accent' : ''}`}
                       >
                         🇷🇺 Русский
                       </DropdownMenuItem>
@@ -242,11 +166,7 @@ const Index = () => {
                 <DropdownMenuItem asChild>
                   <a 
                     href="/privacy" 
-                    className={`transition-colors duration-300 ${
-                      settings.theme === 'dark' ? 'hover:bg-gray-700 text-gray-200' 
-                      : settings.theme === 'feminine' ? 'hover:bg-pink-100 text-pink-800'
-                      : 'hover:bg-gray-100'
-                    }`}
+                    className="focus:bg-accent focus:text-accent-foreground cursor-pointer"
                   >
                     {translations[settings.language].privacy}
                   </a>
@@ -254,11 +174,7 @@ const Index = () => {
                 <DropdownMenuItem asChild>
                   <a 
                     href="/terms" 
-                    className={`transition-colors duration-300 ${
-                      settings.theme === 'dark' ? 'hover:bg-gray-700 text-gray-200' 
-                      : settings.theme === 'feminine' ? 'hover:bg-pink-100 text-pink-800'
-                      : 'hover:bg-gray-100'
-                    }`}
+                    className="focus:bg-accent focus:text-accent-foreground cursor-pointer"
                   >
                     {translations[settings.language].terms}
                   </a>
@@ -266,11 +182,7 @@ const Index = () => {
                 <DropdownMenuItem asChild>
                   <a 
                     href="/license" 
-                    className={`transition-colors duration-300 ${
-                      settings.theme === 'dark' ? 'hover:bg-gray-700 text-gray-200' 
-                      : settings.theme === 'feminine' ? 'hover:bg-pink-100 text-pink-800'
-                      : 'hover:bg-gray-100'
-                    }`}
+                    className="focus:bg-accent focus:text-accent-foreground cursor-pointer"
                   >
                     {translations[settings.language].license}
                   </a>
@@ -281,58 +193,28 @@ const Index = () => {
         </div>
 
         <Tabs defaultValue="mood" className="w-full">
-          <TabsList className={`grid w-full grid-cols-4 transition-colors duration-300 ${
-            settings.theme === 'dark' 
-              ? 'bg-gray-800/50' 
-              : settings.theme === 'feminine'
-              ? 'bg-pink-100/50'
-              : 'bg-white/50'
-          }`}>
+          <TabsList className="grid w-full grid-cols-4 bg-muted/50">
             <TabsTrigger 
               value="mood" 
-              className={`transition-colors duration-300 ${
-                settings.theme === 'dark' 
-                  ? 'data-[state=active]:bg-purple-700 data-[state=active]:text-white' 
-                  : settings.theme === 'feminine'
-                  ? 'data-[state=active]:bg-pink-500 data-[state=active]:text-white'
-                  : 'data-[state=active]:bg-purple-600 data-[state=active]:text-white'
-              }`}
+              className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
             >
               {translations[settings.language].mood}
             </TabsTrigger>
             <TabsTrigger 
               value="history" 
-              className={`transition-colors duration-300 ${
-                settings.theme === 'dark' 
-                  ? 'data-[state=active]:bg-purple-700 data-[state=active]:text-white' 
-                  : settings.theme === 'feminine'
-                  ? 'data-[state=active]:bg-pink-500 data-[state=active]:text-white'
-                  : 'data-[state=active]:bg-purple-600 data-[state=active]:text-white'
-              }`}
+              className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
             >
               {translations[settings.language].history}
             </TabsTrigger>
             <TabsTrigger 
               value="community" 
-              className={`transition-colors duration-300 ${
-                settings.theme === 'dark' 
-                  ? 'data-[state=active]:bg-purple-700 data-[state=active]:text-white' 
-                  : settings.theme === 'feminine'
-                  ? 'data-[state=active]:bg-pink-500 data-[state=active]:text-white'
-                  : 'data-[state=active]:bg-purple-600 data-[state=active]:text-white'
-              }`}
+              className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
             >
               {translations[settings.language].community}
             </TabsTrigger>
             <TabsTrigger 
               value="stats" 
-              className={`transition-colors duration-300 ${
-                settings.theme === 'dark' 
-                  ? 'data-[state=active]:bg-purple-700 data-[state=active]:text-white' 
-                  : settings.theme === 'feminine'
-                  ? 'data-[state=active]:bg-pink-500 data-[state=active]:text-white'
-                  : 'data-[state=active]:bg-purple-600 data-[state=active]:text-white'
-              }`}
+              className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
             >
               İstatistikler
             </TabsTrigger>
