@@ -57,9 +57,7 @@ const Index = () => {
   }
 
   return (
-    <div className={`min-h-screen transition-all duration-300 ${
-      settings.theme === 'dark' ? 'dark' : ''
-    } ${
+    <div className={`min-h-screen ${
       settings.theme === 'dark'
         ? 'bg-gradient-to-br from-gray-900 via-purple-900 to-gray-900'
         : settings.theme === 'feminine'

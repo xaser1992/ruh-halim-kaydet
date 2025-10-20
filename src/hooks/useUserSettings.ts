@@ -16,19 +16,37 @@ export const useUserSettings = () => {
     // localStorage'dan yükle
     const savedTheme = localStorage.getItem('ruh-halim-theme') as 'light' | 'dark' | 'feminine' || 'light';
     const savedLanguage = localStorage.getItem('ruh-halim-language') as 'tr' | 'en' | 'de' | 'fr' | 'es' | 'it' | 'ru' || 'tr';
+    
+    // Dark mode class'ını uygula
+    if (savedTheme === 'dark') {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+    
     setSettings({ theme: savedTheme, language: savedLanguage });
     setLoading(false);
   };
 
   // Ayarları kaydet
-  const updateSettings = async (newSettings: Partial<UserSettings>) => {
+  const updateSettings = (newSettings: Partial<UserSettings>) => {
     const updatedSettings = { ...settings, ...newSettings };
     
     // localStorage'a kaydet
-    if (newSettings.theme) localStorage.setItem('ruh-halim-theme', newSettings.theme);
-    if (newSettings.language) localStorage.setItem('ruh-halim-language', newSettings.language);
+    if (newSettings.theme) {
+      localStorage.setItem('ruh-halim-theme', newSettings.theme);
+      // Dark mode class'ını hemen uygula
+      if (newSettings.theme === 'dark') {
+        document.documentElement.classList.add('dark');
+      } else {
+        document.documentElement.classList.remove('dark');
+      }
+    }
+    if (newSettings.language) {
+      localStorage.setItem('ruh-halim-language', newSettings.language);
+    }
     
-    // State'i hemen güncelle
+    // State'i güncelle
     setSettings(updatedSettings);
   };
 
