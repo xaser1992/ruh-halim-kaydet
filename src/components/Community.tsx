@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from "react";
+import { Capacitor } from '@capacitor/core';
+import { Network } from '@capacitor/network';
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Heart, Share } from "lucide-react";
@@ -41,30 +43,23 @@ const Community = ({ language, theme, onShare }: CommunityProps) => {
   // Paylaşımları ve beğenileri yükle
   const fetchPosts = async () => {
     try {
-      console.log('Paylaşımlar yükleniyor...');
-      
       // Network bağlantısını kontrol et
-      const { Capacitor } = await import('@capacitor/core');
-      const { Network } = await import('@capacitor/network');
-      
       if (Capacitor.isNativePlatform()) {
         const status = await Network.getStatus();
-        console.log('Network status:', status);
         
         if (!status.connected) {
-          console.log('Network bağlantısı yok');
-          toast({
-            title: "Bağlantı Hatası",
-            description: "İnternet bağlantınızı kontrol edin.",
-            variant: "destructive",
-          });
+          setTimeout(() => {
+            toast({
+              title: "Bağlantı Hatası",
+              description: "İnternet bağlantınızı kontrol edin.",
+              variant: "destructive",
+            });
+          }, 100);
           return;
         }
       }
       
-      // Basit ve güvenilir posts yükleme
-      console.log('Community posts yükleniyor...');
-      
+      // Posts'ları çek
       const { data: postsData, error: postsError } = await supabase
         .from('community_posts')
         .select('*')
@@ -72,60 +67,68 @@ const Community = ({ language, theme, onShare }: CommunityProps) => {
         .limit(50);
 
       if (postsError) {
-        console.error('Posts yükleme hatası:', postsError);
-        console.error('Error details:', JSON.stringify(postsError, null, 2));
-        
-        toast({
-          title: "Bağlantı Hatası",
-          description: "Paylaşımlar yüklenemiyor. Lütfen internet bağlantınızı kontrol edin ve tekrar deneyin.",
-          variant: "destructive",
-        });
+        setTimeout(() => {
+          toast({
+            title: "Bağlantı Hatası",
+            description: "Paylaşımlar yüklenemiyor.",
+            variant: "destructive",
+          });
+        }, 100);
         return;
       }
 
-      console.log('Yüklenen posts verisi:', postsData);
-
       if (!postsData || postsData.length === 0) {
-        console.log('Hiç post bulunamadı');
         setPosts([]);
         return;
       }
 
-      // Her post için beğeni sayısını hesapla
-      const postsWithLikes = await Promise.all(
-        postsData.map(async (post) => {
-          // Beğeni sayısını al
-          const { count } = await supabase
-            .from('community_likes')
-            .select('*', { count: 'exact', head: true })
-            .eq('post_id', post.id);
+      // Tüm post ID'lerini topla
+      const postIds = postsData.map(p => p.id);
+      const userIP = 'user_' + (username || 'anonymous');
 
-          // Kullanıcının bu postu beğenip beğenmediğini kontrol et (IP bazlı)
-          const userIP = 'user_' + (username || 'anonymous');
-          const { data: userLike } = await supabase
-            .from('community_likes')
-            .select('id')
-            .eq('post_id', post.id)
-            .eq('user_ip', userIP)
-            .single();
+      // Tek sorguda tüm beğenileri al
+      const { data: allLikes, error: likesError } = await supabase
+        .from('community_likes')
+        .select('post_id, user_ip')
+        .in('post_id', postIds);
 
-          return {
-            ...post,
-            likes_count: count || 0,
-            user_liked: !!userLike
-          };
-        })
-      );
+      if (likesError) {
+        console.error('Beğeniler yüklenemedi:', likesError);
+      }
 
-      console.log('Beğenilerle birlikte posts:', postsWithLikes);
+      // Beğenileri post ID'ye göre grupla
+      const likesMap: Record<string, { count: number; userLiked: boolean }> = {};
+      
+      postIds.forEach(id => {
+        likesMap[id] = { count: 0, userLiked: false };
+      });
+
+      allLikes?.forEach(like => {
+        if (likesMap[like.post_id]) {
+          likesMap[like.post_id].count++;
+          if (like.user_ip === userIP) {
+            likesMap[like.post_id].userLiked = true;
+          }
+        }
+      });
+
+      // Posts'lara beğeni bilgilerini ekle
+      const postsWithLikes = postsData.map(post => ({
+        ...post,
+        likes_count: likesMap[post.id]?.count || 0,
+        user_liked: likesMap[post.id]?.userLiked || false
+      }));
+
       setPosts(postsWithLikes);
     } catch (error) {
       console.error('fetchPosts hatası:', error);
-      toast({
-        title: "Hata",
-        description: "Paylaşımlar yüklenirken beklenmeyen bir hata oluştu.",
-        variant: "destructive",
-      });
+      setTimeout(() => {
+        toast({
+          title: "Hata",
+          description: "Paylaşımlar yüklenirken bir hata oluştu.",
+          variant: "destructive",
+        });
+      }, 100);
     } finally {
       setLoading(false);
     }
@@ -133,7 +136,7 @@ const Community = ({ language, theme, onShare }: CommunityProps) => {
 
   useEffect(() => {
     fetchPosts();
-  }, []);
+  }, [language]);
 
   // Beğeni toggle fonksiyonu
   const toggleLike = async (postId: string, currentlyLiked: boolean) => {
@@ -157,6 +160,13 @@ const Community = ({ language, theme, onShare }: CommunityProps) => {
           console.error('Beğeni kaldırma hatası:', error);
           return;
         }
+        
+        // State'i güncelle
+        setPosts(posts.map(post => 
+          post.id === postId 
+            ? { ...post, likes_count: (post.likes_count || 0) - 1, user_liked: false }
+            : post
+        ));
       } else {
         // Beğeni ekle
         const { error } = await supabase
@@ -170,10 +180,14 @@ const Community = ({ language, theme, onShare }: CommunityProps) => {
           console.error('Beğeni ekleme hatası:', error);
           return;
         }
+        
+        // State'i güncelle
+        setPosts(posts.map(post => 
+          post.id === postId 
+            ? { ...post, likes_count: (post.likes_count || 0) + 1, user_liked: true }
+            : post
+        ));
       }
-
-      // Posts listesini yenile
-      fetchPosts();
     } catch (error) {
       console.error('toggleLike hatası:', error);
     }
@@ -181,7 +195,6 @@ const Community = ({ language, theme, onShare }: CommunityProps) => {
 
   // Paylaşım başarı callback'i
   const handleShareSuccess = () => {
-    console.log('Paylaşım başarılı callback çağrıldı');
     fetchPosts();
     setShareMode(false);
     setShareData({ mood: '', message: '' });
