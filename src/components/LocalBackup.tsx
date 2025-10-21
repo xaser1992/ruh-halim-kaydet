@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import React, { useState, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Upload, Archive } from 'lucide-react';
@@ -47,7 +47,7 @@ interface LocalBackupProps {
   theme: 'light' | 'dark' | 'feminine';
 }
 
-export const LocalBackup = ({ language, theme }: LocalBackupProps) => {
+const LocalBackup = ({ language, theme }: LocalBackupProps) => {
   const [isExporting, setIsExporting] = useState(false);
   const [isImporting, setIsImporting] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -436,3 +436,5 @@ export const LocalBackup = ({ language, theme }: LocalBackupProps) => {
     </Card>
   );
 };
+
+export default React.memo(LocalBackup);

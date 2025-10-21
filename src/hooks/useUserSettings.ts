@@ -1,6 +1,4 @@
-
 import { useState, useEffect } from 'react';
-import { supabase } from '@/integrations/supabase/client';
 
 interface UserSettings {
   theme: 'light' | 'dark' | 'feminine';
@@ -12,17 +10,19 @@ export const useUserSettings = () => {
   const [loading, setLoading] = useState(true);
 
   // Ayarları yükle
-  const loadSettings = async () => {
+  const loadSettings = () => {
     // localStorage'dan yükle
     const savedTheme = localStorage.getItem('ruh-halim-theme') as 'light' | 'dark' | 'feminine' || 'light';
     const savedLanguage = localStorage.getItem('ruh-halim-language') as 'tr' | 'en' | 'de' | 'fr' | 'es' | 'it' | 'ru' || 'tr';
     
-    // Dark mode class'ını uygula
-    if (savedTheme === 'dark') {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-    }
+    // Dark mode class'ını requestAnimationFrame içinde uygula
+    requestAnimationFrame(() => {
+      if (savedTheme === 'dark') {
+        document.documentElement.classList.add('dark');
+      } else {
+        document.documentElement.classList.remove('dark');
+      }
+    });
     
     setSettings({ theme: savedTheme, language: savedLanguage });
     setLoading(false);
@@ -35,12 +35,14 @@ export const useUserSettings = () => {
     // localStorage'a kaydet
     if (newSettings.theme) {
       localStorage.setItem('ruh-halim-theme', newSettings.theme);
-      // Dark mode class'ını hemen uygula
-      if (newSettings.theme === 'dark') {
-        document.documentElement.classList.add('dark');
-      } else {
-        document.documentElement.classList.remove('dark');
-      }
+      // Dark mode class'ını requestAnimationFrame içinde uygula
+      requestAnimationFrame(() => {
+        if (newSettings.theme === 'dark') {
+          document.documentElement.classList.add('dark');
+        } else {
+          document.documentElement.classList.remove('dark');
+        }
+      });
     }
     if (newSettings.language) {
       localStorage.setItem('ruh-halim-language', newSettings.language);
@@ -51,7 +53,15 @@ export const useUserSettings = () => {
   };
 
   useEffect(() => {
-    loadSettings();
+    let mounted = true;
+    
+    if (mounted) {
+      loadSettings();
+    }
+    
+    return () => {
+      mounted = false;
+    };
   }, []);
 
   return {

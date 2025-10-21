@@ -4,6 +4,7 @@
 
 @layer base {
   :root {
+    transition: background-color 0.3s ease, color 0.3s ease;
     --background: 0 0% 100%;
     --foreground: 222.2 84% 4.9%;
 

@@ -1,5 +1,4 @@
-
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Heart, Share } from "lucide-react";
@@ -29,7 +28,7 @@ interface CommunityPost {
   user_liked?: boolean;
 }
 
-export const Community = ({ language, theme, onShare }: CommunityProps) => {
+const Community = ({ language, theme, onShare }: CommunityProps) => {
   const t = translations[language];
   const { toast } = useToast();
   const { username, updateUsername, hasUsername, loading: usernameLoading } = useUsername();
@@ -503,4 +502,5 @@ export const Community = ({ language, theme, onShare }: CommunityProps) => {
   );
 };
 
+export default React.memo(Community);
 export { type CommunityProps };

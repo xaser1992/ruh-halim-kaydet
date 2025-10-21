@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ChevronDown, Trash2 } from "lucide-react";
@@ -12,7 +12,7 @@ interface MoodHistoryProps {
   refreshTrigger?: number;
 }
 
-export const MoodHistory = ({ language, theme, refreshTrigger }: MoodHistoryProps) => {
+const MoodHistory = ({ language, theme, refreshTrigger }: MoodHistoryProps) => {
   const [entries, setEntries] = useState<any[]>([]);
   const [expandedEntries, setExpandedEntries] = useState<string[]>([]);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
@@ -326,3 +326,5 @@ const getLocaleString = (language: string) => {
   };
   return localeMap[language] || 'en-US';
 };
+
+export default React.memo(MoodHistory);

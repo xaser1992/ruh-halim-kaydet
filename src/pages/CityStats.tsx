@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
@@ -23,7 +23,7 @@ interface TopCity {
   mood: string;
 }
 
-export const CityStats = ({ language, theme }: CityStatsProps) => {
+const CityStats = ({ language, theme }: CityStatsProps) => {
   const [loading, setLoading] = useState(true);
   const [topCities, setTopCities] = useState<Record<string, TopCity>>({});
   const [chartData, setChartData] = useState<any[]>([]);
@@ -294,3 +294,5 @@ export const CityStats = ({ language, theme }: CityStatsProps) => {
     </div>
   );
 };
+
+export default React.memo(CityStats);

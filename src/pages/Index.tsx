@@ -1,10 +1,10 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { MoodSelector } from '@/components/MoodSelector';
 import { MoodEntry } from '@/components/MoodEntry';
-import { MoodHistory } from '@/components/MoodHistory';
-import { Community } from '@/components/Community';
-import { CityStats } from '@/pages/CityStats';
-import { LocalBackup } from '@/components/LocalBackup';
+import MoodHistory from '@/components/MoodHistory';
+import Community from '@/components/Community';
+import CityStats from '@/pages/CityStats';
+import LocalBackup from '@/components/LocalBackup';
 import { UserSetup } from '@/components/UserSetup';
 import { UserInfo } from '@/components/UserInfo';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -24,6 +24,9 @@ const Index = () => {
   const { username } = useUsername();
   const { city } = useCity();
   const [showSetup, setShowSetup] = useState(false);
+  
+  // Cache translations
+  const t = useMemo(() => translations[settings.language], [settings.language]);
 
   useEffect(() => {
     if (!username || !city) {
@@ -69,7 +72,7 @@ const Index = () => {
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-4">
             <h1 className="text-3xl font-bold text-foreground">
-              {translations[settings.language].appName}
+              {t.appName}
             </h1>
           </div>
           
@@ -83,90 +86,72 @@ const Index = () => {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="z-50 bg-card border-border shadow-lg">
-                <DropdownMenuItem className="focus:bg-accent focus:text-accent-foreground cursor-pointer">
-                  <DropdownMenu>
-                    <DropdownMenuTrigger className="w-full text-left">
-                      {translations[settings.language].changeTheme}
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent side="right" className="z-50 bg-card border-border shadow-lg">
-                      <DropdownMenuItem 
-                        onClick={() => updateSettings({ theme: 'light' })}
-                        className={`focus:bg-accent focus:text-accent-foreground cursor-pointer ${settings.theme === 'light' ? 'bg-accent' : ''}`}
-                      >
-                        ☀️ Açık Tema
-                      </DropdownMenuItem>
-                      <DropdownMenuItem 
-                        onClick={() => updateSettings({ theme: 'dark' })}
-                        className={`focus:bg-accent focus:text-accent-foreground cursor-pointer ${settings.theme === 'dark' ? 'bg-accent' : ''}`}
-                      >
-                        🌙 Koyu Tema
-                      </DropdownMenuItem>
-                      <DropdownMenuItem 
-                        onClick={() => updateSettings({ theme: 'feminine' })}
-                        className={`focus:bg-accent focus:text-accent-foreground cursor-pointer ${settings.theme === 'feminine' ? 'bg-accent' : ''}`}
-                      >
-                        🌸 Kadınsı Tema
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
+                <DropdownMenuItem 
+                  onClick={() => updateSettings({ theme: 'light' })}
+                  className={`focus:bg-accent focus:text-accent-foreground cursor-pointer ${settings.theme === 'light' ? 'bg-accent' : ''}`}
+                >
+                  ☀️ Açık Tema
                 </DropdownMenuItem>
-                <DropdownMenuItem className="focus:bg-accent focus:text-accent-foreground cursor-pointer">
-                  <DropdownMenu>
-                    <DropdownMenuTrigger className="w-full text-left">
-                      {translations[settings.language].changeLanguage}
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent side="right" className="z-50 bg-card border-border shadow-lg">
-                      <DropdownMenuItem 
-                        onClick={() => updateSettings({ language: 'tr' })}
-                        className={`focus:bg-accent focus:text-accent-foreground cursor-pointer ${settings.language === 'tr' ? 'bg-accent' : ''}`}
-                      >
-                        🇹🇷 Türkçe
-                      </DropdownMenuItem>
-                      <DropdownMenuItem 
-                        onClick={() => updateSettings({ language: 'en' })}
-                        className={`focus:bg-accent focus:text-accent-foreground cursor-pointer ${settings.language === 'en' ? 'bg-accent' : ''}`}
-                      >
-                        🇺🇸 English
-                      </DropdownMenuItem>
-                      <DropdownMenuItem 
-                        onClick={() => updateSettings({ language: 'de' })}
-                        className={`focus:bg-accent focus:text-accent-foreground cursor-pointer ${settings.language === 'de' ? 'bg-accent' : ''}`}
-                      >
-                        🇩🇪 Deutsch
-                      </DropdownMenuItem>
-                      <DropdownMenuItem 
-                        onClick={() => updateSettings({ language: 'fr' })}
-                        className={`focus:bg-accent focus:text-accent-foreground cursor-pointer ${settings.language === 'fr' ? 'bg-accent' : ''}`}
-                      >
-                        🇫🇷 Français
-                      </DropdownMenuItem>
-                      <DropdownMenuItem 
-                        onClick={() => updateSettings({ language: 'es' })}
-                        className={`focus:bg-accent focus:text-accent-foreground cursor-pointer ${settings.language === 'es' ? 'bg-accent' : ''}`}
-                      >
-                        🇪🇸 Español
-                      </DropdownMenuItem>
-                      <DropdownMenuItem 
-                        onClick={() => updateSettings({ language: 'it' })}
-                        className={`focus:bg-accent focus:text-accent-foreground cursor-pointer ${settings.language === 'it' ? 'bg-accent' : ''}`}
-                      >
-                        🇮🇹 Italiano
-                      </DropdownMenuItem>
-                      <DropdownMenuItem 
-                        onClick={() => updateSettings({ language: 'ru' })}
-                        className={`focus:bg-accent focus:text-accent-foreground cursor-pointer ${settings.language === 'ru' ? 'bg-accent' : ''}`}
-                      >
-                        🇷🇺 Русский
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
+                <DropdownMenuItem 
+                  onClick={() => updateSettings({ theme: 'dark' })}
+                  className={`focus:bg-accent focus:text-accent-foreground cursor-pointer ${settings.theme === 'dark' ? 'bg-accent' : ''}`}
+                >
+                  🌙 Koyu Tema
+                </DropdownMenuItem>
+                <DropdownMenuItem 
+                  onClick={() => updateSettings({ theme: 'feminine' })}
+                  className={`focus:bg-accent focus:text-accent-foreground cursor-pointer ${settings.theme === 'feminine' ? 'bg-accent' : ''}`}
+                >
+                  🌸 Kadınsı Tema
+                </DropdownMenuItem>
+                <DropdownMenuItem 
+                  onClick={() => updateSettings({ language: 'tr' })}
+                  className={`focus:bg-accent focus:text-accent-foreground cursor-pointer ${settings.language === 'tr' ? 'bg-accent' : ''}`}
+                >
+                  🇹🇷 Türkçe
+                </DropdownMenuItem>
+                <DropdownMenuItem 
+                  onClick={() => updateSettings({ language: 'en' })}
+                  className={`focus:bg-accent focus:text-accent-foreground cursor-pointer ${settings.language === 'en' ? 'bg-accent' : ''}`}
+                >
+                  🇺🇸 English
+                </DropdownMenuItem>
+                <DropdownMenuItem 
+                  onClick={() => updateSettings({ language: 'de' })}
+                  className={`focus:bg-accent focus:text-accent-foreground cursor-pointer ${settings.language === 'de' ? 'bg-accent' : ''}`}
+                >
+                  🇩🇪 Deutsch
+                </DropdownMenuItem>
+                <DropdownMenuItem 
+                  onClick={() => updateSettings({ language: 'fr' })}
+                  className={`focus:bg-accent focus:text-accent-foreground cursor-pointer ${settings.language === 'fr' ? 'bg-accent' : ''}`}
+                >
+                  🇫🇷 Français
+                </DropdownMenuItem>
+                <DropdownMenuItem 
+                  onClick={() => updateSettings({ language: 'es' })}
+                  className={`focus:bg-accent focus:text-accent-foreground cursor-pointer ${settings.language === 'es' ? 'bg-accent' : ''}`}
+                >
+                  🇪🇸 Español
+                </DropdownMenuItem>
+                <DropdownMenuItem 
+                  onClick={() => updateSettings({ language: 'it' })}
+                  className={`focus:bg-accent focus:text-accent-foreground cursor-pointer ${settings.language === 'it' ? 'bg-accent' : ''}`}
+                >
+                  🇮🇹 Italiano
+                </DropdownMenuItem>
+                <DropdownMenuItem 
+                  onClick={() => updateSettings({ language: 'ru' })}
+                  className={`focus:bg-accent focus:text-accent-foreground cursor-pointer ${settings.language === 'ru' ? 'bg-accent' : ''}`}
+                >
+                  🇷🇺 Русский
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
                   <a 
                     href="/privacy" 
                     className="focus:bg-accent focus:text-accent-foreground cursor-pointer"
                   >
-                    {translations[settings.language].privacy}
+                    {t.privacy}
                   </a>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
@@ -174,7 +159,7 @@ const Index = () => {
                     href="/terms" 
                     className="focus:bg-accent focus:text-accent-foreground cursor-pointer"
                   >
-                    {translations[settings.language].terms}
+                    {t.terms}
                   </a>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
@@ -182,7 +167,7 @@ const Index = () => {
                     href="/license" 
                     className="focus:bg-accent focus:text-accent-foreground cursor-pointer"
                   >
-                    {translations[settings.language].license}
+                    {t.license}
                   </a>
                 </DropdownMenuItem>
               </DropdownMenuContent>
@@ -196,19 +181,19 @@ const Index = () => {
               value="mood" 
               className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
             >
-              {translations[settings.language].mood}
+              {t.mood}
             </TabsTrigger>
             <TabsTrigger 
               value="history" 
               className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
             >
-              {translations[settings.language].history}
+              {t.history}
             </TabsTrigger>
             <TabsTrigger 
               value="community" 
               className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
             >
-              {translations[settings.language].community}
+              {t.community}
             </TabsTrigger>
             <TabsTrigger 
               value="stats" 
