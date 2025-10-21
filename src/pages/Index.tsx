@@ -102,7 +102,7 @@ const Index = () => {
                   onClick={() => updateSettings({ theme: 'feminine' })}
                   className={`focus:bg-accent focus:text-accent-foreground cursor-pointer ${settings.theme === 'feminine' ? 'bg-accent' : ''}`}
                 >
-                  🌸 Kadınsı Tema
+                  🌸 Pembik
                 </DropdownMenuItem>
                 <DropdownMenuItem 
                   onClick={() => updateSettings({ language: 'tr' })}
