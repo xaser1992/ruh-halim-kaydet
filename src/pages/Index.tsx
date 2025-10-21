@@ -9,7 +9,7 @@ import { UserSetup } from '@/components/UserSetup';
 import { UserInfo } from '@/components/UserInfo';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from '@/components/ui/button';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator, DropdownMenuLabel } from '@/components/ui/dropdown-menu';
 import { Settings, Download } from 'lucide-react';
 import { useMoodEntries } from '@/hooks/useMoodEntries';
 import { useUserSettings } from '@/hooks/useUserSettings';
@@ -85,7 +85,8 @@ const Index = () => {
                   <Settings className="h-4 w-4" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="z-50 bg-card border-border shadow-lg">
+              <DropdownMenuContent align="end" className="z-50 bg-card border-border shadow-lg w-48">
+                <DropdownMenuLabel>Temalar</DropdownMenuLabel>
                 <DropdownMenuItem 
                   onClick={() => updateSettings({ theme: 'light' })}
                   className={`focus:bg-accent focus:text-accent-foreground cursor-pointer ${settings.theme === 'light' ? 'bg-accent' : ''}`}
@@ -104,6 +105,10 @@ const Index = () => {
                 >
                   🌸 Pembik
                 </DropdownMenuItem>
+                
+                <DropdownMenuSeparator />
+                
+                <DropdownMenuLabel>Dil Ayarları</DropdownMenuLabel>
                 <DropdownMenuItem 
                   onClick={() => updateSettings({ language: 'tr' })}
                   className={`focus:bg-accent focus:text-accent-foreground cursor-pointer ${settings.language === 'tr' ? 'bg-accent' : ''}`}
@@ -146,6 +151,9 @@ const Index = () => {
                 >
                   🇷🇺 Русский
                 </DropdownMenuItem>
+                
+                <DropdownMenuSeparator />
+                
                 <DropdownMenuItem asChild>
                   <a 
                     href="/privacy" 
