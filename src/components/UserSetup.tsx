@@ -10,10 +10,11 @@ import { useCity } from '@/hooks/useCity';
 interface UserSetupProps {
   language: 'tr' | 'en' | 'de' | 'fr' | 'es' | 'it' | 'ru';
   theme: 'light' | 'dark' | 'feminine';
+  userId?: string;
   onComplete: () => void;
 }
 
-export const UserSetup = ({ language, theme, onComplete }: UserSetupProps) => {
+export const UserSetup = ({ language, theme, userId, onComplete }: UserSetupProps) => {
   const { username, updateUsername, hasUsername } = useUsername();
   const { city, updateCity, hasCity } = useCity();
   const [tempUsername, setTempUsername] = useState(username || '');

@@ -21,14 +21,15 @@ import { translations } from '@/utils/translations';
 const Index = () => {
   const navigate = useNavigate();
   const [selectedMood, setSelectedMood] = useState<string>('');
+  const [activeTab, setActiveTab] = useState(() => localStorage.getItem('last-tab') || 'mood');
   const { entries, saveEntry } = useMoodEntries();
   const { user, loading: authLoading, logout } = useAuth();
   const { profile, loading: profileLoading, updateTheme, updateLanguage, updateCity } = useUserProfile(user?.id || null);
   const { city } = useCity();
   const [showSetup, setShowSetup] = useState(false);
   
-  // Cache translations
-  const t = useMemo(() => translations[profile.language], [profile.language]);
+  // Cache translations with fallback
+  const t = useMemo(() => translations[profile.language] || translations['tr'], [profile.language]);
 
   // Giriş kontrolü
   useEffect(() => {
@@ -38,23 +39,23 @@ const Index = () => {
   }, [user, authLoading, navigate]);
 
   useEffect(() => {
-    if (user && !city) {
+    if (user && !profile.city) {
       setShowSetup(true);
     } else {
       setShowSetup(false);
     }
-  }, [user, city]);
+  }, [user, profile.city]);
 
   const handleMoodSelect = (mood: string) => {
-    if (!city) {
+    if (!profile.city) {
       setShowSetup(true);
       return;
     }
     setSelectedMood(mood);
   };
 
-  const handleLogout = () => {
-    logout();
+  const handleLogout = async () => {
+    await logout();
     navigate('/auth');
   };
 
@@ -64,9 +65,15 @@ const Index = () => {
       note,
       images,
       timestamp: new Date().toISOString(),
-      date: new Date().toDateString()
+      date: new Date().toDateString(),
+      user_id: user?.id || ''
     });
     setSelectedMood('');
+  };
+
+  const handleTabChange = (value: string) => {
+    setActiveTab(value);
+    localStorage.setItem('last-tab', value);
   };
 
   if (authLoading || profileLoading) {
@@ -81,7 +88,7 @@ const Index = () => {
   }
 
   if (showSetup) {
-    return <UserSetup onComplete={() => setShowSetup(false)} theme={profile.theme} language={profile.language} />;
+    return <UserSetup userId={user?.id} onComplete={() => setShowSetup(false)} theme={profile.theme} language={profile.language} />;
   }
 
   return (
@@ -102,7 +109,7 @@ const Index = () => {
           </div>
           
           <div className="flex items-center space-x-4">
-            <UserInfo theme={profile.theme} />
+            <UserInfo theme={profile.theme} username={user?.username || ''} />
             
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -111,21 +118,21 @@ const Index = () => {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="z-50 bg-card border-border shadow-lg w-48">
-                <DropdownMenuLabel>Temalar</DropdownMenuLabel>
+                <DropdownMenuLabel>{t.themes}</DropdownMenuLabel>
                 <DropdownMenuItem 
-                  onClick={() => updateTheme('light')}
+                  onClick={async () => await updateTheme('light')}
                   className={`focus:bg-accent focus:text-accent-foreground cursor-pointer ${profile.theme === 'light' ? 'bg-accent' : ''}`}
                 >
                   ☀️ Açık Tema
                 </DropdownMenuItem>
                 <DropdownMenuItem 
-                  onClick={() => updateTheme('dark')}
+                  onClick={async () => await updateTheme('dark')}
                   className={`focus:bg-accent focus:text-accent-foreground cursor-pointer ${profile.theme === 'dark' ? 'bg-accent' : ''}`}
                 >
                   🌙 Koyu Tema
                 </DropdownMenuItem>
                 <DropdownMenuItem 
-                  onClick={() => updateTheme('feminine')}
+                  onClick={async () => await updateTheme('feminine')}
                   className={`focus:bg-accent focus:text-accent-foreground cursor-pointer ${profile.theme === 'feminine' ? 'bg-accent' : ''}`}
                 >
                   🌸 Pembik
@@ -133,45 +140,45 @@ const Index = () => {
                 
                 <DropdownMenuSeparator />
                 
-                <DropdownMenuLabel>Dil Ayarları</DropdownMenuLabel>
+                <DropdownMenuLabel>{t.languages}</DropdownMenuLabel>
                 <DropdownMenuItem 
-                  onClick={() => updateLanguage('tr')}
+                  onClick={async () => await updateLanguage('tr')}
                   className={`focus:bg-accent focus:text-accent-foreground cursor-pointer ${profile.language === 'tr' ? 'bg-accent' : ''}`}
                 >
                   🇹🇷 Türkçe
                 </DropdownMenuItem>
                 <DropdownMenuItem 
-                  onClick={() => updateLanguage('en')}
+                  onClick={async () => await updateLanguage('en')}
                   className={`focus:bg-accent focus:text-accent-foreground cursor-pointer ${profile.language === 'en' ? 'bg-accent' : ''}`}
                 >
                   🇺🇸 English
                 </DropdownMenuItem>
                 <DropdownMenuItem 
-                  onClick={() => updateLanguage('de')}
+                  onClick={async () => await updateLanguage('de')}
                   className={`focus:bg-accent focus:text-accent-foreground cursor-pointer ${profile.language === 'de' ? 'bg-accent' : ''}`}
                 >
                   🇩🇪 Deutsch
                 </DropdownMenuItem>
                 <DropdownMenuItem 
-                  onClick={() => updateLanguage('fr')}
+                  onClick={async () => await updateLanguage('fr')}
                   className={`focus:bg-accent focus:text-accent-foreground cursor-pointer ${profile.language === 'fr' ? 'bg-accent' : ''}`}
                 >
                   🇫🇷 Français
                 </DropdownMenuItem>
                 <DropdownMenuItem 
-                  onClick={() => updateLanguage('es')}
+                  onClick={async () => await updateLanguage('es')}
                   className={`focus:bg-accent focus:text-accent-foreground cursor-pointer ${profile.language === 'es' ? 'bg-accent' : ''}`}
                 >
                   🇪🇸 Español
                 </DropdownMenuItem>
                 <DropdownMenuItem 
-                  onClick={() => updateLanguage('it')}
+                  onClick={async () => await updateLanguage('it')}
                   className={`focus:bg-accent focus:text-accent-foreground cursor-pointer ${profile.language === 'it' ? 'bg-accent' : ''}`}
                 >
                   🇮🇹 Italiano
                 </DropdownMenuItem>
                 <DropdownMenuItem 
-                  onClick={() => updateLanguage('ru')}
+                  onClick={async () => await updateLanguage('ru')}
                   className={`focus:bg-accent focus:text-accent-foreground cursor-pointer ${profile.language === 'ru' ? 'bg-accent' : ''}`}
                 >
                   🇷🇺 Русский
@@ -211,14 +218,14 @@ const Index = () => {
                   className="focus:bg-accent focus:text-accent-foreground cursor-pointer text-destructive"
                 >
                   <LogOut className="h-4 w-4 mr-2" />
-                  Çıkış Yap
+                  {t.logout}
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
         </div>
 
-        <Tabs defaultValue="mood" className="w-full">
+        <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
           <TabsList className="grid w-full grid-cols-4 bg-muted/50">
             <TabsTrigger 
               value="mood" 
@@ -242,7 +249,7 @@ const Index = () => {
               value="stats" 
               className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
             >
-              İstatistikler
+              {t.statistics}
             </TabsTrigger>
           </TabsList>
 
@@ -259,7 +266,7 @@ const Index = () => {
               onSave={handleMoodSave} 
               theme={profile.theme}
               username={user?.username || ''}
-              city={city!}
+              city={profile.city || city || ''}
               userId={user?.id || ''}
             />
           </TabsContent>

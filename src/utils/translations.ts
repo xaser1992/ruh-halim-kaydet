@@ -18,7 +18,11 @@ export const translations = {
     changeLanguage: "Dil Değiştir",
     privacy: "Gizlilik Politikası",
     terms: "Kullanım Koşulları",
-    license: "Lisans Bilgileri"
+    license: "Lisans Bilgileri",
+    themes: "Temalar",
+    languages: "Dil Ayarları",
+    logout: "Çıkış Yap",
+    statistics: "İstatistikler"
   },
   en: {
     question: "How are you feeling today?",
@@ -38,7 +42,11 @@ export const translations = {
     changeLanguage: "Change Language",
     privacy: "Privacy Policy",
     terms: "Terms of Service",
-    license: "License Information"
+    license: "License Information",
+    themes: "Themes",
+    languages: "Language Settings",
+    logout: "Logout",
+    statistics: "Statistics"
   },
   de: {
     question: "Wie fühlst du dich heute?",
@@ -58,7 +66,11 @@ export const translations = {
     changeLanguage: "Sprache ändern",
     privacy: "Datenschutz",
     terms: "Nutzungsbedingungen",
-    license: "Lizenzinformationen"
+    license: "Lizenzinformationen",
+    themes: "Themen",
+    languages: "Spracheinstellungen",
+    logout: "Abmelden",
+    statistics: "Statistiken"
   },
   fr: {
     question: "Comment te sens-tu aujourd'hui?",
@@ -78,7 +90,11 @@ export const translations = {
     changeLanguage: "Changer la langue",
     privacy: "Politique de confidentialité",
     terms: "Conditions d'utilisation",
-    license: "Informations de licence"
+    license: "Informations de licence",
+    themes: "Thèmes",
+    languages: "Paramètres de langue",
+    logout: "Déconnexion",
+    statistics: "Statistiques"
   },
   es: {
     question: "¿Cómo te sientes hoy?",
@@ -98,7 +114,11 @@ export const translations = {
     changeLanguage: "Cambiar idioma",
     privacy: "Política de privacidad",
     terms: "Términos de servicio",
-    license: "Información de licencia"
+    license: "Información de licencia",
+    themes: "Temas",
+    languages: "Configuración de idioma",
+    logout: "Cerrar sesión",
+    statistics: "Estadísticas"
   },
   it: {
     question: "Come ti senti oggi?",
@@ -118,7 +138,11 @@ export const translations = {
     changeLanguage: "Cambia lingua",
     privacy: "Informativa sulla privacy",
     terms: "Termini di servizio",
-    license: "Informazioni sulla licenza"
+    license: "Informazioni sulla licenza",
+    themes: "Temi",
+    languages: "Impostazioni lingua",
+    logout: "Esci",
+    statistics: "Statistiche"
   },
   ru: {
     question: "Как ты себя чувствуешь сегодня?",
@@ -138,6 +162,10 @@ export const translations = {
     changeLanguage: "Сменить язык",
     privacy: "Политика конфиденциальности",
     terms: "Условия использования",
-    license: "Информация о лицензии"
+    license: "Информация о лицензии",
+    themes: "Темы",
+    languages: "Настройки языка",
+    logout: "Выйти",
+    statistics: "Статистика"
   }
 };

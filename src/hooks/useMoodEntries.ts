@@ -9,6 +9,7 @@ interface MoodEntry {
   note?: string;
   images?: string[];
   timestamp: string;
+  user_id?: string;
 }
 
 export const useMoodEntries = (refreshTrigger?: number) => {

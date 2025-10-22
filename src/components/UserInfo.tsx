@@ -10,10 +10,11 @@ import { turkishCities } from '@/utils/cityData';
 
 interface UserInfoProps {
   theme: 'light' | 'dark' | 'feminine';
+  username: string;
 }
 
-export const UserInfo = ({ theme }: UserInfoProps) => {
-  const { username, updateUsername } = useUsername();
+export const UserInfo = ({ theme, username }: UserInfoProps) => {
+  const { updateUsername } = useUsername();
   const { city, updateCity } = useCity();
   const [isOpen, setIsOpen] = useState(false);
   const [tempUsername, setTempUsername] = useState(username || '');
