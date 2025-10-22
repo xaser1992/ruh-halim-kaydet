@@ -13,16 +13,61 @@ interface MoodEntryProps {
   theme: 'light' | 'dark' | 'feminine';
   username: string;
   city: string;
+  userId: string;
 }
 
-export const MoodEntry = ({ mood, onSave, theme, username, city }: MoodEntryProps) => {
+export const MoodEntry = ({ mood, onSave, theme, username, city, userId }: MoodEntryProps) => {
   const [note, setNote] = useState('');
   const [images, setImages] = useState<string[]>([]);
   const [shareWithCommunity, setShareWithCommunity] = useState(false);
   const { toast } = useToast();
 
   const handleSave = async () => {
-    if (!mood || !username || !city) return;
+    if (!mood || !username || !city || !userId) return;
+    
+    // Bugün için istatistik kontrolü
+    const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD formatı
+    
+    try {
+      // Kullanıcının bugün için bir istatistik olup olmadığını kontrol et
+      const { data: existingStat } = await supabase
+        .from('stats')
+        .select('id')
+        .eq('user_id', userId)
+        .eq('created_date', today)
+        .maybeSingle();
+
+      if (existingStat) {
+        toast({
+          title: "Uyarı",
+          description: "Bugün zaten bir istatistik girdiniz. Günde sadece bir istatistik ekleyebilirsiniz.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Stats tablosuna kaydet
+      await supabase
+        .from('stats')
+        .insert({
+          user_id: userId,
+          mood,
+          note: note || null,
+          created_date: today
+        });
+    } catch (error: any) {
+      console.error('Error saving stats:', error);
+      
+      // Unique constraint hatası kontrolü
+      if (error?.code === '23505') {
+        toast({
+          title: "Uyarı",
+          description: "Bugün zaten bir istatistik girdiniz. Günde sadece bir istatistik ekleyebilirsiniz.",
+          variant: "destructive",
+        });
+        return;
+      }
+    }
     
     onSave(note, images, mood);
     

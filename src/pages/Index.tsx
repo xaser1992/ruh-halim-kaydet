@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { MoodSelector } from '@/components/MoodSelector';
 import { MoodEntry } from '@/components/MoodEntry';
 import MoodHistory from '@/components/MoodHistory';
@@ -10,38 +11,51 @@ import { UserInfo } from '@/components/UserInfo';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator, DropdownMenuLabel } from '@/components/ui/dropdown-menu';
-import { Settings, Download } from 'lucide-react';
+import { Settings, LogOut } from 'lucide-react';
 import { useMoodEntries } from '@/hooks/useMoodEntries';
-import { useUserSettings } from '@/hooks/useUserSettings';
-import { useUsername } from '@/hooks/useUsername';
+import { useAuth } from '@/hooks/useAuth';
+import { useUserProfile } from '@/hooks/useUserProfile';
 import { useCity } from '@/hooks/useCity';
 import { translations } from '@/utils/translations';
 
 const Index = () => {
+  const navigate = useNavigate();
   const [selectedMood, setSelectedMood] = useState<string>('');
   const { entries, saveEntry } = useMoodEntries();
-  const { settings, updateSettings } = useUserSettings();
-  const { username } = useUsername();
+  const { user, loading: authLoading, logout } = useAuth();
+  const { profile, loading: profileLoading, updateTheme, updateLanguage, updateCity } = useUserProfile(user?.id || null);
   const { city } = useCity();
   const [showSetup, setShowSetup] = useState(false);
   
   // Cache translations
-  const t = useMemo(() => translations[settings.language], [settings.language]);
+  const t = useMemo(() => translations[profile.language], [profile.language]);
+
+  // Giriş kontrolü
+  useEffect(() => {
+    if (!authLoading && !user) {
+      navigate('/auth');
+    }
+  }, [user, authLoading, navigate]);
 
   useEffect(() => {
-    if (!username || !city) {
+    if (user && !city) {
       setShowSetup(true);
     } else {
       setShowSetup(false);
     }
-  }, [username, city]);
+  }, [user, city]);
 
   const handleMoodSelect = (mood: string) => {
-    if (!username || !city) {
+    if (!city) {
       setShowSetup(true);
       return;
     }
     setSelectedMood(mood);
+  };
+
+  const handleLogout = () => {
+    logout();
+    navigate('/auth');
   };
 
   const handleMoodSave = (note: string, images: string[], moodId: string) => {
@@ -55,15 +69,26 @@ const Index = () => {
     setSelectedMood('');
   };
 
+  if (authLoading || profileLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+          <p className="mt-4 text-muted-foreground">Yükleniyor...</p>
+        </div>
+      </div>
+    );
+  }
+
   if (showSetup) {
-    return <UserSetup onComplete={() => setShowSetup(false)} theme={settings.theme} language={settings.language} />;
+    return <UserSetup onComplete={() => setShowSetup(false)} theme={profile.theme} language={profile.language} />;
   }
 
   return (
     <div className={`min-h-screen ${
-      settings.theme === 'dark'
+      profile.theme === 'dark'
         ? 'bg-gradient-to-br from-gray-900 via-purple-900 to-gray-900'
-        : settings.theme === 'feminine'
+        : profile.theme === 'feminine'
         ? 'bg-gradient-to-br from-pink-50 via-purple-50 to-pink-100'
         : 'bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50'
     }`}>
@@ -77,7 +102,7 @@ const Index = () => {
           </div>
           
           <div className="flex items-center space-x-4">
-            <UserInfo theme={settings.theme} />
+            <UserInfo theme={profile.theme} />
             
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -88,20 +113,20 @@ const Index = () => {
               <DropdownMenuContent align="end" className="z-50 bg-card border-border shadow-lg w-48">
                 <DropdownMenuLabel>Temalar</DropdownMenuLabel>
                 <DropdownMenuItem 
-                  onClick={() => updateSettings({ theme: 'light' })}
-                  className={`focus:bg-accent focus:text-accent-foreground cursor-pointer ${settings.theme === 'light' ? 'bg-accent' : ''}`}
+                  onClick={() => updateTheme('light')}
+                  className={`focus:bg-accent focus:text-accent-foreground cursor-pointer ${profile.theme === 'light' ? 'bg-accent' : ''}`}
                 >
                   ☀️ Açık Tema
                 </DropdownMenuItem>
                 <DropdownMenuItem 
-                  onClick={() => updateSettings({ theme: 'dark' })}
-                  className={`focus:bg-accent focus:text-accent-foreground cursor-pointer ${settings.theme === 'dark' ? 'bg-accent' : ''}`}
+                  onClick={() => updateTheme('dark')}
+                  className={`focus:bg-accent focus:text-accent-foreground cursor-pointer ${profile.theme === 'dark' ? 'bg-accent' : ''}`}
                 >
                   🌙 Koyu Tema
                 </DropdownMenuItem>
                 <DropdownMenuItem 
-                  onClick={() => updateSettings({ theme: 'feminine' })}
-                  className={`focus:bg-accent focus:text-accent-foreground cursor-pointer ${settings.theme === 'feminine' ? 'bg-accent' : ''}`}
+                  onClick={() => updateTheme('feminine')}
+                  className={`focus:bg-accent focus:text-accent-foreground cursor-pointer ${profile.theme === 'feminine' ? 'bg-accent' : ''}`}
                 >
                   🌸 Pembik
                 </DropdownMenuItem>
@@ -110,44 +135,44 @@ const Index = () => {
                 
                 <DropdownMenuLabel>Dil Ayarları</DropdownMenuLabel>
                 <DropdownMenuItem 
-                  onClick={() => updateSettings({ language: 'tr' })}
-                  className={`focus:bg-accent focus:text-accent-foreground cursor-pointer ${settings.language === 'tr' ? 'bg-accent' : ''}`}
+                  onClick={() => updateLanguage('tr')}
+                  className={`focus:bg-accent focus:text-accent-foreground cursor-pointer ${profile.language === 'tr' ? 'bg-accent' : ''}`}
                 >
                   🇹🇷 Türkçe
                 </DropdownMenuItem>
                 <DropdownMenuItem 
-                  onClick={() => updateSettings({ language: 'en' })}
-                  className={`focus:bg-accent focus:text-accent-foreground cursor-pointer ${settings.language === 'en' ? 'bg-accent' : ''}`}
+                  onClick={() => updateLanguage('en')}
+                  className={`focus:bg-accent focus:text-accent-foreground cursor-pointer ${profile.language === 'en' ? 'bg-accent' : ''}`}
                 >
                   🇺🇸 English
                 </DropdownMenuItem>
                 <DropdownMenuItem 
-                  onClick={() => updateSettings({ language: 'de' })}
-                  className={`focus:bg-accent focus:text-accent-foreground cursor-pointer ${settings.language === 'de' ? 'bg-accent' : ''}`}
+                  onClick={() => updateLanguage('de')}
+                  className={`focus:bg-accent focus:text-accent-foreground cursor-pointer ${profile.language === 'de' ? 'bg-accent' : ''}`}
                 >
                   🇩🇪 Deutsch
                 </DropdownMenuItem>
                 <DropdownMenuItem 
-                  onClick={() => updateSettings({ language: 'fr' })}
-                  className={`focus:bg-accent focus:text-accent-foreground cursor-pointer ${settings.language === 'fr' ? 'bg-accent' : ''}`}
+                  onClick={() => updateLanguage('fr')}
+                  className={`focus:bg-accent focus:text-accent-foreground cursor-pointer ${profile.language === 'fr' ? 'bg-accent' : ''}`}
                 >
                   🇫🇷 Français
                 </DropdownMenuItem>
                 <DropdownMenuItem 
-                  onClick={() => updateSettings({ language: 'es' })}
-                  className={`focus:bg-accent focus:text-accent-foreground cursor-pointer ${settings.language === 'es' ? 'bg-accent' : ''}`}
+                  onClick={() => updateLanguage('es')}
+                  className={`focus:bg-accent focus:text-accent-foreground cursor-pointer ${profile.language === 'es' ? 'bg-accent' : ''}`}
                 >
                   🇪🇸 Español
                 </DropdownMenuItem>
                 <DropdownMenuItem 
-                  onClick={() => updateSettings({ language: 'it' })}
-                  className={`focus:bg-accent focus:text-accent-foreground cursor-pointer ${settings.language === 'it' ? 'bg-accent' : ''}`}
+                  onClick={() => updateLanguage('it')}
+                  className={`focus:bg-accent focus:text-accent-foreground cursor-pointer ${profile.language === 'it' ? 'bg-accent' : ''}`}
                 >
                   🇮🇹 Italiano
                 </DropdownMenuItem>
                 <DropdownMenuItem 
-                  onClick={() => updateSettings({ language: 'ru' })}
-                  className={`focus:bg-accent focus:text-accent-foreground cursor-pointer ${settings.language === 'ru' ? 'bg-accent' : ''}`}
+                  onClick={() => updateLanguage('ru')}
+                  className={`focus:bg-accent focus:text-accent-foreground cursor-pointer ${profile.language === 'ru' ? 'bg-accent' : ''}`}
                 >
                   🇷🇺 Русский
                 </DropdownMenuItem>
@@ -177,6 +202,16 @@ const Index = () => {
                   >
                     {t.license}
                   </a>
+                </DropdownMenuItem>
+
+                <DropdownMenuSeparator />
+
+                <DropdownMenuItem 
+                  onClick={handleLogout}
+                  className="focus:bg-accent focus:text-accent-foreground cursor-pointer text-destructive"
+                >
+                  <LogOut className="h-4 w-4 mr-2" />
+                  Çıkış Yap
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -215,35 +250,36 @@ const Index = () => {
             <MoodSelector 
               selectedMood={selectedMood}
               onMoodSelect={handleMoodSelect} 
-              theme={settings.theme} 
-              language={settings.language}
+              theme={profile.theme} 
+              language={profile.language}
             />
             
             <MoodEntry 
               mood={selectedMood} 
               onSave={handleMoodSave} 
-              theme={settings.theme}
-              username={username!}
+              theme={profile.theme}
+              username={user?.username || ''}
               city={city!}
+              userId={user?.id || ''}
             />
           </TabsContent>
 
           <TabsContent value="history">
             <div className="space-y-6">
               <MoodHistory 
-                theme={settings.theme}
-                language={settings.language}
+                theme={profile.theme}
+                language={profile.language}
               />
-              <LocalBackup theme={settings.theme} language={settings.language} />
+              <LocalBackup theme={profile.theme} language={profile.language} />
             </div>
           </TabsContent>
 
           <TabsContent value="community">
-            <Community theme={settings.theme} language={settings.language} />
+            <Community theme={profile.theme} language={profile.language} />
           </TabsContent>
 
           <TabsContent value="stats">
-            <CityStats theme={settings.theme} language={settings.language} />
+            <CityStats theme={profile.theme} language={profile.language} />
           </TabsContent>
         </Tabs>
       </div>

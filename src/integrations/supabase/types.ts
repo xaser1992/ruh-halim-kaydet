@@ -157,6 +157,38 @@ export type Database = {
         }
         Relationships: []
       }
+      stats: {
+        Row: {
+          created_date: string | null
+          id: string
+          mood: string | null
+          note: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_date?: string | null
+          id?: string
+          mood?: string | null
+          note?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_date?: string | null
+          id?: string
+          mood?: string | null
+          note?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "stats_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_settings: {
         Row: {
           created_at: string
@@ -184,12 +216,36 @@ export type Database = {
         }
         Relationships: []
       }
+      users: {
+        Row: {
+          created_at: string | null
+          id: string
+          name: string | null
+          password: string
+          username: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          name?: string | null
+          password: string
+          username: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          name?: string | null
+          password?: string
+          username?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      hash_password: { Args: { password: string }; Returns: string }
     }
     Enums: {
       [_ in never]: never
