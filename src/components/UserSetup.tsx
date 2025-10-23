@@ -3,6 +3,7 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useUsername } from '@/hooks/useUsername';
+import { useCity } from '@/hooks/useCity';
 
 interface UserSetupProps {
   language: 'tr' | 'en' | 'de' | 'fr' | 'es' | 'it' | 'ru';
@@ -13,8 +14,16 @@ interface UserSetupProps {
 
 export const UserSetup = ({ language, theme, userId, onComplete }: UserSetupProps) => {
   const { username, updateUsername, hasUsername } = useUsername();
+  const { city, loading: cityLoading, hasCity } = useCity();
   const [tempUsername, setTempUsername] = useState(username || '');
   const [error, setError] = useState('');
+
+  // Şehir yüklendiğinde ve kullanıcı adı varsa setup'ı tamamla
+  useEffect(() => {
+    if (hasUsername && hasCity && !cityLoading) {
+      onComplete();
+    }
+  }, [hasUsername, hasCity, cityLoading, onComplete]);
 
   const handleSubmit = () => {
     setError('');
@@ -30,11 +39,35 @@ export const UserSetup = ({ language, theme, userId, onComplete }: UserSetupProp
     }
 
     updateUsername(tempUsername.trim());
-    onComplete();
+    // onComplete artık useEffect'te çağrılacak
   };
 
-  if (hasUsername) {
-    onComplete();
+  // Şehir yüklenirken loading göster
+  if (cityLoading) {
+    return (
+      <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+        <Card className={`w-full max-w-md p-6 transition-colors duration-300 ${
+          theme === 'dark' 
+            ? 'bg-gray-800 text-white border-gray-700' 
+            : theme === 'feminine'
+            ? 'bg-pink-50 border-pink-200'
+            : 'bg-white border-gray-200'
+        }`}>
+          <div className="text-center space-y-4">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+            <p className={`transition-colors duration-300 ${
+              theme === 'dark' ? 'text-gray-300' : theme === 'feminine' ? 'text-pink-600' : 'text-gray-600'
+            }`}>
+              Konumunuz alınıyor...
+            </p>
+          </div>
+        </Card>
+      </div>
+    );
+  }
+
+  // Kullanıcı adı ve şehir varsa setup'ı tamamla
+  if (hasUsername && hasCity) {
     return null;
   }
 

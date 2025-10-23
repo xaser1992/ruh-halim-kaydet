@@ -21,7 +21,10 @@ import { translations } from '@/utils/translations';
 const Index = () => {
   const navigate = useNavigate();
   const [selectedMood, setSelectedMood] = useState<string>('');
-  const [activeTab, setActiveTab] = useState(() => localStorage.getItem('last-tab') || 'mood');
+  const [activeTab, setActiveTab] = useState(() => {
+    const savedTab = localStorage.getItem('last-tab');
+    return savedTab || 'mood'; // Fallback
+  });
   const { entries, saveEntry } = useMoodEntries();
   const { user, loading: authLoading, logout } = useAuth();
   const { profile, loading: profileLoading, updateTheme, updateLanguage, updateCity } = useUserProfile(user?.id || null);
@@ -45,6 +48,19 @@ const Index = () => {
       setShowSetup(false);
     }
   }, [user, profile.city]);
+
+  // Şehir yüklenene kadar loading göster
+  const cityLoadingState = useCity();
+  if (authLoading || profileLoading || cityLoadingState.loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+          <p className="mt-4 text-muted-foreground">Yükleniyor...</p>
+        </div>
+      </div>
+    );
+  }
 
   const handleMoodSelect = (mood: string) => {
     if (!profile.city) {
@@ -75,17 +91,6 @@ const Index = () => {
     setActiveTab(value);
     localStorage.setItem('last-tab', value);
   };
-
-  if (authLoading || profileLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
-          <p className="mt-4 text-muted-foreground">Yükleniyor...</p>
-        </div>
-      </div>
-    );
-  }
 
   if (showSetup) {
     return <UserSetup userId={user?.id} onComplete={() => setShowSetup(false)} theme={profile.theme} language={profile.language} />;
