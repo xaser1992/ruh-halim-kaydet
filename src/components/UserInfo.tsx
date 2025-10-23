@@ -5,6 +5,8 @@ import { Input } from '@/components/ui/input';
 import { User, MapPin, Edit } from 'lucide-react';
 import { useUsername } from '@/hooks/useUsername';
 import { useCity } from '@/hooks/useCity';
+import { useUserProfile } from '@/hooks/useUserProfile';
+import { useAuth } from '@/hooks/useAuth';
 
 interface UserInfoProps {
   theme: 'light' | 'dark' | 'feminine';
@@ -13,12 +15,15 @@ interface UserInfoProps {
 
 export const UserInfo = ({ theme, username }: UserInfoProps) => {
   const { updateUsername } = useUsername();
-  const { city } = useCity();
+  const { city, updateCity } = useCity();
+  const { user } = useAuth();
+  const { updateCity: updateCityInProfile } = useUserProfile(user?.id || null);
   const [isOpen, setIsOpen] = useState(false);
   const [tempUsername, setTempUsername] = useState(username || '');
+  const [tempCity, setTempCity] = useState(city || '');
   const [error, setError] = useState('');
 
-  const handleSave = () => {
+  const handleSave = async () => {
     setError('');
 
     if (!tempUsername.trim()) {
@@ -31,12 +36,20 @@ export const UserInfo = ({ theme, username }: UserInfoProps) => {
       return;
     }
 
+    if (!tempCity.trim()) {
+      setError('Şehir gereklidir');
+      return;
+    }
+
     updateUsername(tempUsername.trim());
+    updateCity(tempCity.trim());
+    await updateCityInProfile(tempCity.trim());
     setIsOpen(false);
   };
 
   const handleCancel = () => {
     setTempUsername(username || '');
+    setTempCity(city || '');
     setError('');
     setIsOpen(false);
   };
@@ -122,6 +135,27 @@ export const UserInfo = ({ theme, username }: UserInfoProps) => {
                     : 'bg-white border-gray-300 placeholder-gray-400'
                 }`}
                 maxLength={20}
+              />
+            </div>
+
+            <div>
+              <label className={`block text-sm font-medium mb-2 transition-colors duration-300 ${
+                theme === 'dark' ? 'text-gray-200' : theme === 'feminine' ? 'text-pink-700' : 'text-gray-700'
+              }`}>
+                Şehir
+              </label>
+              <Input
+                value={tempCity}
+                onChange={(e) => setTempCity(e.target.value)}
+                placeholder="Şehrinizi girin"
+                className={`transition-colors duration-300 ${
+                  theme === 'dark' 
+                    ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' 
+                    : theme === 'feminine'
+                    ? 'bg-pink-50 border-pink-200 placeholder-pink-400'
+                    : 'bg-white border-gray-300 placeholder-gray-400'
+                }`}
+                maxLength={50}
               />
             </div>
 

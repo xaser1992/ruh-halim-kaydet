@@ -28,7 +28,7 @@ const Index = () => {
   const { entries, saveEntry } = useMoodEntries();
   const { user, loading: authLoading, logout } = useAuth();
   const { profile, loading: profileLoading, updateTheme, updateLanguage, updateCity } = useUserProfile(user?.id || null);
-  const { city } = useCity();
+  const { city, loading: cityLoading } = useCity();
   const [showSetup, setShowSetup] = useState(false);
   
   // Cache translations with fallback
@@ -49,9 +49,8 @@ const Index = () => {
     }
   }, [user, profile.city]);
 
-  // Şehir yüklenene kadar loading göster
-  const cityLoadingState = useCity();
-  if (authLoading || profileLoading || cityLoadingState.loading) {
+  // Loading kontrolü
+  if (authLoading || profileLoading || cityLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">

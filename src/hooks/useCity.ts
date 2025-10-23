@@ -9,8 +9,12 @@ const getCityFromCoordinates = async (lat: number, lon: number): Promise<string>
     );
     const data = await response.json();
     
-    // Türkiye'deki il ismini al
-    const city = data.address?.province || data.address?.state || data.address?.city || 'Bilinmiyor';
+    // principalSubdivision (il) alanını kullan
+    const city = data.address?.['ISO3166-2-lvl4']?.split('-')[1] || 
+                 data.address?.state || 
+                 data.address?.province || 
+                 data.address?.city || 
+                 'Bilinmiyor';
     return city;
   } catch (error) {
     console.error('Konum bilgisi alınamadı:', error);
@@ -45,6 +49,11 @@ export const useCity = () => {
           setCity('Bilinmiyor');
           localStorage.setItem('userCity', 'Bilinmiyor');
           setLoading(false);
+        },
+        {
+          enableHighAccuracy: true,
+          timeout: 10000,
+          maximumAge: 0
         }
       );
     } else {
