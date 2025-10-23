@@ -191,6 +191,7 @@ export type Database = {
       }
       user_settings: {
         Row: {
+          city: string | null
           created_at: string
           id: string
           language: string | null
@@ -199,6 +200,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          city?: string | null
           created_at?: string
           id?: string
           language?: string | null
@@ -207,6 +209,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          city?: string | null
           created_at?: string
           id?: string
           language?: string | null

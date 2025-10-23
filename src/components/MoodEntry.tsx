@@ -26,7 +26,7 @@ export const MoodEntry = ({ mood, onSave, theme, username, city, userId }: MoodE
     if (!mood || !username || !city || !userId) return;
     
     // Bugün için istatistik kontrolü
-    const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD formatı
+    const today = new Date().toLocaleDateString('en-CA'); // YYYY-MM-DD formatı
     
     try {
       // Kullanıcının bugün için bir istatistik olup olmadığını kontrol et

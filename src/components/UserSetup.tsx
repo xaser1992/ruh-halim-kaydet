@@ -2,10 +2,7 @@ import { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { turkishCities } from '@/utils/cityData';
 import { useUsername } from '@/hooks/useUsername';
-import { useCity } from '@/hooks/useCity';
 
 interface UserSetupProps {
   language: 'tr' | 'en' | 'de' | 'fr' | 'es' | 'it' | 'ru';
@@ -16,9 +13,7 @@ interface UserSetupProps {
 
 export const UserSetup = ({ language, theme, userId, onComplete }: UserSetupProps) => {
   const { username, updateUsername, hasUsername } = useUsername();
-  const { city, updateCity, hasCity } = useCity();
   const [tempUsername, setTempUsername] = useState(username || '');
-  const [tempCity, setTempCity] = useState(city || '');
   const [error, setError] = useState('');
 
   const handleSubmit = () => {
@@ -34,17 +29,11 @@ export const UserSetup = ({ language, theme, userId, onComplete }: UserSetupProp
       return;
     }
 
-    if (!tempCity) {
-      setError('İl seçimi gereklidir');
-      return;
-    }
-
     updateUsername(tempUsername.trim());
-    updateCity(tempCity);
     onComplete();
   };
 
-  if (hasUsername && hasCity) {
+  if (hasUsername) {
     onComplete();
     return null;
   }
@@ -68,7 +57,7 @@ export const UserSetup = ({ language, theme, userId, onComplete }: UserSetupProp
             <p className={`text-sm transition-colors duration-300 ${
               theme === 'dark' ? 'text-gray-300' : theme === 'feminine' ? 'text-pink-600' : 'text-gray-600'
             }`}>
-              Ruh halinizi kaydetmek için kullanıcı adınızı ve bulunduğunuz ili seçin
+              Ruh halinizi kaydetmek için kullanıcı adınızı girin
             </p>
           </div>
 
@@ -97,44 +86,6 @@ export const UserSetup = ({ language, theme, userId, onComplete }: UserSetupProp
               }`}>
                 En az 3 karakter olmalıdır
               </p>
-            </div>
-
-            <div>
-              <label className={`block text-sm font-medium mb-2 transition-colors duration-300 ${
-                theme === 'dark' ? 'text-gray-200' : theme === 'feminine' ? 'text-pink-700' : 'text-gray-700'
-              }`}>
-                Bulunduğunuz İl *
-              </label>
-              <Select value={tempCity} onValueChange={setTempCity}>
-                <SelectTrigger className={`transition-colors duration-300 ${
-                  theme === 'dark' 
-                    ? 'bg-gray-700 border-gray-600 text-white' 
-                    : theme === 'feminine'
-                    ? 'bg-pink-50 border-pink-200'
-                    : 'bg-white border-gray-300'
-                }`}>
-                  <SelectValue placeholder="İl seçiniz" />
-                </SelectTrigger>
-                <SelectContent className={`${
-                  theme === 'dark' 
-                    ? 'bg-gray-800 border-gray-700' 
-                    : theme === 'feminine'
-                    ? 'bg-pink-50 border-pink-200'
-                    : 'bg-white border-gray-200'
-                }`}>
-                  {turkishCities.map((cityName) => (
-                    <SelectItem key={cityName} value={cityName} className={`${
-                      theme === 'dark' 
-                        ? 'text-white hover:bg-gray-700' 
-                        : theme === 'feminine'
-                        ? 'text-pink-800 hover:bg-pink-100'
-                        : 'text-gray-800 hover:bg-gray-100'
-                    }`}>
-                      {cityName}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
             </div>
 
             {error && (

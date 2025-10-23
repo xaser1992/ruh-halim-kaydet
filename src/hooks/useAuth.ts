@@ -29,17 +29,6 @@ export const useAuth = () => {
 
   const register = async (name: string, username: string, password: string) => {
     try {
-      // Önce kullanıcı adının mevcut olup olmadığını kontrol et
-      const { data: existingUser } = await supabase
-        .from('users')
-        .select('id')
-        .eq('username', username)
-        .maybeSingle();
-
-      if (existingUser) {
-        return { error: 'Bu kullanıcı adı zaten alınmış' };
-      }
-
       // Şifreyi hashle
       const { data: hashedPassword } = await supabase.rpc('hash_password', { password });
 
@@ -54,7 +43,13 @@ export const useAuth = () => {
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        // Unique constraint hatası kontrolü
+        if (error.code === '23505') {
+          return { error: 'Bu kullanıcı adı zaten alınmış' };
+        }
+        throw error;
+      }
 
       // Kullanıcı ayarlarını oluştur
       await supabase

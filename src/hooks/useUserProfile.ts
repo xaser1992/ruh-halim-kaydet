@@ -27,19 +27,16 @@ export const useUserProfile = (userId: string | null) => {
         // Ayarları çek
         const { data: settings, error: settingsError } = await supabase
           .from('user_settings')
-          .select('theme, language')
+          .select('theme, language, city')
           .eq('user_id', userId)
           .maybeSingle();
 
         if (settingsError) throw settingsError;
 
-        // Şehir bilgisini localStorage'dan al (şimdilik)
-        const savedCity = localStorage.getItem('userCity') || '';
-
         const newProfile = {
           theme: (settings?.theme as 'light' | 'dark' | 'feminine') || 'light',
           language: (settings?.language as 'tr' | 'en' | 'de' | 'fr' | 'es' | 'it' | 'ru') || 'tr',
-          city: savedCity
+          city: settings?.city || ''
         };
 
         setProfile(newProfile);
@@ -106,9 +103,18 @@ export const useUserProfile = (userId: string | null) => {
 
   // Şehir güncelle
   const updateCity = async (newCity: string) => {
-    // Şehir bilgisini localStorage'a kaydet
-    localStorage.setItem('userCity', newCity);
-    setProfile(prev => ({ ...prev, city: newCity }));
+    if (!userId) return;
+
+    try {
+      await supabase
+        .from('user_settings')
+        .update({ city: newCity })
+        .eq('user_id', userId);
+
+      setProfile(prev => ({ ...prev, city: newCity }));
+    } catch (error) {
+      console.error('Şehir güncellenirken hata:', error);
+    }
   };
 
   return {

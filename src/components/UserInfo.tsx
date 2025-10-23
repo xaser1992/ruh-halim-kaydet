@@ -2,11 +2,9 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { User, MapPin, Edit } from 'lucide-react';
 import { useUsername } from '@/hooks/useUsername';
 import { useCity } from '@/hooks/useCity';
-import { turkishCities } from '@/utils/cityData';
 
 interface UserInfoProps {
   theme: 'light' | 'dark' | 'feminine';
@@ -15,10 +13,9 @@ interface UserInfoProps {
 
 export const UserInfo = ({ theme, username }: UserInfoProps) => {
   const { updateUsername } = useUsername();
-  const { city, updateCity } = useCity();
+  const { city } = useCity();
   const [isOpen, setIsOpen] = useState(false);
   const [tempUsername, setTempUsername] = useState(username || '');
-  const [tempCity, setTempCity] = useState(city || '');
   const [error, setError] = useState('');
 
   const handleSave = () => {
@@ -34,19 +31,12 @@ export const UserInfo = ({ theme, username }: UserInfoProps) => {
       return;
     }
 
-    if (!tempCity) {
-      setError('İl seçimi gereklidir');
-      return;
-    }
-
     updateUsername(tempUsername.trim());
-    updateCity(tempCity);
     setIsOpen(false);
   };
 
   const handleCancel = () => {
     setTempUsername(username || '');
-    setTempCity(city || '');
     setError('');
     setIsOpen(false);
   };
@@ -133,44 +123,6 @@ export const UserInfo = ({ theme, username }: UserInfoProps) => {
                 }`}
                 maxLength={20}
               />
-            </div>
-
-            <div>
-              <label className={`block text-sm font-medium mb-2 transition-colors duration-300 ${
-                theme === 'dark' ? 'text-gray-200' : theme === 'feminine' ? 'text-pink-700' : 'text-gray-700'
-              }`}>
-                Bulunduğunuz İl
-              </label>
-              <Select value={tempCity} onValueChange={setTempCity}>
-                <SelectTrigger className={`transition-colors duration-300 ${
-                  theme === 'dark' 
-                    ? 'bg-gray-700 border-gray-600 text-white' 
-                    : theme === 'feminine'
-                    ? 'bg-pink-50 border-pink-200'
-                    : 'bg-white border-gray-300'
-                }`}>
-                  <SelectValue placeholder="İl seçiniz" />
-                </SelectTrigger>
-                <SelectContent className={`${
-                  theme === 'dark' 
-                    ? 'bg-gray-800 border-gray-700' 
-                    : theme === 'feminine'
-                    ? 'bg-pink-50 border-pink-200'
-                    : 'bg-white border-gray-200'
-                }`}>
-                  {turkishCities.map((cityName) => (
-                    <SelectItem key={cityName} value={cityName} className={`${
-                      theme === 'dark' 
-                        ? 'text-white hover:bg-gray-700' 
-                        : theme === 'feminine'
-                        ? 'text-pink-800 hover:bg-pink-100'
-                        : 'text-gray-800 hover:bg-gray-100'
-                    }`}>
-                      {cityName}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
             </div>
 
             {error && (
