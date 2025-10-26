@@ -18,6 +18,13 @@ export const UserSetup = ({ language, theme, userId, onComplete }: UserSetupProp
   const [tempUsername, setTempUsername] = useState(username || '');
   const [error, setError] = useState('');
 
+  // Kullanıcı adı ve şehir hazır olduğunda otomatik tamamla
+  useEffect(() => {
+    if (hasUsername && hasCity && !cityLoading) {
+      onComplete();
+    }
+  }, [hasUsername, hasCity, cityLoading, onComplete]);
+
   const handleSubmit = () => {
     setError('');
 
