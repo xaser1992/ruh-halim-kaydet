@@ -42,12 +42,14 @@ const Index = () => {
   }, [user, authLoading, navigate]);
 
   useEffect(() => {
-    if (user && !profile.city) {
+    // Hem profile.city hem de localStorage'daki city'yi kontrol et
+    const hasCity = profile.city || city || localStorage.getItem('userCity');
+    if (user && !hasCity) {
       setShowSetup(true);
     } else {
       setShowSetup(false);
     }
-  }, [user, profile.city]);
+  }, [user, profile.city, city]);
 
   // Loading kontrolü
   if (authLoading || profileLoading || cityLoading) {
@@ -62,7 +64,8 @@ const Index = () => {
   }
 
   const handleMoodSelect = (mood: string) => {
-    if (!profile.city) {
+    const hasCity = profile.city || city || localStorage.getItem('userCity');
+    if (!hasCity) {
       setShowSetup(true);
       return;
     }

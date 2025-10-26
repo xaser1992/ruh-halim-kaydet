@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useUsername } from '@/hooks/useUsername';
 import { useCity } from '@/hooks/useCity';
+import { supabase } from '@/integrations/supabase/client';
 
 interface UserSetupProps {
   language: 'tr' | 'en' | 'de' | 'fr' | 'es' | 'it' | 'ru';
@@ -25,7 +26,7 @@ export const UserSetup = ({ language, theme, userId, onComplete }: UserSetupProp
     }
   }, [hasUsername, hasCity, cityLoading, onComplete]);
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     setError('');
 
     if (!tempUsername.trim()) {
@@ -44,6 +45,25 @@ export const UserSetup = ({ language, theme, userId, onComplete }: UserSetupProp
     }
 
     updateUsername(tempUsername.trim());
+    
+    // Şehri user_settings'e kaydet
+    if (userId) {
+      try {
+        await supabase
+          .from('user_settings')
+          .upsert({
+            user_id: userId,
+            city: city,
+            theme: 'light',
+            language: 'tr'
+          }, {
+            onConflict: 'user_id'
+          });
+      } catch (error) {
+        console.error('Ayarlar kaydedilemedi:', error);
+      }
+    }
+    
     onComplete();
   };
 

@@ -33,22 +33,44 @@ export const useUserProfile = (userId: string | null) => {
 
         if (settingsError) throw settingsError;
 
-        const newProfile = {
-          theme: (settings?.theme as 'light' | 'dark' | 'feminine') || 'light',
-          language: (settings?.language as 'tr' | 'en' | 'de' | 'fr' | 'es' | 'it' | 'ru') || 'tr',
-          city: settings?.city || ''
-        };
+        // Eğer kayıt yoksa oluştur
+        if (!settings) {
+          const { error: insertError } = await supabase
+            .from('user_settings')
+            .insert({
+              user_id: userId,
+              theme: 'light',
+              language: 'tr',
+              city: localStorage.getItem('userCity') || ''
+            });
 
-        setProfile(newProfile);
-
-        // Tema uygula
-        requestAnimationFrame(() => {
-          if (newProfile.theme === 'dark') {
-            document.documentElement.classList.add('dark');
-          } else {
-            document.documentElement.classList.remove('dark');
+          if (insertError) {
+            console.error('Ayarlar oluşturulamadı:', insertError);
           }
-        });
+
+          setProfile({
+            theme: 'light',
+            language: 'tr',
+            city: localStorage.getItem('userCity') || ''
+          });
+        } else {
+          const newProfile = {
+            theme: (settings.theme as 'light' | 'dark' | 'feminine') || 'light',
+            language: (settings.language as 'tr' | 'en' | 'de' | 'fr' | 'es' | 'it' | 'ru') || 'tr',
+            city: settings.city || ''
+          };
+
+          setProfile(newProfile);
+
+          // Tema uygula
+          requestAnimationFrame(() => {
+            if (newProfile.theme === 'dark') {
+              document.documentElement.classList.add('dark');
+            } else {
+              document.documentElement.classList.remove('dark');
+            }
+          });
+        }
 
       } catch (error) {
         console.error('Profil yüklenirken hata:', error);
