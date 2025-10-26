@@ -222,33 +222,35 @@ const Community = ({ language, theme, onShare }: CommunityProps) => {
     try {
       if (!timestamp) return "Az önce";
       
-      // Parse the timestamp properly - handle both ISO string and database format
+      // Database'den gelen timestamp UTC olarak kabul et
+      // Postgres'ten gelen format: "2025-01-26 12:34:56" (timezone bilgisi yok, UTC varsay)
       let postDate: Date;
       
       if (timestamp.includes('T')) {
-        // ISO format with timezone
+        // ISO format (2025-01-26T12:34:56Z veya 2025-01-26T12:34:56.123Z)
         postDate = new Date(timestamp);
-      } else if (timestamp.includes(' ')) {
-        // Database format without timezone (assume UTC)
-        postDate = new Date(timestamp + (timestamp.includes('Z') ? '' : 'Z'));
       } else {
-        postDate = new Date(timestamp);
+        // Database format "2025-01-26 12:34:56" - UTC olarak parse et
+        // Direkt Z ekleyerek UTC olarak işaretle
+        const isoFormat = timestamp.replace(' ', 'T') + 'Z';
+        postDate = new Date(isoFormat);
       }
       
-      // If the date is invalid, try to parse it differently
+      // Geçersiz tarih kontrolü
       if (isNaN(postDate.getTime())) {
-        // Try to parse as MySQL datetime format
-        const mysqlFormat = timestamp.replace(' ', 'T') + 'Z';
-        postDate = new Date(mysqlFormat);
-        
-        if (isNaN(postDate.getTime())) {
-          console.warn('Could not parse timestamp:', timestamp);
-          return "Bilinmiyor";
-        }
+        console.warn('Could not parse timestamp:', timestamp);
+        return "Bilinmiyor";
       }
       
+      // Şimdi ile aradaki farkı hesapla (milisaniye cinsinden)
       const now = new Date();
       const diffInMs = now.getTime() - postDate.getTime();
+      
+      // Negatif fark kontrolü (gelecekteki tarih)
+      if (diffInMs < 0) {
+        return "Az önce";
+      }
+      
       const diffInSeconds = Math.floor(diffInMs / 1000);
       const diffInMinutes = Math.floor(diffInSeconds / 60);
       const diffInHours = Math.floor(diffInMinutes / 60);
@@ -261,6 +263,7 @@ const Community = ({ language, theme, onShare }: CommunityProps) => {
       if (diffInDays === 1) return "Dün";
       if (diffInDays < 7) return `${diffInDays} gün önce`;
 
+      // Eski tarihler için tam tarih göster (yerel saatle)
       return postDate.toLocaleDateString('tr-TR', {
         year: 'numeric',
         month: '2-digit',

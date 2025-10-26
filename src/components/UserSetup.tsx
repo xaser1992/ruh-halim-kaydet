@@ -18,13 +18,6 @@ export const UserSetup = ({ language, theme, userId, onComplete }: UserSetupProp
   const [tempUsername, setTempUsername] = useState(username || '');
   const [error, setError] = useState('');
 
-  // Şehir yüklendiğinde ve kullanıcı adı varsa setup'ı tamamla
-  useEffect(() => {
-    if (hasUsername && hasCity && !cityLoading) {
-      onComplete();
-    }
-  }, [hasUsername, hasCity, cityLoading, onComplete]);
-
   const handleSubmit = () => {
     setError('');
 
@@ -38,8 +31,13 @@ export const UserSetup = ({ language, theme, userId, onComplete }: UserSetupProp
       return;
     }
 
+    if (!hasCity || cityLoading) {
+      setError('Lütfen konumunuz alınana kadar bekleyin');
+      return;
+    }
+
     updateUsername(tempUsername.trim());
-    // onComplete artık useEffect'te çağrılacak
+    onComplete();
   };
 
   // Şehir yüklenirken loading göster
