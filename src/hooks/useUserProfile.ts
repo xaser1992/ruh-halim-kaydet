@@ -1,141 +1,151 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from './useAuth';
 
 interface UserProfile {
+  id?: string;
+  username?: string;
+  email?: string;
   theme: 'light' | 'dark' | 'feminine';
   language: 'tr' | 'en' | 'de' | 'fr' | 'es' | 'it' | 'ru';
-  city: string;
+  city?: string;
 }
 
-export const useUserProfile = (userId: string | null) => {
+export const useUserProfile = () => {
+  const { user } = useAuth();
   const [profile, setProfile] = useState<UserProfile>({
     theme: 'light',
     language: 'tr',
-    city: ''
   });
   const [loading, setLoading] = useState(true);
 
-  // Profili yükle
   useEffect(() => {
-    if (!userId) {
-      setLoading(false);
-      return;
-    }
-
     const loadProfile = async () => {
+      if (!user) {
+        setLoading(false);
+        return;
+      }
+
       try {
-        // Ayarları çek
-        const { data: settings, error: settingsError } = await supabase
-          .from('user_settings')
-          .select('theme, language, city')
-          .eq('user_id', userId)
+        // Supabase profiles tablosundan kullanıcı profilini çek
+        const { data: profileData, error } = await supabase
+          .from('profiles')
+          .select('id, username, email, theme, language, city')
+          .eq('id', user.id)
           .maybeSingle();
 
-        if (settingsError) throw settingsError;
-
-        // Eğer kayıt yoksa oluştur
-        if (!settings) {
-          const { error: insertError } = await supabase
-            .from('user_settings')
-            .insert({
-              user_id: userId,
-              theme: 'light',
-              language: 'tr',
-              city: localStorage.getItem('userCity') || ''
-            });
-
-          if (insertError) {
-            console.error('Ayarlar oluşturulamadı:', insertError);
-          }
-
-          setProfile({
-            theme: 'light',
-            language: 'tr',
-            city: localStorage.getItem('userCity') || ''
-          });
-        } else {
-          const newProfile = {
-            theme: (settings.theme as 'light' | 'dark' | 'feminine') || 'light',
-            language: (settings.language as 'tr' | 'en' | 'de' | 'fr' | 'es' | 'it' | 'ru') || 'tr',
-            city: settings.city || ''
-          };
-
-          setProfile(newProfile);
-
-          // Tema uygula
-          requestAnimationFrame(() => {
-            if (newProfile.theme === 'dark') {
-              document.documentElement.classList.add('dark');
-            } else {
-              document.documentElement.classList.remove('dark');
-            }
-          });
+        if (error) {
+          console.error('Profil yüklenirken hata:', error);
+          setLoading(false);
+          return;
         }
 
+        if (profileData) {
+          setProfile({
+            id: profileData.id,
+            username: profileData.username || undefined,
+            email: profileData.email || undefined,
+            theme: (profileData.theme as 'light' | 'dark' | 'feminine') || 'light',
+            language: (profileData.language as 'tr' | 'en' | 'de' | 'fr' | 'es' | 'it' | 'ru') || 'tr',
+            city: profileData.city || undefined
+          });
+
+          // Temayı uygula
+          document.documentElement.classList.remove('light', 'dark', 'feminine');
+          document.documentElement.classList.add(profileData.theme || 'light');
+        }
       } catch (error) {
-        console.error('Profil yüklenirken hata:', error);
+        console.error('Profil yüklenirken beklenmeyen hata:', error);
       } finally {
         setLoading(false);
       }
     };
 
     loadProfile();
-  }, [userId]);
+  }, [user]);
 
-  // Tema güncelle
   const updateTheme = async (newTheme: 'light' | 'dark' | 'feminine') => {
-    if (!userId) return;
+    if (!user) return;
 
     try {
-      await supabase
-        .from('user_settings')
-        .update({ theme: newTheme })
-        .eq('user_id', userId);
+      const { error } = await supabase
+        .from('profiles')
+        .update({ theme: newTheme, updated_at: new Date().toISOString() })
+        .eq('id', user.id);
+
+      if (error) {
+        console.error('Tema güncellenirken hata:', error);
+        return;
+      }
 
       setProfile(prev => ({ ...prev, theme: newTheme }));
-
-      // Tema uygula
-      requestAnimationFrame(() => {
-        if (newTheme === 'dark') {
-          document.documentElement.classList.add('dark');
-        } else {
-          document.documentElement.classList.remove('dark');
-        }
-      });
+      document.documentElement.classList.remove('light', 'dark', 'feminine');
+      document.documentElement.classList.add(newTheme);
     } catch (error) {
-      console.error('Tema güncellenirken hata:', error);
+      console.error('Tema güncellenirken beklenmeyen hata:', error);
     }
   };
 
-  // Dil güncelle
   const updateLanguage = async (newLanguage: 'tr' | 'en' | 'de' | 'fr' | 'es' | 'it' | 'ru') => {
-    if (!userId) return;
+    if (!user) return;
 
     try {
-      await supabase
-        .from('user_settings')
-        .update({ language: newLanguage })
-        .eq('user_id', userId);
+      const { error } = await supabase
+        .from('profiles')
+        .update({ language: newLanguage, updated_at: new Date().toISOString() })
+        .eq('id', user.id);
+
+      if (error) {
+        console.error('Dil güncellenirken hata:', error);
+        return;
+      }
 
       setProfile(prev => ({ ...prev, language: newLanguage }));
     } catch (error) {
-      console.error('Dil güncellenirken hata:', error);
+      console.error('Dil güncellenirken beklenmeyen hata:', error);
     }
   };
 
-  // Şehir güncelle
   const updateCity = async (newCity: string) => {
-    if (!userId) return;
+    if (!user) return;
 
     try {
-      await supabase
-        .from('user_settings')
-        .update({ city: newCity })
-        .eq('user_id', userId);
+      const { error } = await supabase
+        .from('profiles')
+        .update({ city: newCity, updated_at: new Date().toISOString() })
+        .eq('id', user.id);
+
+      if (error) {
+        console.error('Şehir güncellenirken hata:', error);
+        return;
+      }
 
       setProfile(prev => ({ ...prev, city: newCity }));
     } catch (error) {
-      console.error('Şehir güncellenirken hata:', error);
+      console.error('Şehir güncellenirken beklenmeyen hata:', error);
+    }
+  };
+
+  const updateUsername = async (newUsername: string) => {
+    if (!user) return { success: false, error: 'Kullanıcı girişi gerekli' };
+
+    try {
+      const { data, error } = await supabase.rpc('update_username', {
+        user_id: user.id,
+        new_username: newUsername
+      });
+
+      if (error) throw error;
+
+      const result = data as { success: boolean; error?: string };
+      
+      if (result.success) {
+        setProfile(prev => ({ ...prev, username: newUsername }));
+      }
+
+      return result;
+    } catch (error: any) {
+      return { success: false, error: error.message };
     }
   };
 
@@ -144,6 +154,7 @@ export const useUserProfile = (userId: string | null) => {
     loading,
     updateTheme,
     updateLanguage,
-    updateCity
+    updateCity,
+    updateUsername
   };
 };

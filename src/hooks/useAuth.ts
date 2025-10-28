@@ -1,122 +1,76 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-
-interface User {
-  id: string;
-  username: string;
-  name: string;
-}
+import type { User, Session } from '@supabase/supabase-js';
 
 export const useAuth = () => {
   const [user, setUser] = useState<User | null>(null);
+  const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // localStorage'dan kullanıcıyı yükle
-    const loadUser = async () => {
-      const savedUserId = localStorage.getItem('ruh-halim-user-id');
-      const savedUsername = localStorage.getItem('ruh-halim-username');
-      const savedName = localStorage.getItem('ruh-halim-name');
-
-      if (savedUserId && savedUsername) {
-        setUser({ id: savedUserId, username: savedUsername, name: savedName || '' });
+    // Set up auth state listener
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (_event, session) => {
+        setSession(session);
+        setUser(session?.user ?? null);
       }
-      setLoading(false);
-    };
+    );
 
-    loadUser();
+    // Check for existing session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      setUser(session?.user ?? null);
+      setLoading(false);
+    });
+
+    return () => subscription.unsubscribe();
   }, []);
 
-  const register = async (name: string, username: string, password: string) => {
+  // Send OTP to email
+  const sendOTP = async (email: string) => {
     try {
-      // Şifreyi hashle
-      const { data: hashedPassword } = await supabase.rpc('hash_password', { password });
-
-      // Yeni kullanıcı oluştur
-      const { data: newUser, error } = await supabase
-        .from('users')
-        .insert({
-          name,
-          username,
-          password: hashedPassword
-        })
-        .select()
-        .single();
-
-      if (error) {
-        // Unique constraint hatası kontrolü
-        if (error.code === '23505') {
-          return { error: 'Bu kullanıcı adı zaten alınmış' };
+      const { error } = await supabase.auth.signInWithOtp({
+        email,
+        options: {
+          emailRedirectTo: `${window.location.origin}/`
         }
-        throw error;
-      }
-
-      // Kullanıcı ayarlarını oluştur
-      await supabase
-        .from('user_settings')
-        .insert({
-          user_id: newUser.id,
-          theme: 'light',
-          language: 'tr'
-        });
-
-      // localStorage'a kaydet
-      localStorage.setItem('ruh-halim-user-id', newUser.id);
-      localStorage.setItem('ruh-halim-username', newUser.username);
-      localStorage.setItem('ruh-halim-name', newUser.name || '');
-
-      setUser({ id: newUser.id, username: newUser.username, name: newUser.name || '' });
-
-      return { error: null };
-    } catch (error: any) {
-      return { error: error.message || 'Kayıt sırasında bir hata oluştu' };
-    }
-  };
-
-  const login = async (username: string, password: string) => {
-    try {
-      // Şifreyi hashle
-      const { data: hashedPassword } = await supabase.rpc('hash_password', { password });
-
-      // Kullanıcıyı bul
-      const { data: user, error } = await supabase
-        .from('users')
-        .select('*')
-        .eq('username', username)
-        .eq('password', hashedPassword)
-        .maybeSingle();
+      });
 
       if (error) throw error;
-
-      if (!user) {
-        return { error: 'Kullanıcı adı veya şifre hatalı' };
-      }
-
-      // localStorage'a kaydet
-      localStorage.setItem('ruh-halim-user-id', user.id);
-      localStorage.setItem('ruh-halim-username', user.username);
-      localStorage.setItem('ruh-halim-name', user.name || '');
-
-      setUser({ id: user.id, username: user.username, name: user.name || '' });
-
       return { error: null };
     } catch (error: any) {
-      return { error: error.message || 'Giriş sırasında bir hata oluştu' };
+      return { error: error.message || 'OTP gönderilemedi' };
     }
   };
 
-  const logout = () => {
-    localStorage.removeItem('ruh-halim-user-id');
-    localStorage.removeItem('ruh-halim-username');
-    localStorage.removeItem('ruh-halim-name');
+  // Verify OTP code
+  const verifyOTP = async (email: string, token: string) => {
+    try {
+      const { error } = await supabase.auth.verifyOtp({
+        email,
+        token,
+        type: 'email'
+      });
+
+      if (error) throw error;
+      return { error: null };
+    } catch (error: any) {
+      return { error: error.message || 'Kod doğrulanamadı' };
+    }
+  };
+
+  const logout = async () => {
+    await supabase.auth.signOut();
     setUser(null);
+    setSession(null);
   };
 
   return {
     user,
+    session,
     loading,
-    register,
-    login,
+    sendOTP,
+    verifyOTP,
     logout,
     isAuthenticated: !!user
   };

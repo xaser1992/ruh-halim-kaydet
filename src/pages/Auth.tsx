@@ -6,15 +6,15 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
+import { Mail, Lock } from 'lucide-react';
 
 export default function Auth() {
-  const [isLogin, setIsLogin] = useState(true);
-  const [name, setName] = useState('');
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
+  const [step, setStep] = useState<'email' | 'verify'>('email');
+  const [email, setEmail] = useState('');
+  const [otpCode, setOtpCode] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const { user, register, login } = useAuth();
+  const { user, sendOTP, verifyOTP } = useAuth();
   const navigate = useNavigate();
 
   // Eğer kullanıcı zaten giriş yaptıysa ana sayfaya yönlendir
@@ -24,43 +24,46 @@ export default function Auth() {
     }
   }, [user, navigate]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSendOTP = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!username || !password) {
-      setTimeout(() => toast.error('Lütfen tüm alanları doldurun'), 100);
-      return;
-    }
-
-    if (!isLogin && !name) {
-      setTimeout(() => toast.error('Lütfen adınızı girin'), 100);
-      return;
-    }
-
-    if (password.length < 6) {
-      setTimeout(() => toast.error('Şifre en az 6 karakter olmalıdır'), 100);
+    if (!email || !email.includes('@')) {
+      toast.error('Lütfen geçerli bir e-posta adresi girin');
       return;
     }
 
     setLoading(true);
 
     try {
-      if (isLogin) {
-        const { error } = await login(username, password);
-        if (error) {
-          setTimeout(() => toast.error(error), 100);
-        } else {
-          setTimeout(() => toast.success('Giriş başarılı!'), 100);
-          navigate('/');
-        }
+      const { error } = await sendOTP(email);
+      if (error) {
+        toast.error(error);
       } else {
-        const { error } = await register(name, username, password);
-        if (error) {
-          setTimeout(() => toast.error(error), 100);
-        } else {
-          setTimeout(() => toast.success('Kayıt başarılı!'), 100);
-          navigate('/');
-        }
+        toast.success('Doğrulama kodu e-postanıza gönderildi!');
+        setStep('verify');
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleVerifyOTP = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!otpCode || otpCode.length !== 6) {
+      toast.error('Lütfen 6 haneli kodu girin');
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      const { error } = await verifyOTP(email, otpCode);
+      if (error) {
+        toast.error('Kod doğrulanamadı. Lütfen tekrar deneyin.');
+      } else {
+        toast.success('Giriş başarılı!');
+        navigate('/');
       }
     } finally {
       setLoading(false);
@@ -72,75 +75,78 @@ export default function Auth() {
       <Card className="w-full max-w-md">
         <CardHeader>
           <CardTitle className="text-2xl text-center">
-            {isLogin ? 'Giriş Yap' : 'Kayıt Ol'}
+            {step === 'email' ? 'Giriş Yap' : 'Kodu Doğrula'}
           </CardTitle>
           <CardDescription className="text-center">
-            {isLogin
-              ? 'Hesabınıza giriş yapın'
-              : 'Yeni bir hesap oluşturun'}
+            {step === 'email'
+              ? 'E-posta adresinizi girin'
+              : 'E-postanıza gönderilen 6 haneli kodu girin'}
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            {!isLogin && (
+          {step === 'email' ? (
+            <form onSubmit={handleSendOTP} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="name">Ad Soyad</Label>
-                <Input
-                  id="name"
-                  type="text"
-                  placeholder="Adınızı girin"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  disabled={loading}
-                />
+                <Label htmlFor="email">E-posta</Label>
+                <div className="relative">
+                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    id="email"
+                    type="email"
+                    placeholder="ornek@email.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    disabled={loading}
+                    className="pl-10"
+                  />
+                </div>
               </div>
-            )}
 
-            <div className="space-y-2">
-              <Label htmlFor="username">Kullanıcı Adı</Label>
-              <Input
-                id="username"
-                type="text"
-                placeholder="Kullanıcı adınızı girin"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                disabled={loading}
-              />
-            </div>
+              <Button type="submit" className="w-full" disabled={loading}>
+                {loading ? 'Gönderiliyor...' : 'Kod Gönder'}
+              </Button>
+            </form>
+          ) : (
+            <form onSubmit={handleVerifyOTP} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="otp">Doğrulama Kodu</Label>
+                <div className="relative">
+                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    id="otp"
+                    type="text"
+                    placeholder="000000"
+                    value={otpCode}
+                    onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                    disabled={loading}
+                    className="pl-10 text-center text-2xl tracking-widest"
+                    maxLength={6}
+                  />
+                </div>
+                <p className="text-xs text-muted-foreground text-center">
+                  {email} adresine gönderildi
+                </p>
+              </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="password">Şifre</Label>
-              <Input
-                id="password"
-                type="password"
-                placeholder="Şifrenizi girin"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                disabled={loading}
-              />
-            </div>
-
-            <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? 'İşlem yapılıyor...' : isLogin ? 'Giriş Yap' : 'Kayıt Ol'}
-            </Button>
-
-            <Button
-              type="button"
-              variant="ghost"
-              className="w-full"
-              onClick={() => {
-                setIsLogin(!isLogin);
-                setName('');
-                setUsername('');
-                setPassword('');
-              }}
-              disabled={loading}
-            >
-              {isLogin
-                ? "Hesabınız yok mu? Kayıt olun"
-                : "Hesabınız var mı? Giriş yapın"}
-            </Button>
-          </form>
+              <div className="space-y-2">
+                <Button type="submit" className="w-full" disabled={loading}>
+                  {loading ? 'Doğrulanıyor...' : 'Doğrula'}
+                </Button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  className="w-full"
+                  onClick={() => {
+                    setStep('email');
+                    setOtpCode('');
+                  }}
+                  disabled={loading}
+                >
+                  Farklı e-posta ile giriş yap
+                </Button>
+              </div>
+            </form>
+          )}
         </CardContent>
       </Card>
     </div>

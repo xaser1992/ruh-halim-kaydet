@@ -17,7 +17,7 @@ export const UserInfo = ({ theme, username }: UserInfoProps) => {
   const { updateUsername } = useUsername();
   const { city, updateCity } = useCity();
   const { user } = useAuth();
-  const { updateCity: updateCityInProfile } = useUserProfile(user?.id || null);
+  const { updateCity: updateCityInProfile } = useUserProfile();
   const [isOpen, setIsOpen] = useState(false);
   const [tempUsername, setTempUsername] = useState(username || '');
   const [tempCity, setTempCity] = useState(city || '');

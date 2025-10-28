@@ -27,7 +27,7 @@ const Index = () => {
   });
   const { entries, saveEntry } = useMoodEntries();
   const { user, loading: authLoading, logout } = useAuth();
-  const { profile, loading: profileLoading, updateTheme, updateLanguage, updateCity } = useUserProfile(user?.id || null);
+  const { profile, loading: profileLoading, updateTheme, updateLanguage, updateCity } = useUserProfile();
   const { city, loading: cityLoading } = useCity();
   const [showSetup, setShowSetup] = useState(false);
   
@@ -95,7 +95,7 @@ const Index = () => {
   };
 
   if (showSetup) {
-    return <UserSetup userId={user?.id} onComplete={() => setShowSetup(false)} theme={profile.theme} language={profile.language} />;
+    return <UserSetup onComplete={() => setShowSetup(false)} theme={profile.theme} language={profile.language} />;
   }
 
   return (
@@ -116,7 +116,7 @@ const Index = () => {
           </div>
           
           <div className="flex items-center space-x-4">
-            <UserInfo theme={profile.theme} username={user?.username || ''} />
+            <UserInfo theme={profile.theme} username={profile.username || ''} />
             
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -272,7 +272,7 @@ const Index = () => {
               mood={selectedMood} 
               onSave={handleMoodSave} 
               theme={profile.theme}
-              username={user?.username || ''}
+              username={profile.username || ''}
               city={profile.city || city || ''}
               userId={user?.id || ''}
             />

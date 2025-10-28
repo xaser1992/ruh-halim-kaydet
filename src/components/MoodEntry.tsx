@@ -1,8 +1,7 @@
-
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { ImageUpload } from './ImageUpload';
+import { ImageUploadNew } from './ImageUploadNew';
 import { ShareButton } from './ShareButton';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -147,7 +146,7 @@ export const MoodEntry = ({ mood, onSave, theme, username, city, userId }: MoodE
         </div>
 
         {/* Image Upload */}
-        <ImageUpload 
+        <ImageUploadNew 
           images={images} 
           onImagesChange={setImages} 
           theme={theme} 
