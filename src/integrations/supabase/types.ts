@@ -115,45 +115,63 @@ export type Database = {
           created_at: string | null
           id: number
           mood: string
+          user_id: string | null
         }
         Insert: {
           city: string
           created_at?: string | null
           id?: number
           mood: string
+          user_id?: string | null
         }
         Update: {
           city?: string
           created_at?: string | null
           id?: number
           mood?: string
+          user_id?: string | null
         }
         Relationships: []
       }
       profiles: {
         Row: {
           avatar_url: string | null
+          city: string | null
           created_at: string
           email: string | null
           full_name: string | null
           id: string
+          language: string | null
+          last_username_change: string | null
+          theme: string | null
           updated_at: string
+          username: string | null
         }
         Insert: {
           avatar_url?: string | null
+          city?: string | null
           created_at?: string
           email?: string | null
           full_name?: string | null
           id: string
+          language?: string | null
+          last_username_change?: string | null
+          theme?: string | null
           updated_at?: string
+          username?: string | null
         }
         Update: {
           avatar_url?: string | null
+          city?: string | null
           created_at?: string
           email?: string | null
           full_name?: string | null
           id?: string
+          language?: string | null
+          last_username_change?: string | null
+          theme?: string | null
           updated_at?: string
+          username?: string | null
         }
         Relationships: []
       }
@@ -222,21 +240,27 @@ export type Database = {
       users: {
         Row: {
           created_at: string | null
+          email: string | null
           id: string
+          last_username_change: string | null
           name: string | null
           password: string
           username: string
         }
         Insert: {
           created_at?: string | null
+          email?: string | null
           id?: string
+          last_username_change?: string | null
           name?: string | null
           password: string
           username: string
         }
         Update: {
           created_at?: string | null
+          email?: string | null
           id?: string
+          last_username_change?: string | null
           name?: string | null
           password?: string
           username?: string
@@ -248,7 +272,12 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      can_change_username: { Args: { user_id: string }; Returns: boolean }
       hash_password: { Args: { password: string }; Returns: string }
+      update_username: {
+        Args: { new_username: string; user_id: string }
+        Returns: Json
+      }
     }
     Enums: {
       [_ in never]: never
