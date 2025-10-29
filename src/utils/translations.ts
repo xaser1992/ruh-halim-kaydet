@@ -22,9 +22,15 @@ export const translations = {
     themes: "Temalar",
     languages: "Dil Ayarları",
     logout: "Çıkış Yap",
-    statistics: "İstatistikler"
+    statistics: "İstatistikler",
+    welcome: "Hoş Geldiniz",
+    setupProfile: "Profilinizi Tamamlayın",
+    username: "Kullanıcı Adı",
+    city: "Şehir",
+    gettingLocation: "Konumunuz alınıyor...",
+    continue: "Devam Et"
   },
-  en: {
+    en: {
     question: "How are you feeling today?",
     noteLabel: "Note (Optional)",
     notePlaceholder: "Write your notes for today...",
@@ -46,7 +52,13 @@ export const translations = {
     themes: "Themes",
     languages: "Language Settings",
     logout: "Logout",
-    statistics: "Statistics"
+    statistics: "Statistics",
+    welcome: "Welcome",
+    setupProfile: "Complete Your Profile",
+    username: "Username",
+    city: "City",
+    gettingLocation: "Getting your location...",
+    continue: "Continue"
   },
   de: {
     question: "Wie fühlst du dich heute?",
@@ -70,7 +82,13 @@ export const translations = {
     themes: "Themen",
     languages: "Spracheinstellungen",
     logout: "Abmelden",
-    statistics: "Statistiken"
+    statistics: "Statistiken",
+    welcome: "Willkommen",
+    setupProfile: "Vervollständige dein Profil",
+    username: "Benutzername",
+    city: "Stadt",
+    gettingLocation: "Standort wird abgerufen...",
+    continue: "Weiter"
   },
   fr: {
     question: "Comment te sens-tu aujourd'hui?",
@@ -94,7 +112,13 @@ export const translations = {
     themes: "Thèmes",
     languages: "Paramètres de langue",
     logout: "Déconnexion",
-    statistics: "Statistiques"
+    statistics: "Statistiques",
+    welcome: "Bienvenue",
+    setupProfile: "Complétez votre profil",
+    username: "Nom d'utilisateur",
+    city: "Ville",
+    gettingLocation: "Obtention de votre position...",
+    continue: "Continuer"
   },
   es: {
     question: "¿Cómo te sientes hoy?",
@@ -118,7 +142,13 @@ export const translations = {
     themes: "Temas",
     languages: "Configuración de idioma",
     logout: "Cerrar sesión",
-    statistics: "Estadísticas"
+    statistics: "Estadísticas",
+    welcome: "Bienvenido",
+    setupProfile: "Completa tu perfil",
+    username: "Nombre de usuario",
+    city: "Ciudad",
+    gettingLocation: "Obteniendo tu ubicación...",
+    continue: "Continuar"
   },
   it: {
     question: "Come ti senti oggi?",
@@ -142,7 +172,13 @@ export const translations = {
     themes: "Temi",
     languages: "Impostazioni lingua",
     logout: "Esci",
-    statistics: "Statistiche"
+    statistics: "Statistiche",
+    welcome: "Benvenuto",
+    setupProfile: "Completa il tuo profilo",
+    username: "Nome utente",
+    city: "Città",
+    gettingLocation: "Ottenimento della tua posizione...",
+    continue: "Continua"
   },
   ru: {
     question: "Как ты себя чувствуешь сегодня?",
@@ -166,6 +202,12 @@ export const translations = {
     themes: "Темы",
     languages: "Настройки языка",
     logout: "Выйти",
-    statistics: "Статистика"
+    statistics: "Статистика",
+    welcome: "Добро пожаловать",
+    setupProfile: "Заполните свой профиль",
+    username: "Имя пользователя",
+    city: "Город",
+    gettingLocation: "Определение вашего местоположения...",
+    continue: "Продолжить"
   }
 };

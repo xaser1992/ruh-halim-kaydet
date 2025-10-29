@@ -1,9 +1,11 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { Capacitor } from '@capacitor/core';
 import { Network } from '@capacitor/network';
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Heart, Share } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Heart, Share, X } from "lucide-react";
 import { translations } from "@/utils/translations";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -11,6 +13,7 @@ import { ShareButton } from "./ShareButton";
 import { UsernameSelector } from "./UsernameSelector";
 import { useUsername } from "@/hooks/useUsername";
 import { moodOptions } from "@/utils/moodData";
+import { motion, AnimatePresence } from "framer-motion";
 
 interface CommunityProps {
   language: 'tr' | 'en' | 'de' | 'fr' | 'es' | 'it' | 'ru';
@@ -40,13 +43,10 @@ const Community = ({ language, theme, onShare }: CommunityProps) => {
   const [shareData, setShareData] = useState({ mood: '', message: '' });
   const [showUsernameSelector, setShowUsernameSelector] = useState(false);
 
-  // Paylaşımları ve beğenileri yükle
-  const fetchPosts = async () => {
+  const fetchPosts = useCallback(async () => {
     try {
-      // Network bağlantısını kontrol et
       if (Capacitor.isNativePlatform()) {
         const status = await Network.getStatus();
-        
         if (!status.connected) {
           setTimeout(() => {
             toast({
@@ -59,7 +59,6 @@ const Community = ({ language, theme, onShare }: CommunityProps) => {
         }
       }
       
-      // Posts'ları çek
       const { data: postsData, error: postsError } = await supabase
         .from('community_posts')
         .select('*')
@@ -82,11 +81,9 @@ const Community = ({ language, theme, onShare }: CommunityProps) => {
         return;
       }
 
-      // Tüm post ID'lerini topla
       const postIds = postsData.map(p => p.id);
       const userIP = 'user_' + (username || 'anonymous');
 
-      // Tek sorguda tüm beğenileri al
       const { data: allLikes, error: likesError } = await supabase
         .from('community_likes')
         .select('post_id, user_ip')
@@ -96,7 +93,6 @@ const Community = ({ language, theme, onShare }: CommunityProps) => {
         console.error('Beğeniler yüklenemedi:', likesError);
       }
 
-      // Beğenileri post ID'ye göre grupla
       const likesMap: Record<string, { count: number; userLiked: boolean }> = {};
       
       postIds.forEach(id => {
@@ -112,7 +108,6 @@ const Community = ({ language, theme, onShare }: CommunityProps) => {
         }
       });
 
-      // Posts'lara beğeni bilgilerini ekle
       const postsWithLikes = postsData.map(post => ({
         ...post,
         likes_count: likesMap[post.id]?.count || 0,
@@ -132,13 +127,12 @@ const Community = ({ language, theme, onShare }: CommunityProps) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [username, toast]);
 
   useEffect(() => {
     fetchPosts();
-  }, [language]);
+  }, [fetchPosts]);
 
-  // Beğeni toggle fonksiyonu
   const toggleLike = async (postId: string, currentlyLiked: boolean) => {
     if (!hasUsername) {
       setShowUsernameSelector(true);
@@ -149,7 +143,6 @@ const Community = ({ language, theme, onShare }: CommunityProps) => {
       const userIP = 'user_' + username;
       
       if (currentlyLiked) {
-        // Beğeniyi kaldır
         const { error } = await supabase
           .from('community_likes')
           .delete()
@@ -161,14 +154,12 @@ const Community = ({ language, theme, onShare }: CommunityProps) => {
           return;
         }
         
-        // State'i güncelle
         setPosts(posts.map(post => 
           post.id === postId 
             ? { ...post, likes_count: (post.likes_count || 0) - 1, user_liked: false }
             : post
         ));
       } else {
-        // Beğeni ekle
         const { error } = await supabase
           .from('community_likes')
           .insert({
@@ -181,7 +172,6 @@ const Community = ({ language, theme, onShare }: CommunityProps) => {
           return;
         }
         
-        // State'i güncelle
         setPosts(posts.map(post => 
           post.id === postId 
             ? { ...post, likes_count: (post.likes_count || 0) + 1, user_liked: true }
@@ -193,7 +183,6 @@ const Community = ({ language, theme, onShare }: CommunityProps) => {
     }
   };
 
-  // Paylaşım başarı callback'i
   const handleShareSuccess = () => {
     fetchPosts();
     setShareMode(false);
@@ -222,31 +211,23 @@ const Community = ({ language, theme, onShare }: CommunityProps) => {
     try {
       if (!timestamp) return "Az önce";
       
-      // Database'den gelen timestamp UTC olarak kabul et
-      // Postgres'ten gelen format: "2025-01-26 12:34:56" (timezone bilgisi yok, UTC varsay)
       let postDate: Date;
       
       if (timestamp.includes('T')) {
-        // ISO format (2025-01-26T12:34:56Z veya 2025-01-26T12:34:56.123Z)
         postDate = new Date(timestamp);
       } else {
-        // Database format "2025-01-26 12:34:56" - UTC olarak parse et
-        // Direkt Z ekleyerek UTC olarak işaretle
         const isoFormat = timestamp.replace(' ', 'T') + 'Z';
         postDate = new Date(isoFormat);
       }
       
-      // Geçersiz tarih kontrolü
       if (isNaN(postDate.getTime())) {
         console.warn('Could not parse timestamp:', timestamp);
         return "Bilinmiyor";
       }
       
-      // Şimdi ile aradaki farkı hesapla (milisaniye cinsinden)
       const now = new Date();
       const diffInMs = now.getTime() - postDate.getTime();
       
-      // Negatif fark kontrolü (gelecekteki tarih)
       if (diffInMs < 0) {
         return "Az önce";
       }
@@ -263,7 +244,6 @@ const Community = ({ language, theme, onShare }: CommunityProps) => {
       if (diffInDays === 1) return "Dün";
       if (diffInDays < 7) return `${diffInDays} gün önce`;
 
-      // Eski tarihler için tam tarih göster (yerel saatle)
       return postDate.toLocaleDateString('tr-TR', {
         year: 'numeric',
         month: '2-digit',
@@ -280,10 +260,8 @@ const Community = ({ language, theme, onShare }: CommunityProps) => {
   if (usernameLoading) {
     return (
       <div className="text-center p-4">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600 mx-auto mb-4"></div>
-        <p className={`text-sm ${
-          theme === 'dark' ? 'text-gray-400' : theme === 'feminine' ? 'text-pink-500' : 'text-gray-500'
-        }`}>
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+        <p className="text-sm text-muted-foreground">
           Yükleniyor...
         </p>
       </div>
@@ -292,125 +270,108 @@ const Community = ({ language, theme, onShare }: CommunityProps) => {
 
   return (
     <div className="space-y-4">
-      {/* Username Selector */}
-      {showUsernameSelector && (
-        <UsernameSelector
-          language={language}
-          theme={theme}
-          onUsernameSelected={handleUsernameSelected}
-          currentUsername={username || undefined}
-        />
-      )}
+      <AnimatePresence>
+        {showUsernameSelector && (
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+          >
+            <UsernameSelector
+              language={language}
+              theme={theme}
+              onUsernameSelected={handleUsernameSelected}
+              currentUsername={username || undefined}
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
 
-      {/* Paylaşım Formu */}
-      {shareMode && hasUsername && (
-        <Card className={`p-4 backdrop-blur-sm border-0 shadow-lg transition-colors duration-300 ${
-          theme === 'dark' 
-            ? 'bg-gray-800/80 text-white' 
-            : theme === 'feminine'
-            ? 'bg-pink-50/80'
-            : 'bg-white/80'
-        }`}>
-          <div className="space-y-4">
-            <h3 className={`text-lg font-semibold transition-colors duration-300 ${
-              theme === 'dark' ? 'text-white' : theme === 'feminine' ? 'text-pink-800' : 'text-gray-800'
-            }`}>
-              Toplulukla Paylaş
-            </h3>
-            
-            <div className="space-y-3">
-              <div>
-                <label className={`block text-sm font-medium mb-1 transition-colors duration-300 ${
-                  theme === 'dark' ? 'text-gray-300' : theme === 'feminine' ? 'text-pink-700' : 'text-gray-700'
-                }`}>
-                  Ruh Halin
-                </label>
-                <select
-                  value={shareData.mood}
-                  onChange={(e) => setShareData({ ...shareData, mood: e.target.value })}
-                  className={`w-full p-2 rounded-lg border transition-colors duration-300 ${
-                    theme === 'dark' 
-                      ? 'bg-gray-700 border-gray-600 text-white' 
-                      : theme === 'feminine'
-                      ? 'bg-pink-50 border-pink-200'
-                      : 'bg-white border-gray-200'
-                  }`}
-                >
-                  <option value="">Seç...</option>
-                  {moodOptions.map((mood) => (
-                    <option key={mood.id} value={mood.id}>
-                      {mood.emoji} {mood.labelTr}
-                    </option>
-                  ))}
-                </select>
+      <AnimatePresence>
+        {shareMode && hasUsername && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.95 }}
+          >
+            <Card className="p-4 bg-card border-border shadow-lg">
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-lg font-semibold text-card-foreground">
+                    Toplulukla Paylaş
+                  </h3>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => setShareMode(false)}
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
+                
+                <div className="space-y-3">
+                  <div>
+                    <label className="block text-sm font-medium mb-1 text-muted-foreground">
+                      Ruh Halin
+                    </label>
+                    <Select value={shareData.mood} onValueChange={(value) => setShareData({ ...shareData, mood: value })}>
+                      <SelectTrigger className="w-full bg-background border-border">
+                        <SelectValue placeholder="Seç..." />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {moodOptions.map((mood) => (
+                          <SelectItem key={mood.id} value={mood.id}>
+                            {mood.emoji} {mood.labelTr}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium mb-1 text-muted-foreground">
+                      Mesajın
+                    </label>
+                    <Textarea
+                      value={shareData.message}
+                      onChange={(e) => setShareData({ ...shareData, message: e.target.value })}
+                      placeholder="Nasıl hissediyorsun?"
+                      rows={3}
+                      className="bg-background border-border"
+                    />
+                  </div>
+                </div>
+                
+                <div className="flex gap-2 justify-end">
+                  <Button
+                    onClick={() => setShareMode(false)}
+                    variant="ghost"
+                  >
+                    İptal
+                  </Button>
+                  <ShareButton
+                    mood={shareData.mood}
+                    message={shareData.message}
+                    theme={theme}
+                    username={username!}
+                    onShareSuccess={handleShareSuccess}
+                  />
+                </div>
               </div>
-              
-              <div>
-                <label className={`block text-sm font-medium mb-1 transition-colors duration-300 ${
-                  theme === 'dark' ? 'text-gray-300' : theme === 'feminine' ? 'text-pink-700' : 'text-gray-700'
-                }`}>
-                  Mesajın
-                </label>
-                  <textarea
-                    value={shareData.message}
-                    onChange={(e) => setShareData({ ...shareData, message: e.target.value })}
-                    placeholder="Nasıl hissediyorsun?"
-                    rows={3}
-                  className={`w-full p-2 rounded-lg border transition-colors duration-300 ${
-                    theme === 'dark' 
-                      ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' 
-                      : theme === 'feminine'
-                      ? 'bg-pink-50 border-pink-200 placeholder-pink-400'
-                      : 'bg-white border-gray-200 placeholder-gray-400'
-                  }`}
-                />
-              </div>
-            </div>
-            
-            <div className="flex gap-2 justify-end">
-              <Button
-                onClick={() => setShareMode(false)}
-                variant="ghost"
-                className={`transition-colors duration-300 ${
-                  theme === 'dark' 
-                    ? 'text-gray-300 hover:text-white hover:bg-gray-700' 
-                    : theme === 'feminine'
-                    ? 'text-pink-600 hover:text-pink-700 hover:bg-pink-100'
-                    : 'text-gray-600 hover:text-gray-700 hover:bg-gray-100'
-                }`}
-              >
-                İptal
-              </Button>
-              <ShareButton
-                mood={shareData.mood}
-                message={shareData.message}
-                theme={theme}
-                username={username!}
-                onShareSuccess={handleShareSuccess}
-              />
-            </div>
-          </div>
-        </Card>
-      )}
+            </Card>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
-      {/* Topluluk Gönderileri */}
       <div className="space-y-3">
         <div className="flex items-center justify-between">
-          <h3 className={`text-lg font-semibold transition-colors duration-300 ${
-            theme === 'dark' ? 'text-white' : theme === 'feminine' ? 'text-pink-800' : 'text-gray-800'
-          }`}>
+          <h3 className="text-lg font-semibold text-foreground">
             Topluluk Paylaşımları ({posts.length})
           </h3>
           
           <Button
             onClick={handleShareClick}
-            className={`flex items-center gap-2 text-white font-medium transition-all duration-200 ${
-              theme === 'dark' 
-                ? 'bg-gradient-to-r from-purple-700 to-pink-700 hover:from-purple-600 hover:to-pink-600'
-                : theme === 'feminine'
-                ? 'bg-gradient-to-r from-pink-400 to-rose-400 hover:from-pink-500 hover:to-rose-500'
-                : 'bg-gradient-to-r from-purple-400 to-pink-400 hover:from-purple-500 hover:to-pink-500'
-            }`}
+            className="flex items-center gap-2 bg-primary text-primary-foreground hover:bg-primary/90"
           >
             <Share className="w-4 h-4" />
             {hasUsername ? 'Paylaş' : 'Kullanıcı Adı Seç'}
@@ -418,105 +379,79 @@ const Community = ({ language, theme, onShare }: CommunityProps) => {
         </div>
         
         {loading ? (
-          <Card className={`p-4 backdrop-blur-sm border-0 shadow-lg transition-colors duration-300 ${
-            theme === 'dark' 
-              ? 'bg-gray-800/80 text-white' 
-              : theme === 'feminine'
-              ? 'bg-pink-50/80'
-              : 'bg-white/80'
-          }`}>
+          <Card className="p-4 bg-card border-border">
             <div className="text-center">
-              <p className={`text-sm transition-colors duration-300 ${
-                theme === 'dark' ? 'text-gray-400' : theme === 'feminine' ? 'text-pink-500' : 'text-gray-500'
-              }`}>
+              <p className="text-sm text-muted-foreground">
                 Paylaşımlar yükleniyor...
               </p>
             </div>
           </Card>
         ) : posts.length === 0 ? (
-          <Card className={`p-4 backdrop-blur-sm border-0 shadow-lg transition-colors duration-300 ${
-            theme === 'dark' 
-              ? 'bg-gray-800/80 text-white' 
-              : theme === 'feminine'
-              ? 'bg-pink-50/80'
-              : 'bg-white/80'
-          }`}>
+          <Card className="p-4 bg-card border-border">
             <div className="text-center">
-              <p className={`text-sm transition-colors duration-300 ${
-                theme === 'dark' ? 'text-gray-400' : theme === 'feminine' ? 'text-pink-500' : 'text-gray-500'
-              }`}>
+              <p className="text-sm text-muted-foreground">
                 Henüz paylaşım yok. İlk paylaşımı siz yapın! 🌟
               </p>
             </div>
           </Card>
         ) : (
-          posts.map((post) => (
-            <Card key={post.id} className={`p-4 backdrop-blur-sm border-0 shadow-lg transition-colors duration-300 ${
-              theme === 'dark' 
-                ? 'bg-gray-800/80 text-white' 
-                : theme === 'feminine'
-                ? 'bg-pink-50/80'
-                : 'bg-white/80'
-            }`}>
-              <div className="space-y-3">
-                {/* Kullanıcı Bilgisi ve Ruh Hali */}
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <span className="text-2xl">{getMoodEmoji(post.mood)}</span>
-                    <div className="flex flex-col">
-                      <span className={`text-sm font-medium transition-colors duration-300 ${
-                        theme === 'dark' ? 'text-gray-200' : theme === 'feminine' ? 'text-pink-700' : 'text-gray-700'
-                      }`}>
-                        {post.display_name || 'Anonim'}
-                      </span>
-                      <span className={`text-xs transition-colors duration-300 ${
-                        theme === 'dark' ? 'text-gray-400' : theme === 'feminine' ? 'text-pink-500' : 'text-gray-500'
-                      }`}>
-                        {formatTimeAgo(post.created_at)}
-                      </span>
+          <motion.div className="space-y-3">
+            <AnimatePresence>
+              {posts.map((post, index) => (
+                <motion.div
+                  key={post.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, x: -100 }}
+                  transition={{ delay: index * 0.05 }}
+                >
+                  <Card className="p-4 bg-card border-border hover:shadow-lg transition-shadow">
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <span className="text-2xl">{getMoodEmoji(post.mood)}</span>
+                          <div className="flex flex-col">
+                            <span className="text-sm font-medium text-card-foreground">
+                              {post.display_name || 'Anonim'}
+                            </span>
+                            <span className="text-xs text-muted-foreground">
+                              {formatTimeAgo(post.created_at)}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <p className="text-sm leading-relaxed text-card-foreground">
+                        {post.message}
+                      </p>
+                      
+                      <div className="flex items-center justify-between pt-2 border-t border-border">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => toggleLike(post.id, post.user_liked || false)}
+                          className="flex items-center gap-1"
+                        >
+                          <Heart
+                            className={`h-4 w-4 ${
+                              post.user_liked ? 'fill-destructive text-destructive' : 'text-muted-foreground'
+                            }`}
+                          />
+                          <span className="text-sm text-muted-foreground">
+                            {post.likes_count || 0}
+                          </span>
+                        </Button>
+                      </div>
                     </div>
-                  </div>
-                </div>
-                
-                {/* Mesaj */}
-                <p className={`text-sm leading-relaxed transition-colors duration-300 ${
-                  theme === 'dark' ? 'text-gray-200' : theme === 'feminine' ? 'text-pink-700' : 'text-gray-700'
-                }`}>
-                  {post.message}
-                </p>
-                
-                {/* Beğeni Butonu */}
-                <div className="flex items-center justify-between pt-2 border-t border-opacity-20">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => toggleLike(post.id, post.user_liked || false)}
-                    className={`flex items-center gap-2 transition-colors duration-300 ${
-                      post.user_liked
-                        ? theme === 'dark' 
-                          ? 'text-pink-400 hover:text-pink-300 hover:bg-gray-700/50' 
-                          : theme === 'feminine'
-                          ? 'text-pink-600 hover:text-pink-700 hover:bg-pink-100/50'
-                          : 'text-purple-600 hover:text-purple-700 hover:bg-purple-50'
-                        : theme === 'dark' 
-                          ? 'text-gray-300 hover:text-pink-400 hover:bg-gray-700/50' 
-                          : theme === 'feminine'
-                          ? 'text-pink-400 hover:text-pink-600 hover:bg-pink-100/50'
-                          : 'text-gray-600 hover:text-purple-600 hover:bg-purple-50'
-                    }`}
-                  >
-                    <Heart className={`w-4 h-4 ${post.user_liked ? 'fill-current' : ''}`} />
-                    <span>{post.likes_count || 0} Beğeni</span>
-                  </Button>
-                </div>
-              </div>
-            </Card>
-          ))
+                  </Card>
+                </motion.div>
+              ))}
+            </AnimatePresence>
+          </motion.div>
         )}
       </div>
     </div>
   );
 };
 
-export default React.memo(Community);
-export { type CommunityProps };
+export default Community;

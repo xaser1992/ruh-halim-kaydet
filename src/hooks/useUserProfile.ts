@@ -22,6 +22,17 @@ export const useUserProfile = () => {
   useEffect(() => {
     const loadProfile = async () => {
       if (!user) {
+        // localStorage'dan tema ve dil yükle
+        const savedTheme = localStorage.getItem('userTheme') as 'light' | 'dark' | 'feminine' || 'light';
+        const savedLanguage = localStorage.getItem('userLanguage') as 'tr' | 'en' | 'de' | 'fr' | 'es' | 'it' | 'ru' || 'tr';
+        
+        setProfile({
+          theme: savedTheme,
+          language: savedLanguage,
+        });
+
+        document.documentElement.classList.remove('light', 'dark', 'feminine');
+        document.documentElement.classList.add(savedTheme);
         setLoading(false);
         return;
       }
@@ -41,18 +52,27 @@ export const useUserProfile = () => {
         }
 
         if (profileData) {
-          setProfile({
+          const newProfile = {
             id: profileData.id,
             username: profileData.username || undefined,
             email: profileData.email || undefined,
             theme: (profileData.theme as 'light' | 'dark' | 'feminine') || 'light',
             language: (profileData.language as 'tr' | 'en' | 'de' | 'fr' | 'es' | 'it' | 'ru') || 'tr',
             city: profileData.city || undefined
-          });
+          };
+
+          setProfile(newProfile);
+
+          // localStorage ile senkronize et
+          localStorage.setItem('userTheme', newProfile.theme);
+          localStorage.setItem('userLanguage', newProfile.language);
+          if (newProfile.city) {
+            localStorage.setItem('userCity', newProfile.city);
+          }
 
           // Temayı uygula
           document.documentElement.classList.remove('light', 'dark', 'feminine');
-          document.documentElement.classList.add(profileData.theme || 'light');
+          document.documentElement.classList.add(newProfile.theme);
         }
       } catch (error) {
         console.error('Profil yüklenirken beklenmeyen hata:', error);
@@ -65,6 +85,13 @@ export const useUserProfile = () => {
   }, [user]);
 
   const updateTheme = async (newTheme: 'light' | 'dark' | 'feminine') => {
+    // localStorage'a hemen kaydet
+    localStorage.setItem('userTheme', newTheme);
+    setProfile(prev => ({ ...prev, theme: newTheme }));
+    document.documentElement.classList.remove('light', 'dark', 'feminine');
+    document.documentElement.classList.add(newTheme);
+
+    // Supabase'e kaydet (arka planda)
     if (!user) return;
 
     try {
@@ -75,18 +102,18 @@ export const useUserProfile = () => {
 
       if (error) {
         console.error('Tema güncellenirken hata:', error);
-        return;
       }
-
-      setProfile(prev => ({ ...prev, theme: newTheme }));
-      document.documentElement.classList.remove('light', 'dark', 'feminine');
-      document.documentElement.classList.add(newTheme);
     } catch (error) {
       console.error('Tema güncellenirken beklenmeyen hata:', error);
     }
   };
 
   const updateLanguage = async (newLanguage: 'tr' | 'en' | 'de' | 'fr' | 'es' | 'it' | 'ru') => {
+    // localStorage'a hemen kaydet
+    localStorage.setItem('userLanguage', newLanguage);
+    setProfile(prev => ({ ...prev, language: newLanguage }));
+
+    // Supabase'e kaydet (arka planda)
     if (!user) return;
 
     try {
@@ -97,16 +124,18 @@ export const useUserProfile = () => {
 
       if (error) {
         console.error('Dil güncellenirken hata:', error);
-        return;
       }
-
-      setProfile(prev => ({ ...prev, language: newLanguage }));
     } catch (error) {
       console.error('Dil güncellenirken beklenmeyen hata:', error);
     }
   };
 
   const updateCity = async (newCity: string) => {
+    // localStorage'a hemen kaydet
+    localStorage.setItem('userCity', newCity);
+    setProfile(prev => ({ ...prev, city: newCity }));
+
+    // Supabase'e kaydet (arka planda)
     if (!user) return;
 
     try {
@@ -117,10 +146,7 @@ export const useUserProfile = () => {
 
       if (error) {
         console.error('Şehir güncellenirken hata:', error);
-        return;
       }
-
-      setProfile(prev => ({ ...prev, city: newCity }));
     } catch (error) {
       console.error('Şehir güncellenirken beklenmeyen hata:', error);
     }
