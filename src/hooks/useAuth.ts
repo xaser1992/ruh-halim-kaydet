@@ -32,7 +32,8 @@ export const useAuth = () => {
       const { error } = await supabase.auth.signInWithOtp({
         email,
         options: {
-          shouldCreateUser: false
+          shouldCreateUser: true,
+          emailRedirectTo: null
         }
       });
 
