@@ -30,10 +30,7 @@ export const useAuth = () => {
   const sendOTP = async (email: string) => {
     try {
       const { error } = await supabase.auth.signInWithOtp({
-        email,
-        options: {
-          emailRedirectTo: `${window.location.origin}/`
-        }
+        email
       });
 
       if (error) throw error;
