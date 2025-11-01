@@ -29,15 +29,15 @@ export const useAuth = () => {
   // Send OTP to email
   const sendOTP = async (email: string) => {
     try {
-      const { error } = await supabase.auth.signInWithOtp({
-        email,
-        options: {
-          shouldCreateUser: true,
-          emailRedirectTo: null
-        }
+      const response = await supabase.functions.invoke('send-otp', {
+        body: { email }
       });
 
-      if (error) throw error;
+      if (response.error) throw response.error;
+      if (!response.data?.status || response.data.status !== 'ok') {
+        throw new Error(response.data?.error || 'OTP gönderilemedi');
+      }
+      
       return { error: null };
     } catch (error: any) {
       return { error: error.message || 'OTP gönderilemedi' };
@@ -47,13 +47,20 @@ export const useAuth = () => {
   // Verify OTP code
   const verifyOTP = async (email: string, token: string) => {
     try {
-      const { error } = await supabase.auth.verifyOtp({
-        email,
-        token,
-        type: 'email'
+      const response = await supabase.functions.invoke('verify-otp', {
+        body: { email, code: token }
       });
 
-      if (error) throw error;
+      if (response.error) throw response.error;
+      if (!response.data?.status || response.data.status !== 'ok') {
+        throw new Error(response.data?.error || 'Kod doğrulanamadı');
+      }
+
+      // Session backend'den gelirse client'a set et
+      if (response.data.session) {
+        await supabase.auth.setSession(response.data.session);
+      }
+      
       return { error: null };
     } catch (error: any) {
       return { error: error.message || 'Kod doğrulanamadı' };
