@@ -102,13 +102,16 @@ serve(async (req) => {
       userId = newUser.user.id;
     }
 
-    // Session oluştur
+    // Admin olarak kullanıcı için session token'ları oluştur
     const { data: sessionData, error: sessionError } = await supabase.auth.admin.generateLink({
       type: 'magiclink',
       email,
+      options: {
+        redirectTo: 'https://ruh-halim-kaydet.lovable.app'
+      }
     });
 
-    if (sessionError) {
+    if (sessionError || !sessionData?.properties?.action_link) {
       console.error('Session oluşturma hatası:', sessionError);
       return new Response(
         JSON.stringify({ error: 'Oturum oluşturulamadı' }),
@@ -116,14 +119,28 @@ serve(async (req) => {
       );
     }
 
-    console.log(`OTP doğrulandı: ${email}`);
+    // URL'den token'ları çıkar
+    const actionLink = sessionData.properties.action_link;
+    const urlParams = new URLSearchParams(actionLink.split('?')[1] || '');
+    const accessToken = urlParams.get('access_token');
+    const refreshToken = urlParams.get('refresh_token');
+
+    if (!accessToken || !refreshToken) {
+      console.error('Token parse hatası. Action link:', actionLink);
+      return new Response(
+        JSON.stringify({ error: 'Token oluşturulamadı' }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    console.log(`OTP doğrulandı: ${email}, tokens parsed successfully`);
 
     return new Response(
       JSON.stringify({ 
         status: 'ok', 
         message: 'Doğrulama başarılı',
-        access_token: sessionData.properties.action_link.split('access_token=')[1]?.split('&')[0],
-        refresh_token: sessionData.properties.action_link.split('refresh_token=')[1]?.split('&')[0]
+        access_token: accessToken,
+        refresh_token: refreshToken
       }),
       { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
