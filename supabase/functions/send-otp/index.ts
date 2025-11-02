@@ -61,8 +61,7 @@ serve(async (req) => {
       .insert({
         email,
         code_hash: hashData,
-        expires_at: expiresAt,
-        used: false
+        expires_at: expiresAt
       });
 
     if (insertError) {
