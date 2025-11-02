@@ -60,52 +60,23 @@ export const useAuth = () => {
         throw new Error(response.data?.error || 'Kod doğrulanamadı');
       }
 
-      console.log('Backend kod doğrulaması başarılı!');
+      console.log('✅ Backend OTP doğrulaması başarılı! Şimdi Supabase session başlatılıyor...');
 
-      // Backend'den hashed_token gelirse, Supabase'in kendi verifyOtp'sine gönder
-      if (response.data.hashed_token) {
-        console.log('Hashed token alındı, Supabase auth ile doğrulanıyor...');
-        
-        try {
-          const { data: authData, error: authError } = await supabase.auth.verifyOtp({
-            email: response.data.email,
-            token: response.data.hashed_token,
-            type: 'email'
-          });
-          
-          console.log('Supabase auth result:', { authData, authError });
-          
-          if (authError) {
-            console.warn('Supabase auth hatası ama devam ediyoruz:', authError);
-          } else {
-            console.log('Supabase session başarıyla kuruldu!');
-          }
-        } catch (authErr) {
-          console.warn('Supabase auth exception ama devam ediyoruz:', authErr);
-        }
+      // Edge Function doğruladıktan sonra Supabase'e giriş yaptır
+      const { error: loginError } = await supabase.auth.signInWithOtp({
+        email,
+        options: { 
+          shouldCreateUser: true, 
+          emailRedirectTo: null 
+        },
+      });
+
+      if (loginError) {
+        console.error('Supabase session kurulamadı:', loginError);
+        throw new Error('Giriş yapılamadı, lütfen tekrar deneyin.');
       }
-      
-      // Email OTP varsa da dene
-      if (response.data.email_otp && !response.data.hashed_token) {
-        console.log('Email OTP ile deneniyor...');
-        
-        try {
-          const { error: authError } = await supabase.auth.verifyOtp({
-            email: response.data.email,
-            token: response.data.email_otp,
-            type: 'email'
-          });
-          
-          if (authError) {
-            console.warn('Email OTP hatası ama devam ediyoruz:', authError);
-          }
-        } catch (authErr) {
-          console.warn('Email OTP exception ama devam ediyoruz:', authErr);
-        }
-      }
-      
-      // Backend doğrulaması başarılıysa her durumda başarı dön
-      console.log('OTP doğrulaması tamamlandı - başarılı!');
+
+      console.log('🎉 Supabase session başarıyla kuruldu!');
       return { error: null };
     } catch (error: any) {
       console.error('verifyOTP error:', error);
