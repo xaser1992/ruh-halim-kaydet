@@ -60,7 +60,7 @@ serve(async (req) => {
       .eq('code_hash', codeHash)
       .eq('used', false)
       .gt('expires_at', new Date().toISOString())
-      .single();
+      .maybeSingle();
 
     if (fetchError || !otpRecord) {
       console.error('OTP bulunamadı veya geçersiz:', fetchError);
@@ -102,45 +102,31 @@ serve(async (req) => {
       userId = newUser.user.id;
     }
 
-    // Admin olarak kullanıcı için session token'ları oluştur
-    const { data: sessionData, error: sessionError } = await supabase.auth.admin.generateLink({
+    // Kullanıcı için Supabase OTP oluştur ve direkt doğrula
+    const { data: otpData, error: otpError } = await supabase.auth.admin.generateLink({
       type: 'magiclink',
       email,
-      options: {
-        redirectTo: 'https://ruh-halim-kaydet.lovable.app'
-      }
     });
 
-    if (sessionError || !sessionData?.properties?.action_link) {
-      console.error('Session oluşturma hatası:', sessionError);
+    if (otpError || !otpData) {
+      console.error('OTP link oluşturma hatası:', otpError);
       return new Response(
         JSON.stringify({ error: 'Oturum oluşturulamadı' }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    // URL'den token'ları çıkar
-    const actionLink = sessionData.properties.action_link;
-    const urlParams = new URLSearchParams(actionLink.split('?')[1] || '');
-    const accessToken = urlParams.get('access_token');
-    const refreshToken = urlParams.get('refresh_token');
-
-    if (!accessToken || !refreshToken) {
-      console.error('Token parse hatası. Action link:', actionLink);
-      return new Response(
-        JSON.stringify({ error: 'Token oluşturulamadı' }),
-        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
-    console.log(`OTP doğrulandı: ${email}, tokens parsed successfully`);
+    // Link'ten hashed_token'ı çıkar ve frontend'e gönder
+    // Frontend bu token ile supabase.auth.verifyOtp çağrısı yapacak
+    console.log(`OTP doğrulandı: ${email}, hashed_token gönderiliyor`);
 
     return new Response(
       JSON.stringify({ 
         status: 'ok', 
         message: 'Doğrulama başarılı',
-        access_token: accessToken,
-        refresh_token: refreshToken
+        email: email,
+        hashed_token: otpData.properties.hashed_token,
+        email_otp: otpData.properties.email_otp // Bu varsa gönder
       }),
       { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );

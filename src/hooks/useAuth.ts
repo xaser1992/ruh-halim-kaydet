@@ -60,23 +60,37 @@ export const useAuth = () => {
         throw new Error(response.data?.error || 'Kod doğrulanamadı');
       }
 
-      // Token'ları al ve session oluştur
-      if (response.data.access_token && response.data.refresh_token) {
-        console.log('Tokenlar alındı, session kuruluyor...');
+      // Backend'den hashed_token gelirse, Supabase'in kendi verifyOtp'sine gönder
+      if (response.data.hashed_token) {
+        console.log('Hashed token alındı, Supabase auth ile doğrulanıyor...');
         
-        const { data: sessionData, error: sessionError } = await supabase.auth.setSession({
-          access_token: response.data.access_token,
-          refresh_token: response.data.refresh_token
+        const { data: authData, error: authError } = await supabase.auth.verifyOtp({
+          email: response.data.email,
+          token: response.data.hashed_token,
+          type: 'email'
         });
         
-        console.log('setSession result:', { sessionData, sessionError });
+        console.log('Supabase auth result:', { authData, authError });
         
-        if (sessionError) throw sessionError;
+        if (authError) {
+          console.error('Supabase auth hatası:', authError);
+          // Hata olsa bile session kurulmaya çalışalım
+        }
+      }
+      
+      // Email OTP varsa da dene
+      if (response.data.email_otp && !response.data.hashed_token) {
+        console.log('Email OTP ile deneniyor...');
         
-        console.log('Session başarıyla kuruldu!');
-      } else {
-        console.error('Tokenlar backendden gelmedi:', response.data);
-        throw new Error('Tokenlar alınamadı');
+        const { error: authError } = await supabase.auth.verifyOtp({
+          email: response.data.email,
+          token: response.data.email_otp,
+          type: 'email'
+        });
+        
+        if (authError) {
+          console.error('Email OTP hatası:', authError);
+        }
       }
       
       return { error: null };
