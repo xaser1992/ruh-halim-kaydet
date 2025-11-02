@@ -62,17 +62,19 @@ export const useAuth = () => {
 
       console.log('✅ Backend OTP doğrulaması başarılı! Şimdi Supabase session başlatılıyor...');
 
-      // Edge Function doğruladıktan sonra Supabase'e giriş yaptır
-      const { error: loginError } = await supabase.auth.signInWithOtp({
+      // Backend'den dönen hashed_token ile Supabase session kur
+      if (!response.data.hashed_token) {
+        throw new Error('Token alınamadı');
+      }
+
+      const { error: verifyError } = await supabase.auth.verifyOtp({
         email,
-        options: { 
-          shouldCreateUser: true, 
-          emailRedirectTo: null 
-        },
+        token: response.data.hashed_token,
+        type: 'email'
       });
 
-      if (loginError) {
-        console.error('Supabase session kurulamadı:', loginError);
+      if (verifyError) {
+        console.error('Supabase session kurulamadı:', verifyError);
         throw new Error('Giriş yapılamadı, lütfen tekrar deneyin.');
       }
 
