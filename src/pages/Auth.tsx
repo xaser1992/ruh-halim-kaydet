@@ -61,11 +61,19 @@ export default function Auth() {
       const { error } = await verifyOTP(email, otpCode);
       if (error) {
         toast.error('Kod doğrulanamadı. Lütfen tekrar deneyin.');
+        setLoading(false);
       } else {
         toast.success('Giriş başarılı!');
-        navigate('/');
+        // Backend doğrulaması başarılı - yönlendir
+        // Session kurulup kurulmadığına bakmadan yönlendir
+        // useAuth hook'u zaten session'ı yakalayacak
+        setTimeout(() => {
+          navigate('/', { replace: true });
+        }, 500);
       }
-    } finally {
+    } catch (err) {
+      console.error('Verification error:', err);
+      toast.error('Bir hata oluştu');
       setLoading(false);
     }
   };
