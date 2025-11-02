@@ -60,21 +60,20 @@ export const useAuth = () => {
         throw new Error(response.data?.error || 'Kod doğrulanamadı');
       }
 
-      console.log('✅ Backend OTP doğrulaması başarılı! Şimdi Supabase session başlatılıyor...');
+      console.log('✅ Backend OTP doğrulaması başarılı! Session kuruluyor...');
 
-      // Backend'den dönen hashed_token ile Supabase session kur
-      if (!response.data.hashed_token) {
-        throw new Error('Token alınamadı');
+      // Backend'den dönen session bilgilerini kullan
+      if (!response.data.session?.access_token || !response.data.session?.refresh_token) {
+        throw new Error('Session bilgileri alınamadı');
       }
 
-      const { error: verifyError } = await supabase.auth.verifyOtp({
-        email,
-        token: response.data.hashed_token,
-        type: 'email'
+      const { error: sessionError } = await supabase.auth.setSession({
+        access_token: response.data.session.access_token,
+        refresh_token: response.data.session.refresh_token,
       });
 
-      if (verifyError) {
-        console.error('Supabase session kurulamadı:', verifyError);
+      if (sessionError) {
+        console.error('Supabase session kurulamadı:', sessionError);
         throw new Error('Giriş yapılamadı, lütfen tekrar deneyin.');
       }
 

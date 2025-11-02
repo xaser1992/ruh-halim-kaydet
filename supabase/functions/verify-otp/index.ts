@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
+import { create } from "https://deno.land/x/djwt@v3.0.2/mod.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -102,31 +103,65 @@ serve(async (req) => {
       userId = newUser.user.id;
     }
 
-    // Kullanıcı için Supabase OTP oluştur ve direkt doğrula
-    const { data: otpData, error: otpError } = await supabase.auth.admin.generateLink({
-      type: 'magiclink',
-      email,
-    });
-
-    if (otpError || !otpData) {
-      console.error('OTP link oluşturma hatası:', otpError);
+    // JWT token'ları oluştur
+    const jwtSecret = Deno.env.get('SUPABASE_JWT_SECRET');
+    if (!jwtSecret) {
+      console.error('JWT_SECRET bulunamadı');
       return new Response(
-        JSON.stringify({ error: 'Oturum oluşturulamadı' }),
+        JSON.stringify({ error: 'Sunucu yapılandırma hatası' }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    // Link'ten hashed_token'ı çıkar ve frontend'e gönder
-    // Frontend bu token ile supabase.auth.verifyOtp çağrısı yapacak
-    console.log(`OTP doğrulandı: ${email}, hashed_token gönderiliyor`);
+    const now = Math.floor(Date.now() / 1000);
+    const accessTokenExpiry = now + (60 * 60); // 1 saat
+    const refreshTokenExpiry = now + (60 * 60 * 24 * 30); // 30 gün
+
+    // Access token oluştur
+    const accessToken = await create(
+      { alg: "HS256", typ: "JWT" },
+      {
+        sub: userId,
+        aud: "authenticated",
+        role: "authenticated",
+        email: email,
+        exp: accessTokenExpiry,
+        iat: now,
+      },
+      jwtSecret
+    );
+
+    // Refresh token oluştur
+    const refreshToken = await create(
+      { alg: "HS256", typ: "JWT" },
+      {
+        sub: userId,
+        aud: "authenticated",
+        role: "authenticated",
+        email: email,
+        exp: refreshTokenExpiry,
+        iat: now,
+      },
+      jwtSecret
+    );
+
+    console.log(`✅ OTP doğrulandı ve session oluşturuldu: ${email}`);
 
     return new Response(
       JSON.stringify({ 
         status: 'ok', 
         message: 'Doğrulama başarılı',
-        email: email,
-        hashed_token: otpData.properties.hashed_token,
-        email_otp: otpData.properties.email_otp // Bu varsa gönder
+        session: {
+          access_token: accessToken,
+          refresh_token: refreshToken,
+          expires_in: 3600,
+          token_type: 'bearer',
+          user: {
+            id: userId,
+            email: email,
+            email_confirmed_at: new Date().toISOString(),
+          }
+        }
       }),
       { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
