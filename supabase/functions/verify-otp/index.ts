@@ -30,28 +30,100 @@ serve(async (req) => {
 
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_ANON_KEY') ?? ''
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
+      {
+        auth: {
+          autoRefreshToken: false,
+          persistSession: false
+        }
+      }
     );
 
-    const { data, error } = await supabase.auth.verifyOtp({
-      email,
-      token: code,
-      type: 'email'
+    // Kodu hash'le
+    const { data: codeHash, error: hashError } = await supabase.rpc('hash_password', { 
+      password: code 
     });
 
-    if (error) {
-      console.error('OTP doğrulama hatası:', error);
+    if (hashError) {
+      console.error('Hash hatası:', hashError);
       return new Response(
-        JSON.stringify({ error: 'Kod doğrulanamadı' }),
+        JSON.stringify({ error: 'Doğrulama başarısız' }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Database'den kodu kontrol et
+    const { data: otpRecord, error: fetchError } = await supabase
+      .from('otp_codes')
+      .select('*')
+      .eq('email', email)
+      .eq('code_hash', codeHash)
+      .eq('used', false)
+      .gt('expires_at', new Date().toISOString())
+      .single();
+
+    if (fetchError || !otpRecord) {
+      console.error('OTP bulunamadı veya geçersiz:', fetchError);
+      return new Response(
+        JSON.stringify({ error: 'Kod hatalı veya süresi dolmuş' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
+
+    // Kodu kullanıldı olarak işaretle
+    await supabase
+      .from('otp_codes')
+      .update({ used: true })
+      .eq('id', otpRecord.id);
+
+    // Kullanıcının auth.users'da olup olmadığını kontrol et
+    const { data: { users }, error: listError } = await supabase.auth.admin.listUsers();
+    
+    let userId: string;
+    const existingUser = users?.find(u => u.email === email);
+
+    if (existingUser) {
+      userId = existingUser.id;
+    } else {
+      // Yeni kullanıcı oluştur
+      const { data: newUser, error: createError } = await supabase.auth.admin.createUser({
+        email,
+        email_confirm: true,
+      });
+
+      if (createError || !newUser.user) {
+        console.error('Kullanıcı oluşturma hatası:', createError);
+        return new Response(
+          JSON.stringify({ error: 'Kullanıcı oluşturulamadı' }),
+          { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+
+      userId = newUser.user.id;
+    }
+
+    // Session oluştur
+    const { data: sessionData, error: sessionError } = await supabase.auth.admin.generateLink({
+      type: 'magiclink',
+      email,
+    });
+
+    if (sessionError) {
+      console.error('Session oluşturma hatası:', sessionError);
+      return new Response(
+        JSON.stringify({ error: 'Oturum oluşturulamadı' }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    console.log(`OTP doğrulandı: ${email}`);
 
     return new Response(
       JSON.stringify({ 
         status: 'ok', 
         message: 'Doğrulama başarılı',
-        session: data.session 
+        access_token: sessionData.properties.action_link.split('access_token=')[1]?.split('&')[0],
+        refresh_token: sessionData.properties.action_link.split('refresh_token=')[1]?.split('&')[0]
       }),
       { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );

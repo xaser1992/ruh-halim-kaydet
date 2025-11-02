@@ -56,9 +56,14 @@ export const useAuth = () => {
         throw new Error(response.data?.error || 'Kod doğrulanamadı');
       }
 
-      // Session backend'den gelirse client'a set et
-      if (response.data.session) {
-        await supabase.auth.setSession(response.data.session);
+      // Token'ları al ve session oluştur
+      if (response.data.access_token && response.data.refresh_token) {
+        const { error: sessionError } = await supabase.auth.setSession({
+          access_token: response.data.access_token,
+          refresh_token: response.data.refresh_token
+        });
+        
+        if (sessionError) throw sessionError;
       }
       
       return { error: null };
